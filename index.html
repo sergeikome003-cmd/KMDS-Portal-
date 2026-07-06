@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>KMDS Procurement Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --black:#0a0a0a;--panel:#141414;--panel2:#1c1c1c;
+  --gold:#d4af37;--gold2:#a8852b;--text:#eaeaea;--dim:#8c8c8c;--line:#2a2a2a;
+  --new:#3b82c4;--pay:#c47a1f;--ship:#16a085;--done:#2f9e5c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
+header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+.brand{display:flex;align-items:center;gap:10px;}
+.crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
+.brand h1{color:var(--gold);font-size:18px;letter-spacing:2px;font-weight:normal;}
+.brand p{color:var(--dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);}
+nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
+nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
+main{padding:16px;}
+section{display:none;}
+section.active{display:block;animation:fd .2s ease;}
+@keyframes fd{from{opacity:0}to{opacity:1}}
+h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
+.sub{color:var(--dim);font-size:11px;margin-bottom:16px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
+.stat .n{font-size:28px;color:var(--gold);font-weight:bold;}
+.stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:14px;margin-bottom:10px;}
+.card.s-pay{border-left-color:var(--pay);}
+.card.s-ship{border-left-color:var(--ship);}
+.card.s-done{border-left-color:var(--done);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card-ref{color:var(--gold);font-size:12px;}
+.card-name{font-size:15px;font-weight:bold;margin-top:2px;}
+.card-item{font-size:12px;color:var(--dim);margin-top:2px;}
+.card-total{font-size:13px;color:var(--gold);margin-top:6px;font-weight:bold;}
+.badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border:1px solid var(--new);color:var(--new);white-space:nowrap;flex-shrink:0;}
+.badge.s-pay{border-color:var(--pay);color:var(--pay);}
+.badge.s-ship{border-color:var(--ship);color:var(--ship);}
+.badge.s-done{border-color:var(--done);color:var(--done);}
+.card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;font-family:inherit;}
+.card-actions button.gold{border-color:var(--gold2);color:var(--gold);}
+.card-actions button.green{border-color:var(--done);color:var(--done);}
+.card-actions button.danger{border-color:#7a2a2a;color:#c45a5a;}
+.detail-box{background:var(--panel2);border:1px solid var(--line);padding:12px;margin-top:10px;display:none;}
+.detail-box.open{display:block;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;padding:16px;overflow-y:auto;}
+.modal-overlay.show{display:block;}
+.modal-box{background:var(--panel);border:1px solid var(--gold2);max-width:520px;margin:20px auto;padding:18px;}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px;}
+.modal-head #om-title{color:var(--gold);font-size:16px;letter-spacing:1px;}
+.modal-close{background:none;border:1px solid var(--line);color:var(--dim);font-size:18px;line-height:1;padding:4px 10px;font-family:inherit;}
+.modal-close:active{color:var(--gold);}
+.drow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);}
+.drow:last-child{border-bottom:none;}
+.drow span:first-child{color:var(--dim);}
+.fee-note{background:var(--panel2);border:1px solid var(--gold2);padding:12px;margin-bottom:16px;font-size:12px;line-height:1.7;color:var(--dim);}
+.fee-note strong{color:var(--gold);}
+form{display:flex;flex-direction:column;gap:12px;}
+label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px;}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:12px;font-family:inherit;font-size:14px;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);}
+.btn-gold{background:var(--gold);color:var(--black);border:none;padding:14px;font-family:inherit;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;width:100%;}
+.btn-out{background:none;border:1px solid var(--line);color:var(--dim);padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-top:8px;}
+.empty{text-align:center;padding:36px 20px;color:var(--dim);font-size:13px;border:1px dashed var(--line);}
+.filter-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;}
+.filter-row button{background:none;border:1px solid var(--line);color:var(--dim);padding:7px 12px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:inherit;white-space:nowrap;}
+.filter-row button.active{border-color:var(--gold);color:var(--gold);}
+.paste-area{background:var(--panel2);border:1px solid var(--gold2);padding:14px;margin-bottom:20px;}
+.paste-area p{color:var(--dim);font-size:12px;margin-bottom:10px;line-height:1.6;}
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:var(--dim);font-size:11px;letter-spacing:1px;}
+.divider::before,.divider::after{content:"";flex:1;border-top:1px solid var(--line);}
+/* PLATFORM GRID */
+.plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.plat-btn{background:var(--panel);border:1px solid var(--line);padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;text-decoration:none;}
+.plat-btn:hover{border-color:var(--gold2);}
+.plat-icon{font-size:22px;}
+.plat-name{color:var(--gold);font-size:11px;letter-spacing:1px;text-transform:uppercase;text-align:center;}
+.plat-desc{color:var(--dim);font-size:10px;text-align:center;}
+/* PAYMENTS */
+.pay-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.pay-stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
+.pay-stat .n{font-size:22px;color:var(--gold);font-weight:bold;}
+.pay-stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.pay-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--done);padding:13px;margin-bottom:10px;}
+.pay-name{font-size:14px;font-weight:bold;color:var(--text);}
+.pay-amt{font-size:18px;color:var(--gold);font-weight:bold;margin-top:4px;}
+.pay-detail{font-size:11px;color:var(--dim);margin-top:3px;}
+/* INVOICE */
+.inv-card{background:#fff;color:#111;padding:20px;font-family:Georgia,serif;}
+.inv-top{display:flex;justify-content:space-between;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:12px;}
+.inv-logo{font-size:20px;font-weight:bold;letter-spacing:1px;}
+.inv-sub{font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
+.inv-badge{background:#111;color:#d4af37;font-size:9px;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;}
+.inv-meta{font-size:10px;color:#555;text-align:right;margin-top:6px;line-height:1.6;}
+.inv-bill{display:flex;justify-content:space-between;margin-bottom:14px;}
+.inv-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:3px;}
+table.itbl{width:100%;border-collapse:collapse;margin-bottom:14px;}
+table.itbl th{background:#111;color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:7px;text-align:left;}
+table.itbl th:last-child,table.itbl td:last-child{text-align:right;}
+table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
+.inv-total{display:flex;justify-content:space-between;font-size:15px;font-weight:bold;padding-top:8px;border-top:2px solid #111;}
+.inv-foot{text-align:center;font-size:10px;color:#777;margin-top:16px;line-height:1.8;}
+@media print{
+  header,nav,.card-actions,.filter-row,#inv-select,label+select,.btn-gold,.btn-out,.paste-area,.divider,p.sub,h2.title+p{display:none!important;}
+  body{padding:0;background:#fff;}
+  section{display:none!important;}
+  section#invoice{display:block!important;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="crest">KMDS</div>
+    <div><h1>KMDS</h1><p>Procurement Portal</p></div>
+  </div>
+  <div id="sync-status" style="font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;text-align:right;">Connecting…</div>
+</header>
+<nav id="nav">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="neworder">New Order</button>
+  <button data-tab="orders">Orders</button>
+  <button data-tab="payments">Payments</button>
+  <button data-tab="invoice">Invoice</button>
+  <button data-tab="suppliers">Suppliers</button>
+  <button data-tab="freight">Freight & Tracking</button>
+</nav>
+<main>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="active">
+  <h2 class="title">Overview</h2>
+  <p class="sub">Live business snapshot</p>
+  <div class="stat-grid">
+    <div class="stat"><div class="n" id="d-new">0</div><div class="l">New Orders</div></div>
+    <div class="stat"><div class="n" id="d-pay">0</div><div class="l">Pending Payment</div></div>
+    <div class="stat" id="stat-ship-block" style="cursor:pointer;"><div class="n" id="d-ship">0</div><div class="l">In Shipment — Tap to View</div></div>
+    <div class="stat"><div class="n" id="d-done">0</div><div class="l">Completed</div></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat"><div class="n" id="d-today">0</div><div class="l">Received Today</div></div>
+    <div class="stat"><div class="n" id="d-total-paid">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="stat"><div class="n" id="d-profit">0</div><div class="l">Total Profit (XAF)</div></div>
+  </div>
+  <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:8px;">Today's Orders</h2>
+  <div id="d-today-list"></div>
+  <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:10px;">Recent Orders</h2>
+  <div id="d-recent"></div>
+</section>
+
+<!-- NEW ORDER -->
+<section id="neworder">
+  <h2 class="title">New Order</h2>
+  <p class="sub">Paste from WhatsApp or enter manually</p>
+  <div class="fee-note">
+    <strong>Standard KMDS Fees (automatic):</strong><br>
+    Markup: 1,000 XAF per 10,000 XAF (10%)<br>
+    Service Fee: 500 XAF per 10,000 XAF (5%)
+  </div>
+  <div class="paste-area">
+    <p>Copy the customer's WhatsApp message and paste it here — order is created instantly.</p>
+    <textarea id="paste-box" style="height:90px;margin-bottom:10px;" placeholder="Paste WhatsApp message here..."></textarea>
+    <button class="btn-gold" id="paste-btn">Create Order from Paste</button>
+  </div>
+  <div class="divider">OR ENTER MANUALLY</div>
+  <form id="order-form">
+    <div><label>Client Name *</label><input type="text" id="f-name" required placeholder="e.g. Mballa Jean"></div>
+    <div><label>Phone</label><input type="tel" id="f-phone" placeholder="e.g. 677 000 000"></div>
+    <div><label>Item / Product *</label><textarea id="f-item" rows="2" required placeholder="e.g. 50 iPhone 14 cases, black"></textarea></div>
+    <div><label>Quantity</label><input type="text" id="f-qty" placeholder="e.g. 50 units"></div>
+    <div><label>Cost Price (XAF) — what you pay the supplier</label><input type="number" id="f-cost" placeholder="e.g. 150000"></div>
+    <div><label>Tracking Number (optional)</label><input type="text" id="f-track" placeholder="e.g. 1Z999AA10123456784"></div>
+    <div><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Optional..."></textarea></div>
+    <button type="submit" class="btn-gold">Add New Order</button>
+  </form>
+</section>
+
+<!-- ORDERS -->
+<section id="orders">
+  <h2 class="title">Orders</h2>
+  <p class="sub">Manage your order pipeline</p>
+  <div class="filter-row" id="filter-row">
+    <button data-f="all" class="active">All</button>
+    <button data-f="new">New</button>
+    <button data-f="pay">Pending Payment</button>
+    <button data-f="ship">In Shipment</button>
+    <button data-f="done">Completed</button>
+  </div>
+  <div id="orders-list"></div>
+</section>
+
+<!-- PAYMENTS -->
+<section id="payments">
+  <h2 class="title">Payments</h2>
+  <p class="sub">Record and track all client payments</p>
+  <div class="pay-summary">
+    <div class="pay-stat"><div class="n" id="p-total">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="pay-stat"><div class="n" id="p-profit">0</div><div class="l">Your Profit (XAF)</div></div>
+  </div>
+  <form id="pay-form" style="margin-bottom:24px;">
+    <div><label>Select Order *</label><select id="p-order"></select></div>
+    <div><label>Amount Paid (XAF) *</label><input type="number" id="p-amount" required placeholder="e.g. 172500"></div>
+    <div><label>Payment Method</label>
+      <select id="p-method">
+        <option>MTN Mobile Money</option>
+        <option>Orange Money</option>
+        <option>Bank Transfer</option>
+      </select>
+    </div>
+    <div><label>Transaction Reference (optional)</label><input type="text" id="p-ref" placeholder="e.g. MTN ref: 12345678"></div>
+    <button type="submit" class="btn-gold">Record Payment</button>
+  </form>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Transactions — Amount Sent vs Your Profit</h2>
+  <p class="sub" style="margin-bottom:12px;">Auto-generated from every order once it's Pending Payment or further along — no manual entry needed.</p>
+  <div id="tx-list" style="margin-bottom:24px;"></div>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Payment History</h2>
+  <p class="sub" style="margin-bottom:12px;">Optional — log the method/reference for your own records.</p>
+  <div id="pay-list"></div>
+</section>
+
+<!-- INVOICE -->
+<section id="invoice">
+  <h2 class="title">Invoice Generator</h2>
+  <p class="sub">Generate and share professional invoices</p>
+  <div style="margin-bottom:14px;">
+    <label>Select Order</label>
+    <select id="inv-select"></select>
+  </div>
+  <div id="inv-wrap"></div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+    <button class="btn-gold" id="inv-print">Print / Save as PDF</button>
+    <button class="btn-out" id="inv-wa">Send via WhatsApp</button>
+  </div>
+</section>
+
+<!-- SUPPLIERS -->
+<section id="suppliers">
+  <h2 class="title">Suppliers</h2>
+  <p class="sub">Tap a platform to open it directly</p>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://www.alibaba.com" target="_blank">
+      <div class="plat-icon">🛒</div>
+      <div class="plat-name">Alibaba</div>
+      <div class="plat-desc">China wholesale B2B</div>
+    </a>
+    <a class="plat-btn" href="https://www.1688.com" target="_blank">
+      <div class="plat-icon">🏭</div>
+      <div class="plat-name">1688</div>
+      <div class="plat-desc">China domestic prices</div>
+    </a>
+    <a class="plat-btn" href="https://www.taobao.com" target="_blank">
+      <div class="plat-icon">🛍</div>
+      <div class="plat-name">Taobao</div>
+      <div class="plat-desc">China retail market</div>
+    </a>
+    <a class="plat-btn" href="https://www.aliexpress.com" target="_blank">
+      <div class="plat-icon">✈</div>
+      <div class="plat-name">AliExpress</div>
+      <div class="plat-desc">Ships internationally</div>
+    </a>
+    <a class="plat-btn" href="https://www.dhgate.com" target="_blank">
+      <div class="plat-icon">📦</div>
+      <div class="plat-name">DHgate</div>
+      <div class="plat-desc">Small batch orders</div>
+    </a>
+    <a class="plat-btn" href="https://www.google.com/search?q=Dragon+Mart+Dubai+wholesale" target="_blank">
+      <div class="plat-icon">🕌</div>
+      <div class="plat-name">Dubai</div>
+      <div class="plat-desc">Dragon Mart wholesale</div>
+    </a>
+  </div>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">My Suppliers</h2>
+  <form id="sup-form" style="margin-bottom:16px;">
+    <div><label>Supplier Name *</label><input type="text" id="s-name" required placeholder="e.g. Yiwu Trading Co."></div>
+    <div><label>Platform</label>
+      <select id="s-plat"><option>Alibaba</option><option>1688</option><option>Taobao</option><option>AliExpress</option><option>DHgate</option><option>Dubai</option><option>Other</option></select>
+    </div>
+    <div><label>Product Category</label><input type="text" id="s-cat" placeholder="e.g. Electronics"></div>
+    <div><label>Contact (WeChat / Phone)</label><input type="text" id="s-cont" placeholder="e.g. WeChat: trader88"></div>
+    <button type="submit" class="btn-gold">Save Supplier</button>
+  </form>
+  <div id="sup-list"></div>
+</section>
+
+<!-- FREIGHT & TRACKING -->
+<section id="freight">
+  <h2 class="title">Freight & Tracking</h2>
+  <p class="sub">Freight forwarders directory and shipment tracking</p>
+
+  <div class="paste-area">
+    <p>Paste any tracking number below. "Track Shipment" checks it against every major carrier at once. If you know it's DHL specifically, use that button instead for a more direct result.</p>
+    <input type="text" id="track-input" style="margin-bottom:10px;" placeholder="e.g. 1Z999AA10123456784">
+    <button class="btn-gold" id="track-btn">Track Shipment (All Carriers)</button>
+    <button class="btn-out" id="track-dhl-btn">Track on DHL</button>
+  </div>
+
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Shipping Lines & Logistics Platforms</h2>
+  <p class="sub">Tap a platform to open it directly — for quotes, bookings, or contacting them</p>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://www.dhl.com" target="_blank">
+      <div class="plat-icon">📦</div>
+      <div class="plat-name">DHL Express</div>
+      <div class="plat-desc">Door-to-door air & courier</div>
+    </a>
+    <a class="plat-btn" href="https://www.maersk.com" target="_blank">
+      <div class="plat-icon">🚢</div>
+      <div class="plat-name">Maersk</div>
+      <div class="plat-desc">Ocean freight, FCL/LCL</div>
+    </a>
+    <a class="plat-btn" href="https://www.msc.com" target="_blank">
+      <div class="plat-icon">🚢</div>
+      <div class="plat-name">MSC</div>
+      <div class="plat-desc">Ocean freight to Douala</div>
+    </a>
+    <a class="plat-btn" href="https://www.cma-cgm.com" target="_blank">
+      <div class="plat-icon">⚓</div>
+      <div class="plat-name">CMA CGM</div>
+      <div class="plat-desc">Major line serving Douala</div>
+    </a>
+    <a class="plat-btn" href="https://www.freightos.com" target="_blank">
+      <div class="plat-icon">🌐</div>
+      <div class="plat-name">Freightos</div>
+      <div class="plat-desc">Compare forwarder quotes</div>
+    </a>
+    <a class="plat-btn" href="https://www.google.com/search?q=freight+forwarder+China+to+Douala+Cameroon" target="_blank">
+      <div class="plat-icon">🔎</div>
+      <div class="plat-name">Find More</div>
+      <div class="plat-desc">Search China–Cameroon agents</div>
+    </a>
+  </div>
+
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">My Saved Forwarders</h2>
+  <p class="sub" style="margin-bottom:12px;">Save your own contacts once you've picked who to work with</p>
+  <form id="fwd-form" style="margin-bottom:16px;">
+    <div><label>Company / Forwarder Name *</label><input type="text" id="fw-name" required placeholder="e.g. DHL, or agent name"></div>
+    <div><label>Phone Number (with country code, for WhatsApp)</label><input type="text" id="fw-phone" placeholder="e.g. 237677000000"></div>
+    <div><label>Email Address</label><input type="email" id="fw-email" placeholder="e.g. contact@dhl.com"></div>
+    <div><label>Notes / Trade Lane</label><input type="text" id="fw-notes" placeholder="e.g. China to Douala sea freight LCL"></div>
+    <button type="submit" class="btn-gold">Save Forwarder</button>
+  </form>
+  <div id="fwd-list"></div>
+</section>
+
+</main>
+
+<div id="order-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div id="om-title"></div>
+      <button id="om-close" class="modal-close">&times;</button>
+    </div>
+    <div id="om-body"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var ORDER_KEY = "kmds_orders_v2";
+var PAY_KEY   = "kmds_pays_v2";
+var SUP_KEY   = "kmds_sup_v2";
+var FWD_KEY   = "kmds_fwd_v1";
+var activeFilter = "all";
+var RATE_KEY  = "kmds_rates_v1";
+var statusDesc = {new:"Order received, not yet reviewed.",pay:"Customer has paid you \u2014 now pay your supplier.",ship:"Goods paid for and on the way from supplier.",done:"Customer has received their item."};
+
+// ===== CLOUD SYNC (Supabase) =====
+// Fill these in from your Supabase project: Settings -> API
+var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+var sb = null;
+try{
+  if(window.supabase && SUPABASE_URL.indexOf("YOUR_")!==0 && SUPABASE_ANON_KEY.indexOf("YOUR_")!==0){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){sb=null;}
+
+var ordersCache=[], paysCache=[], supCache=[], ratesCache={usd:610,cny:85}, fwdCache=[];
+
+function setSyncStatus(state){
+  var el=document.getElementById("sync-status");
+  if(!el)return;
+  if(state==="synced"){el.textContent="\u25CF Cloud Synced";el.style.color="var(--done)";}
+  else if(state==="offline"){el.textContent="\u25CB Offline \u2014 Local Only";el.style.color="#c45a5a";}
+  else if(state==="nocloud"){el.textContent="\u25CB Local Only (cloud not set up)";el.style.color="var(--dim)";}
+  else{el.textContent="Connecting\u2026";el.style.color="var(--dim)";}
+}
+
+// In-memory reads are synchronous (rest of the app depends on this) —
+// the cache is kept current by cloudLoadAll() and every save() call below.
+function loadOrders(){return ordersCache;}
+function loadPays(){return paysCache;}
+function loadSup(){return supCache;}
+function loadRates(){return ratesCache;}
+function loadFwd(){return fwdCache;}
+
+function saveOrders(l){ordersCache=l;localStorage.setItem(ORDER_KEY,JSON.stringify(l));cloudSave("orders",l);}
+function savePays(l){paysCache=l;localStorage.setItem(PAY_KEY,JSON.stringify(l));cloudSave("pays",l);}
+function saveSup(l){supCache=l;localStorage.setItem(SUP_KEY,JSON.stringify(l));cloudSave("suppliers",l);}
+function saveRates(r){ratesCache=r;localStorage.setItem(RATE_KEY,JSON.stringify(r));cloudSave("rates",r);}
+function saveFwd(l){fwdCache=l;localStorage.setItem(FWD_KEY,JSON.stringify(l));cloudSave("forwarders",l);}
+
+function cloudSave(key,value){
+  if(!sb){setSyncStatus("nocloud");return;}
+  sb.from("kmds_kv").upsert({key:key,value:value,updated_at:new Date().toISOString()}).then(function(res){
+    if(res.error){console.error("Cloud save failed for "+key,res.error);setSyncStatus("offline");}
+    else{setSyncStatus("synced");}
+  });
+}
+
+function cloudLoadAll(){
+  if(!sb){setSyncStatus("nocloud");return Promise.resolve(false);}
+  return sb.from("kmds_kv").select("key,value").then(function(res){
+    if(res.error){console.error("Cloud load failed",res.error);setSyncStatus("offline");return false;}
+    (res.data||[]).forEach(function(row){
+      if(row.key==="orders")ordersCache=row.value||[];
+      if(row.key==="pays")paysCache=row.value||[];
+      if(row.key==="suppliers")supCache=row.value||[];
+      if(row.key==="rates")ratesCache=row.value||{usd:610,cny:85};
+      if(row.key==="forwarders")fwdCache=row.value||[];
+    });
+    localStorage.setItem(ORDER_KEY,JSON.stringify(ordersCache));
+    localStorage.setItem(PAY_KEY,JSON.stringify(paysCache));
+    localStorage.setItem(SUP_KEY,JSON.stringify(supCache));
+    localStorage.setItem(RATE_KEY,JSON.stringify(ratesCache));
+    localStorage.setItem(FWD_KEY,JSON.stringify(fwdCache));
+    setSyncStatus("synced");
+    return true;
+  });
+}
+
+function bootFromLocalCache(){
+  try{ordersCache=JSON.parse(localStorage.getItem(ORDER_KEY))||[];}catch(e){ordersCache=[];}
+  try{paysCache=JSON.parse(localStorage.getItem(PAY_KEY))||[];}catch(e){paysCache=[];}
+  try{supCache=JSON.parse(localStorage.getItem(SUP_KEY))||[];}catch(e){supCache=[];}
+  try{ratesCache=JSON.parse(localStorage.getItem(RATE_KEY))||{usd:610,cny:85};}catch(e){ratesCache={usd:610,cny:85};}
+  try{fwdCache=JSON.parse(localStorage.getItem(FWD_KEY))||[];}catch(e){fwdCache=[];}
+}
+
+function refreshActiveTab(){
+  var activeBtn=document.querySelector("nav button.active");
+  var tab=activeBtn?activeBtn.getAttribute("data-tab"):"dashboard";
+  renderDashboard();
+  if(tab==="orders")renderOrders();
+  if(tab==="payments"){populatePayOrders();renderPayments();}
+  if(tab==="invoice"){populateInvSelect();renderInvoice();}
+  if(tab==="suppliers")renderSuppliers();
+  if(tab==="freight")renderFreight();
+}
+
+function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+function fmtXAF(n){return Number(n||0).toLocaleString()+" XAF";}
+function fmtDate(iso){if(!iso)return"?";return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function genRef(){return"KMDS-"+Math.floor(1000+Math.random()*9000);}
+function calcFees(cost,duty){
+  var c=Number(cost)||0;
+  var d=Number(duty)||0;
+  var mu=Math.round(c*0.10);
+  var fe=Math.round(c*0.05);
+  return{cost:c,markup:mu,fee:fe,duty:d,total:c+mu+fe+d};
+}
+function statusLabel(s){return{new:"New",pay:"Pending Payment",ship:"In Shipment",done:"Completed"}[s]||s;}
+function statusClass(s){return{pay:"s-pay",ship:"s-ship",done:"s-done"}[s]||"";}
+
+// NAV
+document.getElementById("nav").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-tab]");if(!btn)return;
+  var tab=btn.getAttribute("data-tab");
+  document.querySelectorAll("nav button").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  document.querySelectorAll("main > section").forEach(function(s){s.classList.remove("active");});
+  document.getElementById(tab).classList.add("active");
+  if(tab==="dashboard") renderDashboard();
+  if(tab==="orders") renderOrders();
+  if(tab==="payments"){populatePayOrders();renderPayments();}
+  if(tab==="invoice"){populateInvSelect();renderInvoice();}
+  if(tab==="suppliers") renderSuppliers();
+  if(tab==="freight") renderFreight();
+});
+
+// PASTE
+document.getElementById("paste-btn").addEventListener("click",function(){
+  var text=document.getElementById("paste-box").value.trim();
+  if(!text){alert("Please paste a WhatsApp message first.");return;}
+  function extract(label){var re=new RegExp(label+"[:\\s]+([^\\n]+)","i");var m=text.match(re);return m?m[1].trim():"";}
+  var name=extract("Name")||extract("Client")||"Unknown Client";
+  var phone=extract("Phone")||extract("Tel")||"";
+  var wa=extract("WhatsApp")||"";
+  var email=extract("Email")||"";
+  var city=extract("City")||"";
+  var quarter=extract("Quarter")||"";
+  var address=extract("Address")||"";
+  var ship=extract("Shipping")||"";
+  var pay=extract("Payment")||"";
+  var item=extract("Item")||extract("Product")||extract("Order")||text.split("\n")[0];
+  var qty=extract("Qty")||extract("Quantity")||"";
+  var notes=extract("Notes")||"";
+  var tracking=extract("Tracking Number")||extract("Tracking")||"";
+  var orders=loadOrders();
+  orders.unshift({id:Date.now(),ref:genRef(),name:name,phone:phone,wa:wa,email:email,city:city,quarter:quarter,address:address,ship:ship,pay:pay,item:item,qty:qty,cost:0,duty:0,tracking:tracking,notes:notes,status:"new",created:new Date().toISOString()});
+  saveOrders(orders);
+  document.getElementById("paste-box").value="";
+  alert("Order created! Set the Cost Price inside Manage Order to calculate fees. Go to Orders tab.");
+  renderDashboard();
+});
+
+// MANUAL ORDER
+document.getElementById("order-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("f-name").value.trim();
+  var item=document.getElementById("f-item").value.trim();
+  if(!name||!item)return;
+  var orders=loadOrders();
+  orders.unshift({id:Date.now(),ref:genRef(),name:name,phone:document.getElementById("f-phone").value.trim(),item:item,qty:document.getElementById("f-qty").value.trim(),cost:Number(document.getElementById("f-cost").value)||0,tracking:document.getElementById("f-track").value.trim(),notes:document.getElementById("f-notes").value.trim(),status:"new",created:new Date().toISOString()});
+  saveOrders(orders);
+  document.getElementById("order-form").reset();
+  document.querySelector("nav button[data-tab='orders']").click();
+});
+
+// BUILD CARD
+function buildCard(o){
+  var sc=statusClass(o.status);
+  var t=calcFees(o.cost,o.duty);
+  var totalLine=t.total>0?"<div class='card-total'>Client Pays: "+fmtXAF(t.total)+"</div>":"";
+  var trackBadge=o.tracking?"<div style='margin-top:6px;'><span style='border:1px solid var(--gold2);color:var(--gold);font-size:9px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;'>Tracking: "+esc(o.tracking)+"</span></div>":"";
+  var actions="";
+  if(o.status==="new") actions+="<button data-a='to-pay' data-id='"+o.id+"' class='green'>Mark Pending Payment</button>";
+  if(o.status==="pay") actions+="<button data-a='to-ship' data-id='"+o.id+"' class='green'>Mark In Shipment</button>";
+  if(o.status==="ship") actions+="<button data-a='to-done' data-id='"+o.id+"' class='green'>Mark Completed</button>";
+  actions+="<button data-a='invoice' data-id='"+o.id+"' class='gold'>Invoice</button>";
+  actions+="<button data-a='detail' data-id='"+o.id+"'>Manage Order</button>";
+  actions+="<button data-a='delete' data-id='"+o.id+"' class='danger'>Delete</button>";
+  return "<div class='card "+sc+"' data-id='"+o.id+"'>"+
+    "<div class='card-top'><div><div class='card-ref'>"+esc(o.ref)+" · "+fmtDate(o.created)+"</div><div class='card-name'>"+esc(o.name)+"</div><div class='card-item'>"+esc(o.item)+"</div>"+totalLine+trackBadge+"</div><span class='badge "+sc+"'>"+statusLabel(o.status)+"</span></div>"+
+    "<div class='card-actions'>"+actions+"</div></div>";
+}
+
+// ORDER DETAIL MODAL
+function openOrderModal(id){
+  var orders=loadOrders();
+  var o=orders.find(function(x){return x.id===id;});
+  if(!o)return;
+  var t=calcFees(o.cost,o.duty);
+  var rates=loadRates();
+  var usd=rates.usd>0?Math.round(o.cost/rates.usd):0;
+  var cny=rates.cny>0?Math.round(o.cost/rates.cny):0;
+  var locked=o.status==="done";
+  document.getElementById("om-title").textContent=o.ref+" — "+o.name;
+  document.getElementById("om-body").innerHTML=
+    "<div class='drow'><span>Phone</span><span>"+(o.phone||"—")+"</span></div>"+
+    (o.wa?"<div class='drow'><span>WhatsApp</span><span>"+esc(o.wa)+"</span></div>":"")+
+    (o.tracking?"<div class='drow'><span>Tracking Number</span><span>"+esc(o.tracking)+"</span></div>":"")+
+    (o.email?"<div class='drow'><span>Email</span><span>"+esc(o.email)+"</span></div>":"")+
+    (o.city?"<div class='drow'><span>City</span><span>"+esc(o.city)+"</span></div>":"")+
+    (o.quarter?"<div class='drow'><span>Quarter</span><span>"+esc(o.quarter)+"</span></div>":"")+
+    (o.address?"<div class='drow'><span>Address</span><span>"+esc(o.address)+"</span></div>":"")+
+    (o.ship?"<div class='drow'><span>Shipping</span><span>"+esc(o.ship)+"</span></div>":"")+
+    (o.pay?"<div class='drow'><span>Payment Method</span><span>"+esc(o.pay)+"</span></div>":"")+
+    "<div class='drow'><span>Item</span><span>"+esc(o.item)+"</span></div>"+
+    (o.qty?"<div class='drow'><span>Qty</span><span>"+esc(o.qty)+"</span></div>":"")+
+    "<div class='drow'><span>Cost Price</span><span>"+fmtXAF(o.cost)+"</span></div>"+
+    "<div class='drow'><span>Markup (10%)</span><span>"+fmtXAF(t.markup)+"</span></div>"+
+    "<div class='drow'><span>Service Fee (5%)</span><span>"+fmtXAF(t.fee)+"</span></div>"+
+    "<div class='drow'><span>Customs Duty</span><span>"+fmtXAF(t.duty)+"</span></div>"+
+    "<div class='drow'><span><strong>Client Pays</strong></span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
+    "<div class='drow'><span><strong>Your Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
+    (o.notes?"<div class='drow'><span>Notes</span><span>"+esc(o.notes)+"</span></div>":"")+
+    "<div class='drow'><span>Date</span><span>"+fmtDate(o.created)+"</span></div>"+
+    "<div style='margin-top:14px;border-top:1px solid var(--line);padding-top:12px;'>"+
+      "<label style='margin-bottom:6px;'>Cost Price In Other Currencies (editable rate below)</label>"+
+      "<div class='drow'><span>US Dollars (approx.)</span><span>$"+usd.toLocaleString()+"</span></div>"+
+      "<div class='drow'><span>Chinese Yuan (approx.)</span><span>¥"+cny.toLocaleString()+"</span></div>"+
+      "<div style='display:flex;gap:8px;margin-top:10px;'>"+
+        "<div style='flex:1;'><label style='margin-bottom:4px;'>XAF per USD</label><input type='number' id='om-rate-usd' value='"+rates.usd+"'></div>"+
+        "<div style='flex:1;'><label style='margin-bottom:4px;'>XAF per CNY</label><input type='number' id='om-rate-cny' value='"+rates.cny+"'></div>"+
+      "</div>"+
+      "<button id='om-save-rate' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-top:8px;'>Save Rates</button>"+
+    "</div>"+
+    "<div style='margin-top:14px;border-top:1px solid var(--line);padding-top:12px;'>"+
+      "<label style='margin-bottom:6px;'>Order Status</label>"+
+      "<select class='status-sel' data-id='"+o.id+"' style='margin-bottom:6px;'>"+
+        "<option value='new'"+(o.status==="new"?" selected":"")+">New</option>"+
+        "<option value='pay'"+(o.status==="pay"?" selected":"")+">Pending Payment</option>"+
+        "<option value='ship'"+(o.status==="ship"?" selected":"")+">In Shipment</option>"+
+        "<option value='done'"+(o.status==="done"?" selected":"")+">Completed</option>"+
+      "</select>"+
+      "<div style='color:var(--dim);font-size:11px;line-height:1.6;margin-bottom:10px;'>"+statusDesc[o.status]+"</div>"+
+    "</div>"+
+    "<div style='margin-top:6px;'>"+
+      "<label style='margin-bottom:6px;'>Tracking Number</label>"+
+      "<input type='text' class='track-inp' data-id='"+o.id+"' value='"+esc(o.tracking||"")+"' placeholder='e.g. 1Z999AA10123456784' style='margin-bottom:8px;'>"+
+      (locked?
+        "<div style='border:1px solid var(--gold2);background:var(--panel2);padding:10px;margin-bottom:8px;font-size:11px;color:var(--dim);line-height:1.6;'>"+
+          "\uD83D\uDD12 <strong style='color:var(--gold);'>Financial fields locked.</strong> This order is Completed, so Cost Price and Customs Duty can no longer be edited here to protect against tampering. Change the status above (e.g. back to In Shipment) if you need to correct them."+
+        "</div>"+
+        "<div class='drow'><span>Cost Price (locked)</span><span>"+fmtXAF(o.cost)+"</span></div>"+
+        "<div class='drow'><span>Customs Duty (locked)</span><span>"+fmtXAF(o.duty)+"</span></div>"+
+        "<button data-a='save-track' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-top:4px;'>Save Tracking Number</button>"
+      :
+        "<label style='margin-bottom:6px;'>Update Cost Price (XAF) — what you pay the supplier</label>"+
+        "<input type='number' class='cost-inp' data-id='"+o.id+"' value='"+Number(o.cost||0)+"' style='margin-bottom:8px;'>"+
+        "<label style='margin-bottom:6px;'>Customs Duty (XAF) — enter based on your own estimate</label>"+
+        "<input type='number' class='duty-inp' data-id='"+o.id+"' value='"+Number(o.duty||0)+"' style='margin-bottom:8px;'>"+
+        "<button data-a='save-cost' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;'>Save Tracking, Cost &amp; Duty</button>"
+      )+
+    "</div>";
+  document.getElementById("order-modal").classList.add("show");
+}
+function closeOrderModal(){document.getElementById("order-modal").classList.remove("show");}
+document.getElementById("om-close").addEventListener("click",closeOrderModal);
+document.getElementById("order-modal").addEventListener("click",function(e){if(e.target.id==="order-modal")closeOrderModal();});
+document.getElementById("om-body").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-a],#om-save-rate");if(!btn)return;
+  if(btn.id==="om-save-rate"){
+    var u=Number(document.getElementById("om-rate-usd").value)||1;
+    var c=Number(document.getElementById("om-rate-cny").value)||1;
+    saveRates({usd:u,cny:c});
+    btn.textContent="Saved!";
+    var openId=Number(document.querySelector(".status-sel").getAttribute("data-id"));
+    setTimeout(function(){openOrderModal(openId);},600);
+    return;
+  }
+  var action=btn.getAttribute("data-a");
+  var id=Number(btn.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  var tinp=document.querySelector(".track-inp[data-id='"+id+"']");
+  if(action==="save-cost"){
+    if(!order)return;
+    if(order.status==="done"){alert("This order is Completed. Financial fields are locked and cannot be changed from here.");return;}
+    var inp=document.querySelector(".cost-inp[data-id='"+id+"']");
+    var dinp=document.querySelector(".duty-inp[data-id='"+id+"']");
+    if(!inp)return;
+    order.cost=Number(inp.value)||0;
+    order.duty=dinp?(Number(dinp.value)||0):0;
+    if(tinp)order.tracking=tinp.value.trim();
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    renderOrders();renderDashboard();
+    setTimeout(function(){openOrderModal(id);},600);
+  }
+  if(action==="save-track"){
+    if(!order||!tinp)return;
+    order.tracking=tinp.value.trim();
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    renderOrders();renderDashboard();
+    setTimeout(function(){openOrderModal(id);},600);
+  }
+});
+document.getElementById("om-body").addEventListener("change",function(e){
+  var sel=e.target.closest("select.status-sel");if(!sel)return;
+  var id=Number(sel.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  if(order){order.status=sel.value;saveOrders(orders);renderDashboard();renderOrders();openOrderModal(id);}
+});
+
+function handleActions(e){
+  var btn=e.target.closest("button[data-a]");if(!btn)return;
+  var action=btn.getAttribute("data-a");
+  var id=Number(btn.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  if(action==="detail"){openOrderModal(id);return;}
+  if(action==="invoice"){
+    document.querySelector("nav button[data-tab='invoice']").click();
+    setTimeout(function(){document.getElementById("inv-select").value=String(id);renderInvoice();},200);
+    return;
+  }
+  if(action==="save-cost"){
+    var inp=document.querySelector(".cost-inp[data-id='"+id+"']");if(!inp)return;
+    if(order){order.cost=Number(inp.value)||0;}
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    setTimeout(function(){btn.textContent="Save Cost";renderOrders();renderDashboard();},1000);
+    return;
+  }
+  if(action==="delete"){
+    if(!confirm("Delete this order?"))return;
+    saveOrders(orders.filter(function(o){return o.id!==id;}));
+    renderDashboard();renderOrders();return;
+  }
+  var sm={"to-pay":"pay","to-ship":"ship","to-done":"done"};
+  if(sm[action]&&order){order.status=sm[action];saveOrders(orders);renderDashboard();renderOrders();}
+}
+
+document.getElementById("stat-ship-block").addEventListener("click",function(){
+  document.querySelector("nav button[data-tab='orders']").click();
+  document.querySelector("#filter-row button[data-f='ship']").click();
+});
+
+document.getElementById("filter-row").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-f]");if(!btn)return;
+  activeFilter=btn.getAttribute("data-f");
+  document.querySelectorAll("#filter-row button").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  renderOrders();
+});
+
+function isToday(iso){
+  if(!iso)return false;
+  var d=new Date(iso), n=new Date();
+  return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();
+}
+function renderDashboard(){
+  var orders=loadOrders();
+  var pays=loadPays();
+  document.getElementById("d-new").textContent=orders.filter(function(o){return o.status==="new";}).length;
+  document.getElementById("d-pay").textContent=orders.filter(function(o){return o.status==="pay";}).length;
+  document.getElementById("d-ship").textContent=orders.filter(function(o){return o.status==="ship";}).length;
+  document.getElementById("d-done").textContent=orders.filter(function(o){return o.status==="done";}).length;
+  var todays=orders.filter(function(o){return isToday(o.created);});
+  document.getElementById("d-today").textContent=todays.length;
+  var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
+  var totalPaid=0, totalProfit=0;
+  paidOrders.forEach(function(o){
+    var t=calcFees(o.cost,o.duty);
+    totalPaid+=t.total;
+    totalProfit+=t.markup+t.fee;
+  });
+  document.getElementById("d-total-paid").textContent=totalPaid.toLocaleString();
+  document.getElementById("d-profit").textContent=totalProfit.toLocaleString();
+  var tw=document.getElementById("d-today-list");
+  if(todays.length===0){tw.innerHTML="<div class='empty'>No orders received today yet.</div>";}
+  else{tw.innerHTML=todays.map(buildCard).join("");tw.removeEventListener("click",handleActions);tw.addEventListener("click",handleActions);}
+  var rec=orders.slice(0,3);
+  var rw=document.getElementById("d-recent");
+  if(rec.length===0){rw.innerHTML="<div class='empty'>No orders yet.</div>";}
+  else{rw.innerHTML=rec.map(buildCard).join("");rw.removeEventListener("click",handleActions);rw.addEventListener("click",handleActions);}
+}
+
+function renderOrders(){
+  var orders=loadOrders();
+  if(activeFilter!=="all") orders=orders.filter(function(o){return o.status===activeFilter;});
+  var c=document.getElementById("orders-list");
+  if(orders.length===0){c.innerHTML="<div class='empty'>No orders here.</div>";return;}
+  c.innerHTML=orders.map(buildCard).join("");
+  c.removeEventListener("click",handleActions);
+  c.addEventListener("click",handleActions);
+}
+
+// PAYMENTS
+function populatePayOrders(){
+  var orders=loadOrders();
+  var sel=document.getElementById("p-order");
+  sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
+    orders.map(function(o){var t=calcFees(o.cost,o.duty);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+}
+document.getElementById("pay-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var orderId=Number(document.getElementById("p-order").value);
+  var amount=Number(document.getElementById("p-amount").value)||0;
+  var method=document.getElementById("p-method").value;
+  var ref=document.getElementById("p-ref").value.trim();
+  if(!orderId||amount<=0){alert("Please select an order and enter the amount.");return;}
+  var pays=loadPays();
+  pays.unshift({id:Date.now(),orderId:orderId,amount:amount,method:method,ref:ref,date:new Date().toISOString()});
+  savePays(pays);
+  document.getElementById("pay-form").reset();
+  renderPayments();
+  renderDashboard();
+});
+function renderPayments(){
+  var pays=loadPays();
+  var orders=loadOrders();
+  var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
+  var totalReceived=0, totalProfit=0;
+  paidOrders.forEach(function(o){
+    var t=calcFees(o.cost,o.duty);
+    totalReceived+=t.total;
+    totalProfit+=t.markup+t.fee;
+  });
+  document.getElementById("p-total").textContent=totalReceived.toLocaleString();
+  document.getElementById("p-profit").textContent=totalProfit.toLocaleString();
+
+  var tx=document.getElementById("tx-list");
+  if(paidOrders.length===0){tx.innerHTML="<div class='empty'>No paid orders yet. Orders appear here once marked Pending Payment or further.</div>";}
+  else{
+    tx.innerHTML=paidOrders.map(function(o){
+      var t=calcFees(o.cost,o.duty);
+      return "<div class='pay-card'>"+
+        "<div class='pay-name'>"+esc(o.name)+" — "+esc(o.item)+"</div>"+
+        "<div class='drow'><span>Amount Sent By Client</span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
+        "<div class='drow'><span>Cost + Duty (pass-through)</span><span>"+fmtXAF(t.cost+t.duty)+"</span></div>"+
+        "<div class='drow'><span><strong>Our Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
+        "<div class='pay-detail'>"+esc(o.ref)+" · "+statusLabel(o.status)+" · "+fmtDate(o.created)+"</div>"+
+      "</div>";
+    }).join("");
+  }
+
+  var c=document.getElementById("pay-list");
+  if(pays.length===0){c.innerHTML="<div class='empty'>No payments logged yet.</div>";return;}
+  c.innerHTML=pays.map(function(p){
+    var o=orders.find(function(x){return x.id===p.orderId;});
+    var oName=o?o.name:"Unknown";
+    var oRef=o?o.ref:"";
+    return "<div class='pay-card'>"+
+      "<div class='pay-name'>"+esc(oName)+"</div>"+
+      "<div class='pay-amt'>"+fmtXAF(p.amount)+"</div>"+
+      "<div class='pay-detail'>"+esc(p.method)+(oRef?" · "+esc(oRef):"")+(p.ref?" · Ref: "+esc(p.ref):"")+"</div>"+
+      "<div class='pay-detail'>"+fmtDate(p.date)+"</div>"+
+    "</div>";
+  }).join("");
+}
+
+// INVOICE
+function populateInvSelect(){
+  var orders=loadOrders();
+  var sel=document.getElementById("inv-select");
+  sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
+    orders.map(function(o){var t=calcFees(o.cost,o.duty);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+}
+document.getElementById("inv-select").addEventListener("change",renderInvoice);
+function renderInvoice(){
+  var id=Number(document.getElementById("inv-select").value);
+  var wrap=document.getElementById("inv-wrap");
+  var o=loadOrders().find(function(x){return x.id===id;});
+  if(!o){wrap.innerHTML="<div class='empty'>Select an order above.</div>";return;}
+  var t=calcFees(o.cost,o.duty);
+  var due=new Date(new Date(o.created).getTime()+3*24*60*60*1000);
+  var shipLine=[o.address,o.quarter,o.city].filter(Boolean).join(", ");
+  wrap.innerHTML="<div class='inv-card'>"+
+    "<div class='inv-top'>"+
+      "<div><div class='inv-logo'>KMDS</div><div class='inv-sub'>The Kingmakers Delivery Service</div><div class='inv-sub'>Limbe, Cameroon</div></div>"+
+      "<div style='text-align:right'><span class='inv-badge'>Invoice</span><div class='inv-meta'>Ref: "+esc(o.ref)+"<br>Date: "+fmtDate(o.created)+"<br>Due: "+fmtDate(due.toISOString())+"</div></div>"+
+    "</div>"+
+    "<div class='inv-bill'>"+
+      "<div><div class='inv-lbl'>Bill To</div><strong>"+esc(o.name)+"</strong>"+
+        (o.phone?"<div style='font-size:12px'>Tel: "+esc(o.phone)+"</div>":"")+
+        (o.wa&&o.wa!==o.phone?"<div style='font-size:12px'>WhatsApp: "+esc(o.wa)+"</div>":"")+
+        (o.email?"<div style='font-size:12px'>"+esc(o.email)+"</div>":"")+
+        (shipLine?"<div style='font-size:12px'>"+esc(shipLine)+"</div>":"")+
+        (o.ship?"<div style='font-size:12px'>Shipping: "+esc(o.ship)+"</div>":"")+
+        (o.pay?"<div style='font-size:12px'>Payment: "+esc(o.pay)+"</div>":"")+
+      "</div><div style='text-align:right'><div class='inv-lbl'>Status</div><strong>"+statusLabel(o.status)+"</strong></div>"+
+    "</div>"+
+    "<table class='itbl'>"+
+      "<tr><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr>"+
+      "<tr><td>"+esc(o.item)+"</td><td>"+(o.qty||1)+"</td><td>"+fmtXAF(t.cost)+"</td><td>"+fmtXAF(t.cost)+"</td></tr>"+
+      "<tr><td colspan='3'>Markup (10% — 1,000 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.markup)+"</td></tr>"+
+      "<tr><td colspan='3'>Service Fee (5% — 500 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.fee)+"</td></tr>"+
+      (t.duty>0?"<tr><td colspan='3'>Customs Duty</td><td>"+fmtXAF(t.duty)+"</td></tr>":"")+
+    "</table>"+
+    "<div class='inv-total'><span>Total Due</span><span>"+fmtXAF(t.total)+"</span></div>"+
+    "<div class='inv-foot'>Payment within 3 days — MTN Mobile Money | Orange Money | Bank Transfer<br>WhatsApp: +237 641 560 868 · Call: +237 676 347 228 · kmdscameroon@gmail.com<br><br>Thank you for trusting KMDS — The Kingmakers Delivery Service</div>"+
+  "</div>";
+}
+document.getElementById("inv-print").addEventListener("click",function(){window.print();});
+document.getElementById("inv-wa").addEventListener("click",function(){
+  var id=Number(document.getElementById("inv-select").value);
+  var o=loadOrders().find(function(x){return x.id===id;});if(!o)return;
+  var t=calcFees(o.cost,o.duty);
+  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\nPayment: MTN MoMo | Orange Money | Bank\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
+  window.open("https://wa.me/237641560868?text="+encodeURIComponent(msg),"_blank");
+});
+
+// SUPPLIERS
+document.getElementById("sup-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("s-name").value.trim();if(!name)return;
+  var sups=loadSup();
+  sups.unshift({id:Date.now(),name:name,plat:document.getElementById("s-plat").value,cat:document.getElementById("s-cat").value.trim(),contact:document.getElementById("s-cont").value.trim()});
+  saveSup(sups);
+  document.getElementById("sup-form").reset();
+  renderSuppliers();
+});
+document.getElementById("sup-list").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-del]");if(!btn)return;
+  saveSup(loadSup().filter(function(s){return s.id!==Number(btn.getAttribute("data-del"));}));
+  renderSuppliers();
+});
+function renderSuppliers(){
+  var sups=loadSup();
+  var c=document.getElementById("sup-list");
+  if(sups.length===0){c.innerHTML="<div class='empty'>No saved suppliers yet.</div>";return;}
+  c.innerHTML=sups.map(function(s){
+    return "<div style='background:var(--panel);border:1px solid var(--line);padding:13px;margin-bottom:10px;'>"+
+      "<div style='color:var(--gold);font-size:14px;'>"+esc(s.name)+"</div>"+
+      (s.plat?"<span style='display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold2);padding:2px 7px;margin-top:5px;'>"+esc(s.plat)+"</span>":"")+
+      (s.cat?"<div style='font-size:12px;color:var(--dim);margin-top:4px;'>"+esc(s.cat)+"</div>":"")+
+      (s.contact?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>"+esc(s.contact)+"</div>":"")+
+      "<div class='card-actions'><button data-del='"+s.id+"' class='danger'>Remove</button></div>"+
+    "</div>";
+  }).join("");
+}
+
+// FREIGHT FORWARDERS & TRACKING
+document.getElementById("fwd-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("fw-name").value.trim();if(!name)return;
+  var fwds=loadFwd();
+  fwds.unshift({
+    id:Date.now(),
+    name:name,
+    phone:document.getElementById("fw-phone").value.trim(),
+    email:document.getElementById("fw-email").value.trim(),
+    notes:document.getElementById("fw-notes").value.trim()
+  });
+  saveFwd(fwds);
+  document.getElementById("fwd-form").reset();
+  renderFreight();
+});
+document.getElementById("fwd-list").addEventListener("click",function(e){
+  var del=e.target.closest("button[data-del]");
+  if(del){
+    saveFwd(loadFwd().filter(function(f){return f.id!==Number(del.getAttribute("data-del"));}));
+    renderFreight();
+    return;
+  }
+  var wa=e.target.closest("button[data-wa]");
+  if(wa){
+    var phone=wa.getAttribute("data-wa").replace(/[^0-9]/g,"");
+    if(!phone)return;
+    window.open("https://wa.me/"+phone,"_blank");
+  }
+});
+function renderFreight(){
+  var fwds=loadFwd();
+  var c=document.getElementById("fwd-list");
+  if(fwds.length===0){c.innerHTML="<div class='empty'>No freight forwarders saved yet.</div>";return;}
+  c.innerHTML=fwds.map(function(f){
+    return "<div style='background:var(--panel);border:1px solid var(--line);padding:13px;margin-bottom:10px;'>"+
+      "<div style='color:var(--gold);font-size:14px;'>"+esc(f.name)+"</div>"+
+      (f.notes?"<div style='font-size:12px;color:var(--dim);margin-top:4px;'>"+esc(f.notes)+"</div>":"")+
+      (f.phone?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>Tel: "+esc(f.phone)+"</div>":"")+
+      (f.email?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>"+esc(f.email)+"</div>":"")+
+      "<div class='card-actions'>"+
+        (f.phone?"<button data-wa='"+esc(f.phone)+"' class='gold'>WhatsApp</button>":"")+
+        (f.phone?"<a href='tel:"+esc(f.phone)+"' style='display:inline-block;background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;text-decoration:none;'>Call</a>":"")+
+        (f.email?"<a href='mailto:"+esc(f.email)+"' style='display:inline-block;background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;text-decoration:none;'>Email</a>":"")+
+        "<button data-del='"+f.id+"' class='danger'>Remove</button>"+
+      "</div>"+
+    "</div>";
+  }).join("");
+}
+document.getElementById("track-btn").addEventListener("click",function(){
+  var num=document.getElementById("track-input").value.trim();
+  if(!num)return;
+  window.open("https://t.17track.net/en#nums="+encodeURIComponent(num),"_blank");
+});
+document.getElementById("track-dhl-btn").addEventListener("click",function(){
+  var num=document.getElementById("track-input").value.trim();
+  if(!num)return;
+  window.open("https://www.dhl.com/global-en/home/tracking.html?tracking-id="+encodeURIComponent(num),"_blank");
+});
+
+// INIT
+bootFromLocalCache();
+renderDashboard();
+renderSuppliers();
+renderFreight();
+
+if(!sb){
+  setSyncStatus("nocloud");
+}else{
+  setSyncStatus("connecting");
+  cloudLoadAll().then(function(){refreshActiveTab();});
+  // Cross-device sync: when any device writes to kmds_kv, all open portals refresh.
+  sb.channel("kmds-sync")
+    .on("postgres_changes",{event:"*",schema:"public",table:"kmds_kv"},function(){
+      cloudLoadAll().then(function(){refreshActiveTab();});
+    })
+    .subscribe();
+}
+
+})();
+</script>
+</body>
+</html>
