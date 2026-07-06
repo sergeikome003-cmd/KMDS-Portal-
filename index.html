@@ -120,6 +120,51 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
 </style>
 </head>
 <body>
+<div id="kmds-lock" style="position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:340px;width:100%;text-align:center;">
+    <div style="width:60px;height:60px;border:1px solid #d4af37;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:13px;letter-spacing:1px;margin:0 auto 20px;">KMDS</div>
+    <h1 style="color:#d4af37;font-size:20px;font-weight:normal;letter-spacing:2px;margin-bottom:6px;font-family:Georgia,serif;">KMDS PORTAL</h1>
+    <p style="color:#8c8c8c;font-size:11px;margin-bottom:24px;letter-spacing:1px;">ENTER PASSWORD TO CONTINUE</p>
+    <input type="password" id="kmds-lock-input" placeholder="Password" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:14px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="off">
+    <button id="kmds-lock-btn" style="width:100%;background:#d4af37;color:#0a0a0a;border:none;padding:14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-family:Georgia,serif;cursor:pointer;">Unlock</button>
+    <p id="kmds-lock-error" style="color:#c0392b;font-size:11px;margin-top:14px;display:none;">Incorrect password. Try again.</p>
+  </div>
+</div>
+<script>
+(function(){
+  var CORRECT_HASH = "8201c02460b33789d3fa27c6560bdf4c1adec961d5c1fcd1d444238cf3c685d3";
+  var lock = document.getElementById('kmds-lock');
+  var input = document.getElementById('kmds-lock-input');
+  var btn = document.getElementById('kmds-lock-btn');
+  var err = document.getElementById('kmds-lock-error');
+
+  async function sha256(msg){
+    var data = new TextEncoder().encode(msg);
+    var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }
+
+  async function tryUnlock(){
+    var val = input.value;
+    var hash = await sha256(val);
+    if(hash === CORRECT_HASH){
+      sessionStorage.setItem('kmds_unlocked','1');
+      lock.style.display='none';
+    } else {
+      err.style.display='block';
+      input.value='';
+      input.focus();
+    }
+  }
+
+  if(sessionStorage.getItem('kmds_unlocked')==='1'){
+    lock.style.display='none';
+  }
+
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ tryUnlock(); } });
+})();
+</script>
 <header>
   <div class="brand">
     <div class="crest">KMDS</div>
