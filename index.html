@@ -16,13 +16,13 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;background:var(--black);}
 .brand{display:flex;align-items:center;gap:10px;}
 .crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
 .brand h1{color:var(--gold);font-size:18px;letter-spacing:2px;font-weight:normal;}
 .brand p{color:var(--dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
-nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);}
-nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
+nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:73px;z-index:99;}
+nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:18px 18px;border-bottom:2px solid transparent;white-space:nowrap;min-height:48px;}
 nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
 main{padding:16px;}
 section{display:none;}
@@ -34,7 +34,7 @@ h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
 .stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
 .stat .n{font-size:28px;color:var(--gold);font-weight:bold;}
 .stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
-.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:14px;margin-bottom:10px;}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:18px;margin-bottom:14px;}
 .card.s-pay{border-left-color:var(--pay);}
 .card.s-ship{border-left-color:var(--ship);}
 .card.s-done{border-left-color:var(--done);}
@@ -48,7 +48,7 @@ h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
 .badge.s-ship{border-color:var(--ship);color:var(--ship);}
 .badge.s-done{border-color:var(--done);color:var(--done);}
 .card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;font-family:inherit;}
+.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;font-family:inherit;min-height:44px;}
 .card-actions button.gold{border-color:var(--gold2);color:var(--gold);}
 .card-actions button.green{border-color:var(--done);color:var(--done);}
 .card-actions button.danger{border-color:#7a2a2a;color:#c45a5a;}
