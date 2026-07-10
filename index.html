@@ -16,13 +16,13 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
-header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;background:var(--black);}
+header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
 .brand{display:flex;align-items:center;gap:10px;}
 .crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
 .brand h1{color:var(--gold);font-size:18px;letter-spacing:2px;font-weight:normal;}
 .brand p{color:var(--dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
-nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:73px;z-index:99;}
-nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:18px 18px;border-bottom:2px solid transparent;white-space:nowrap;min-height:48px;}
+nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);}
+nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
 nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
 main{padding:16px;}
 section{display:none;}
@@ -34,7 +34,7 @@ h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
 .stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
 .stat .n{font-size:28px;color:var(--gold);font-weight:bold;}
 .stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
-.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:18px;margin-bottom:14px;}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:14px;margin-bottom:10px;}
 .card.s-pay{border-left-color:var(--pay);}
 .card.s-ship{border-left-color:var(--ship);}
 .card.s-done{border-left-color:var(--done);}
@@ -48,7 +48,7 @@ h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
 .badge.s-ship{border-color:var(--ship);color:var(--ship);}
 .badge.s-done{border-color:var(--done);color:var(--done);}
 .card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;font-family:inherit;min-height:44px;}
+.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;font-family:inherit;}
 .card-actions button.gold{border-color:var(--gold2);color:var(--gold);}
 .card-actions button.green{border-color:var(--done);color:var(--done);}
 .card-actions button.danger{border-color:#7a2a2a;color:#c45a5a;}
@@ -508,12 +508,15 @@ function esc(s){var d=document.createElement("div");d.textContent=s||"";return d
 function fmtXAF(n){return Number(n||0).toLocaleString()+" XAF";}
 function fmtDate(iso){if(!iso)return"?";return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 function genRef(){return"KMDS-"+Math.floor(1000+Math.random()*9000);}
-function calcFees(cost,duty){
+var SIZE_FEES={small:2500,medium:3900,large:5300};
+var SIZE_LABELS={small:"Small",medium:"Medium",large:"Large"};
+function calcFees(cost,duty,delivery){
   var c=Number(cost)||0;
   var d=Number(duty)||0;
+  var dl=Number(delivery)||0;
   var mu=Math.round(c*0.10);
   var fe=Math.round(c*0.05);
-  return{cost:c,markup:mu,fee:fe,duty:d,total:c+mu+fe+d};
+  return{cost:c,markup:mu,fee:fe,duty:d,delivery:dl,total:c+mu+fe+d+dl};
 }
 function statusLabel(s){return{new:"New",pay:"Pending Payment",ship:"In Shipment",done:"Completed"}[s]||s;}
 function statusClass(s){return{pay:"s-pay",ship:"s-ship",done:"s-done"}[s]||"";}
@@ -576,7 +579,7 @@ document.getElementById("order-form").addEventListener("submit",function(e){
 // BUILD CARD
 function buildCard(o){
   var sc=statusClass(o.status);
-  var t=calcFees(o.cost,o.duty);
+  var t=calcFees(o.cost,o.duty,o.delivery);
   var totalLine=t.total>0?"<div class='card-total'>Client Pays: "+fmtXAF(t.total)+"</div>":"";
   var trackBadge=o.tracking?"<div style='margin-top:6px;'><span style='border:1px solid var(--gold2);color:var(--gold);font-size:9px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;'>Tracking: "+esc(o.tracking)+"</span></div>":"";
   var actions="";
@@ -596,7 +599,7 @@ function openOrderModal(id){
   var orders=loadOrders();
   var o=orders.find(function(x){return x.id===id;});
   if(!o)return;
-  var t=calcFees(o.cost,o.duty);
+  var t=calcFees(o.cost,o.duty,o.delivery);
   var rates=loadRates();
   var usd=rates.usd>0?Math.round(o.cost/rates.usd):0;
   var cny=rates.cny>0?Math.round(o.cost/rates.cny):0;
@@ -618,6 +621,8 @@ function openOrderModal(id){
     "<div class='drow'><span>Markup (10%)</span><span>"+fmtXAF(t.markup)+"</span></div>"+
     "<div class='drow'><span>Service Fee (5%)</span><span>"+fmtXAF(t.fee)+"</span></div>"+
     "<div class='drow'><span>Customs Duty</span><span>"+fmtXAF(t.duty)+"</span></div>"+
+    (o.size?"<div class='drow'><span>Size</span><span>"+(SIZE_LABELS[o.size]||o.size)+"</span></div>":"")+
+    "<div class='drow'><span>Last Mile Delivery Fee</span><span>"+fmtXAF(t.delivery)+"</span></div>"+
     "<div class='drow'><span><strong>Client Pays</strong></span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
     "<div class='drow'><span><strong>Your Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
     (o.notes?"<div class='drow'><span>Notes</span><span>"+esc(o.notes)+"</span></div>":"")+
@@ -651,13 +656,23 @@ function openOrderModal(id){
         "</div>"+
         "<div class='drow'><span>Cost Price (locked)</span><span>"+fmtXAF(o.cost)+"</span></div>"+
         "<div class='drow'><span>Customs Duty (locked)</span><span>"+fmtXAF(o.duty)+"</span></div>"+
+        "<div class='drow'><span>Delivery Fee (locked)</span><span>"+fmtXAF(o.delivery)+"</span></div>"+
         "<button data-a='save-track' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-top:4px;'>Save Tracking Number</button>"
       :
         "<label style='margin-bottom:6px;'>Update Cost Price (XAF) — what you pay the supplier</label>"+
         "<input type='number' class='cost-inp' data-id='"+o.id+"' value='"+Number(o.cost||0)+"' style='margin-bottom:8px;'>"+
         "<label style='margin-bottom:6px;'>Customs Duty (XAF) — enter based on your own estimate</label>"+
         "<input type='number' class='duty-inp' data-id='"+o.id+"' value='"+Number(o.duty||0)+"' style='margin-bottom:8px;'>"+
-        "<button data-a='save-cost' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;'>Save Tracking, Cost &amp; Duty</button>"
+        "<label style='margin-bottom:6px;'>Package Size — from supplier dimensions</label>"+
+        "<select class='size-inp' data-id='"+o.id+"' style='margin-bottom:8px;'>"+
+          "<option value=''"+(!o.size?" selected":"")+">— Select size —</option>"+
+          "<option value='small'"+(o.size==="small"?" selected":"")+">Small (2,500 XAF)</option>"+
+          "<option value='medium'"+(o.size==="medium"?" selected":"")+">Medium (3,900 XAF)</option>"+
+          "<option value='large'"+(o.size==="large"?" selected":"")+">Large (5,300 XAF)</option>"+
+        "</select>"+
+        "<label style='margin-bottom:6px;'>Last Mile Delivery Fee (XAF) — auto-fills from size, editable</label>"+
+        "<input type='number' class='delivery-inp' data-id='"+o.id+"' value='"+Number(o.delivery||0)+"' style='margin-bottom:8px;'>"+
+        "<button data-a='save-cost' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;'>Save Tracking, Cost, Duty &amp; Delivery</button>"
       )+
     "</div>";
   document.getElementById("order-modal").classList.add("show");
@@ -686,9 +701,13 @@ document.getElementById("om-body").addEventListener("click",function(e){
     if(order.status==="done"){alert("This order is Completed. Financial fields are locked and cannot be changed from here.");return;}
     var inp=document.querySelector(".cost-inp[data-id='"+id+"']");
     var dinp=document.querySelector(".duty-inp[data-id='"+id+"']");
+    var sinp=document.querySelector(".size-inp[data-id='"+id+"']");
+    var delinp=document.querySelector(".delivery-inp[data-id='"+id+"']");
     if(!inp)return;
     order.cost=Number(inp.value)||0;
     order.duty=dinp?(Number(dinp.value)||0):0;
+    order.size=sinp?sinp.value:"";
+    order.delivery=delinp?(Number(delinp.value)||0):0;
     if(tinp)order.tracking=tinp.value.trim();
     saveOrders(orders);
     btn.textContent="Saved!";
@@ -705,6 +724,13 @@ document.getElementById("om-body").addEventListener("click",function(e){
   }
 });
 document.getElementById("om-body").addEventListener("change",function(e){
+  var sizeSel=e.target.closest("select.size-inp");
+  if(sizeSel){
+    var id=Number(sizeSel.getAttribute("data-id"));
+    var delinp=document.querySelector(".delivery-inp[data-id='"+id+"']");
+    if(delinp&&SIZE_FEES[sizeSel.value]!==undefined)delinp.value=SIZE_FEES[sizeSel.value];
+    return;
+  }
   var sel=e.target.closest("select.status-sel");if(!sel)return;
   var id=Number(sel.getAttribute("data-id"));
   var orders=loadOrders();
@@ -771,7 +797,7 @@ function renderDashboard(){
   var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
   var totalPaid=0, totalProfit=0;
   paidOrders.forEach(function(o){
-    var t=calcFees(o.cost,o.duty);
+    var t=calcFees(o.cost,o.duty,o.delivery);
     totalPaid+=t.total;
     totalProfit+=t.markup+t.fee;
   });
@@ -801,7 +827,7 @@ function populatePayOrders(){
   var orders=loadOrders();
   var sel=document.getElementById("p-order");
   sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
-    orders.map(function(o){var t=calcFees(o.cost,o.duty);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+    orders.map(function(o){var t=calcFees(o.cost,o.duty,o.delivery);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
 }
 document.getElementById("pay-form").addEventListener("submit",function(e){
   e.preventDefault();
@@ -823,7 +849,7 @@ function renderPayments(){
   var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
   var totalReceived=0, totalProfit=0;
   paidOrders.forEach(function(o){
-    var t=calcFees(o.cost,o.duty);
+    var t=calcFees(o.cost,o.duty,o.delivery);
     totalReceived+=t.total;
     totalProfit+=t.markup+t.fee;
   });
@@ -834,11 +860,11 @@ function renderPayments(){
   if(paidOrders.length===0){tx.innerHTML="<div class='empty'>No paid orders yet. Orders appear here once marked Pending Payment or further.</div>";}
   else{
     tx.innerHTML=paidOrders.map(function(o){
-      var t=calcFees(o.cost,o.duty);
+      var t=calcFees(o.cost,o.duty,o.delivery);
       return "<div class='pay-card'>"+
         "<div class='pay-name'>"+esc(o.name)+" — "+esc(o.item)+"</div>"+
         "<div class='drow'><span>Amount Sent By Client</span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
-        "<div class='drow'><span>Cost + Duty (pass-through)</span><span>"+fmtXAF(t.cost+t.duty)+"</span></div>"+
+        "<div class='drow'><span>Cost + Duty + Delivery (pass-through)</span><span>"+fmtXAF(t.cost+t.duty+t.delivery)+"</span></div>"+
         "<div class='drow'><span><strong>Our Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
         "<div class='pay-detail'>"+esc(o.ref)+" · "+statusLabel(o.status)+" · "+fmtDate(o.created)+"</div>"+
       "</div>";
@@ -865,7 +891,7 @@ function populateInvSelect(){
   var orders=loadOrders();
   var sel=document.getElementById("inv-select");
   sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
-    orders.map(function(o){var t=calcFees(o.cost,o.duty);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+    orders.map(function(o){var t=calcFees(o.cost,o.duty,o.delivery);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
 }
 document.getElementById("inv-select").addEventListener("change",renderInvoice);
 function renderInvoice(){
@@ -873,7 +899,7 @@ function renderInvoice(){
   var wrap=document.getElementById("inv-wrap");
   var o=loadOrders().find(function(x){return x.id===id;});
   if(!o){wrap.innerHTML="<div class='empty'>Select an order above.</div>";return;}
-  var t=calcFees(o.cost,o.duty);
+  var t=calcFees(o.cost,o.duty,o.delivery);
   var due=new Date(new Date(o.created).getTime()+3*24*60*60*1000);
   var shipLine=[o.address,o.quarter,o.city].filter(Boolean).join(", ");
   wrap.innerHTML="<div class='inv-card'>"+
@@ -897,6 +923,7 @@ function renderInvoice(){
       "<tr><td colspan='3'>Markup (10% — 1,000 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.markup)+"</td></tr>"+
       "<tr><td colspan='3'>Service Fee (5% — 500 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.fee)+"</td></tr>"+
       (t.duty>0?"<tr><td colspan='3'>Customs Duty</td><td>"+fmtXAF(t.duty)+"</td></tr>":"")+
+      (t.delivery>0?"<tr><td colspan='3'>Last Mile Delivery"+(o.size?" ("+(SIZE_LABELS[o.size]||o.size)+")":"")+"</td><td>"+fmtXAF(t.delivery)+"</td></tr>":"")+
     "</table>"+
     "<div class='inv-total'><span>Total Due</span><span>"+fmtXAF(t.total)+"</span></div>"+
     "<div class='inv-foot'>Payment within 3 days — MTN Mobile Money | Orange Money | Bank Transfer<br>WhatsApp: +237 641 560 868 · Call: +237 676 347 228 · kmdscameroon@gmail.com<br><br>Thank you for trusting KMDS — The Kingmakers Delivery Service</div>"+
@@ -906,8 +933,8 @@ document.getElementById("inv-print").addEventListener("click",function(){window.
 document.getElementById("inv-wa").addEventListener("click",function(){
   var id=Number(document.getElementById("inv-select").value);
   var o=loadOrders().find(function(x){return x.id===id;});if(!o)return;
-  var t=calcFees(o.cost,o.duty);
-  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\nPayment: MTN MoMo | Orange Money | Bank\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
+  var t=calcFees(o.cost,o.duty,o.delivery);
+  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+(t.delivery>0?"\nLast Mile Delivery: "+fmtXAF(t.delivery):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\nPayment: MTN MoMo | Orange Money | Bank\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
   window.open("https://wa.me/237641560868?text="+encodeURIComponent(msg),"_blank");
 });
 
