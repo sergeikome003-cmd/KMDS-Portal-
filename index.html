@@ -17,6 +17,8 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
 .topbar{position:sticky;top:0;z-index:100;background:var(--black);}
+body.hide-profit .profit-figure{filter:blur(6px);transition:filter .15s;cursor:pointer;}
+body.hide-profit .profit-figure.revealed{filter:none;}
 header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
 .brand{display:flex;align-items:center;gap:10px;}
 .crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
@@ -182,6 +184,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <button data-tab="invoice">Invoice</button>
   <button data-tab="suppliers">Suppliers</button>
   <button data-tab="freight">Freight & Tracking</button>
+  <button data-tab="settings">Settings</button>
 </nav>
 </div>
 <main>
@@ -199,7 +202,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <div class="stat-grid">
     <div class="stat"><div class="n" id="d-today">0</div><div class="l">Received Today</div></div>
     <div class="stat"><div class="n" id="d-total-paid">0</div><div class="l">Total Received (XAF)</div></div>
-    <div class="stat"><div class="n" id="d-profit">0</div><div class="l">Total Profit (XAF)</div></div>
+    <div class="stat"><div class="n profit-figure" id="d-profit">0</div><div class="l">Total Profit (XAF)</div></div>
   </div>
   <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:8px;">Today's Orders</h2>
   <div id="d-today-list"></div>
@@ -254,7 +257,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <p class="sub">Record and track all client payments</p>
   <div class="pay-summary">
     <div class="pay-stat"><div class="n" id="p-total">0</div><div class="l">Total Received (XAF)</div></div>
-    <div class="pay-stat"><div class="n" id="p-profit">0</div><div class="l">Your Profit (XAF)</div></div>
+    <div class="pay-stat"><div class="n profit-figure" id="p-profit">0</div><div class="l">Your Profit (XAF)</div></div>
   </div>
   <form id="pay-form" style="margin-bottom:24px;">
     <div><label>Select Order *</label><select id="p-order"></select></div>
@@ -400,6 +403,29 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <div id="fwd-list"></div>
 </section>
 
+<!-- SETTINGS -->
+<section id="settings">
+  <h2 class="title">Settings</h2>
+  <p class="sub" style="margin-bottom:12px;">System-wide controls</p>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Exchange Rates</h3>
+  <p class="sub" style="margin-bottom:12px;">Used across every order's currency conversion.</p>
+  <div style="display:flex;gap:10px;margin-bottom:10px;">
+    <div style="flex:1;"><label style="margin-bottom:4px;">XAF per USD</label><input type="number" id="set-rate-usd"></div>
+    <div style="flex:1;"><label style="margin-bottom:4px;">XAF per CNY</label><input type="number" id="set-rate-cny"></div>
+  </div>
+  <button id="set-save-rates" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:24px;">Save Rates</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Privacy</h3>
+  <p class="sub" style="margin-bottom:12px;">Blur profit figures on screen. Tap a blurred number to reveal it briefly — useful if someone else can see your screen.</p>
+  <button id="set-toggle-privacy" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:24px;">Turn On Profit Privacy</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">System Status</h3>
+  <div id="set-sync-status" style="font-size:11px;color:var(--dim);margin-bottom:10px;">Checking…</div>
+  <button id="set-force-refresh" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:10px;">Force Refresh Data</button>
+  <p class="sub" style="font-size:10px;line-height:1.6;">If the portal looks stuck or out of sync after a refresh, the issue is usually on GitHub Pages or Supabase directly — check github.com (Actions tab) or supabase.com (Project dashboard) for a paused project or failed deploy.</p>
+</section>
+
 </main>
 
 <div id="order-modal" class="modal-overlay">
@@ -438,11 +464,14 @@ var ordersCache=[], paysCache=[], supCache=[], ratesCache={usd:610,cny:85}, fwdC
 
 function setSyncStatus(state){
   var el=document.getElementById("sync-status");
-  if(!el)return;
-  if(state==="synced"){el.textContent="\u25CF Cloud Synced";el.style.color="var(--done)";}
-  else if(state==="offline"){el.textContent="\u25CB Offline \u2014 Local Only";el.style.color="#c45a5a";}
-  else if(state==="nocloud"){el.textContent="\u25CB Local Only (cloud not set up)";el.style.color="var(--dim)";}
-  else{el.textContent="Connecting\u2026";el.style.color="var(--dim)";}
+  var el2=document.getElementById("set-sync-status");
+  var txt="",col="";
+  if(state==="synced"){txt="\u25CF Cloud Synced";col="var(--done)";}
+  else if(state==="offline"){txt="\u25CB Offline \u2014 Local Only";col="#c45a5a";}
+  else if(state==="nocloud"){txt="\u25CB Local Only (cloud not set up)";col="var(--dim)";}
+  else{txt="Connecting\u2026";col="var(--dim)";}
+  if(el){el.textContent=txt;el.style.color=col;}
+  if(el2){el2.textContent=txt;el2.style.color=col;}
 }
 
 // In-memory reads are synchronous (rest of the app depends on this) —
@@ -538,6 +567,7 @@ document.getElementById("nav").addEventListener("click",function(e){
   if(tab==="invoice"){populateInvSelect();renderInvoice();}
   if(tab==="suppliers") renderSuppliers();
   if(tab==="freight") renderFreight();
+  if(tab==="settings") fillSettingsRates();
 });
 
 // PASTE
@@ -627,7 +657,7 @@ function openOrderModal(id){
     (o.size?"<div class='drow'><span>Size</span><span>"+(SIZE_LABELS[o.size]||o.size)+"</span></div>":"")+
     "<div class='drow'><span>Last Mile Delivery Fee</span><span>"+fmtXAF(t.delivery)+"</span></div>"+
     "<div class='drow'><span><strong>Client Pays</strong></span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
-    "<div class='drow'><span><strong>Your Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
+    "<div class='drow'><span><strong>Your Profit</strong></span><span class='profit-figure'><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
     (o.notes?"<div class='drow'><span>Notes</span><span>"+esc(o.notes)+"</span></div>":"")+
     "<div class='drow'><span>Date</span><span>"+fmtDate(o.created)+"</span></div>"+
     "<div style='margin-top:14px;border-top:1px solid var(--line);padding-top:12px;'>"+
@@ -1049,6 +1079,56 @@ if(!sb){
     })
     .subscribe();
 }
+
+// ---- Settings tab ----
+var PRIVACY_KEY="kmds_hide_profit_v1";
+function applyPrivacyState(){
+  var on=localStorage.getItem(PRIVACY_KEY)==="1";
+  document.body.classList.toggle("hide-profit",on);
+  var btn=document.getElementById("set-toggle-privacy");
+  if(btn)btn.textContent=on?"Turn Off Profit Privacy":"Turn On Profit Privacy";
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest(".profit-figure");
+  if(t&&document.body.classList.contains("hide-profit")){
+    t.classList.add("revealed");
+    setTimeout(function(){t.classList.remove("revealed");},2500);
+  }
+});
+document.getElementById("set-toggle-privacy").addEventListener("click",function(){
+  var on=localStorage.getItem(PRIVACY_KEY)==="1";
+  localStorage.setItem(PRIVACY_KEY,on?"0":"1");
+  applyPrivacyState();
+});
+function fillSettingsRates(){
+  var r=loadRates();
+  var u=document.getElementById("set-rate-usd"),c=document.getElementById("set-rate-cny");
+  if(u)u.value=r.usd; if(c)c.value=r.cny;
+}
+document.getElementById("set-save-rates").addEventListener("click",function(){
+  var u=Number(document.getElementById("set-rate-usd").value)||1;
+  var c=Number(document.getElementById("set-rate-cny").value)||1;
+  saveRates({usd:u,cny:c});
+  var btn=document.getElementById("set-save-rates");
+  var orig=btn.textContent; btn.textContent="Saved ✓";
+  setTimeout(function(){btn.textContent=orig;},1200);
+});
+document.getElementById("set-force-refresh").addEventListener("click",function(){
+  var btn=document.getElementById("set-force-refresh");
+  var orig=btn.textContent; btn.textContent="Refreshing…";
+  if(sb){
+    setSyncStatus("connecting");
+    cloudLoadAll().then(function(){
+      refreshActiveTab(); fillSettingsRates();
+      btn.textContent="Refreshed ✓"; setTimeout(function(){btn.textContent=orig;},1200);
+    });
+  }else{
+    fillSettingsRates();
+    btn.textContent="No Cloud Connected"; setTimeout(function(){btn.textContent=orig;},1500);
+  }
+});
+applyPrivacyState();
+fillSettingsRates();
 
 })();
 </script>
