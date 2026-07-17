@@ -16,6 +16,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
+.topbar{position:sticky;top:0;z-index:100;background:var(--black);}
 header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
 .brand{display:flex;align-items:center;gap:10px;}
 .crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
@@ -165,6 +166,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ tryUnlock(); } });
 })();
 </script>
+<div class="topbar">
 <header>
   <div class="brand">
     <div class="crest">KMDS</div>
@@ -181,6 +183,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <button data-tab="suppliers">Suppliers</button>
   <button data-tab="freight">Freight & Tracking</button>
 </nav>
+</div>
 <main>
 
 <!-- DASHBOARD -->
