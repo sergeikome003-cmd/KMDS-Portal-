@@ -8,6 +8,14 @@
 <meta http-equiv="Expires" content="0">
 <title>KMDS Procurement Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+var sb = null;
+try{
+  if(window.supabase){ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+}catch(e){ sb=null; }
+</script>
 <style>
 :root{
   --black:#0a0a0a;--panel:#141414;--panel2:#1c1c1c;
@@ -127,45 +135,51 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <div style="max-width:340px;width:100%;text-align:center;">
     <div style="width:60px;height:60px;border:1px solid #d4af37;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:13px;letter-spacing:1px;margin:0 auto 20px;">KMDS</div>
     <h1 style="color:#d4af37;font-size:20px;font-weight:normal;letter-spacing:2px;margin-bottom:6px;font-family:Georgia,serif;">KMDS PORTAL</h1>
-    <p style="color:#8c8c8c;font-size:11px;margin-bottom:24px;letter-spacing:1px;">ENTER PASSWORD TO CONTINUE</p>
-    <input type="password" id="kmds-lock-input" placeholder="Password" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:14px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="off">
-    <button id="kmds-lock-btn" style="width:100%;background:#d4af37;color:#0a0a0a;border:none;padding:14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-family:Georgia,serif;cursor:pointer;">Unlock</button>
-    <p id="kmds-lock-error" style="color:#c0392b;font-size:11px;margin-top:14px;display:none;">Incorrect password. Try again.</p>
+    <p style="color:#8c8c8c;font-size:11px;margin-bottom:24px;letter-spacing:1px;">SIGN IN TO CONTINUE</p>
+    <input type="email" id="kmds-lock-email" placeholder="Email" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:10px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="username">
+    <input type="password" id="kmds-lock-input" placeholder="Password" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:14px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="current-password">
+    <button id="kmds-lock-btn" style="width:100%;background:#d4af37;color:#0a0a0a;border:none;padding:14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-family:Georgia,serif;cursor:pointer;">Sign In</button>
+    <p id="kmds-lock-error" style="color:#c0392b;font-size:11px;margin-top:14px;display:none;">Incorrect email or password.</p>
   </div>
 </div>
 <script>
 (function(){
-  var CORRECT_HASH = "8201c02460b33789d3fa27c6560bdf4c1adec961d5c1fcd1d444238cf3c685d3";
   var lock = document.getElementById('kmds-lock');
+  var emailInput = document.getElementById('kmds-lock-email');
   var input = document.getElementById('kmds-lock-input');
   var btn = document.getElementById('kmds-lock-btn');
   var err = document.getElementById('kmds-lock-error');
 
-  async function sha256(msg){
-    var data = new TextEncoder().encode(msg);
-    var hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-  }
-
   async function tryUnlock(){
-    var val = input.value;
-    var hash = await sha256(val);
-    if(hash === CORRECT_HASH){
-      sessionStorage.setItem('kmds_unlocked','1');
-      lock.style.display='none';
-    } else {
+    if(!sb){ err.textContent="Cannot connect right now. Check your internet and reload."; err.style.display='block'; return; }
+    btn.textContent="Signing In…";
+    var res = await sb.auth.signInWithPassword({ email: emailInput.value.trim(), password: input.value });
+    btn.textContent="Sign In";
+    if(res.error){
+      err.textContent="Incorrect email or password.";
       err.style.display='block';
-      input.value='';
-      input.focus();
+      input.value=''; input.focus();
+    } else {
+      lock.style.display='none';
     }
   }
 
-  if(sessionStorage.getItem('kmds_unlocked')==='1'){
-    lock.style.display='none';
+  async function checkSession(){
+    if(!sb) return;
+    var { data } = await sb.auth.getSession();
+    if(data && data.session){ lock.style.display='none'; }
   }
+  checkSession();
 
   btn.addEventListener('click', tryUnlock);
   input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ tryUnlock(); } });
+  emailInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ input.focus(); } });
+
+  if(sb){
+    sb.auth.onAuthStateChange(function(event){
+      if(event==='SIGNED_OUT'){ lock.style.display='flex'; }
+    });
+  }
 })();
 </script>
 <div class="topbar">
@@ -424,6 +438,9 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <div id="set-sync-status" style="font-size:11px;color:var(--dim);margin-bottom:10px;">Checking…</div>
   <button id="set-force-refresh" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:10px;">Force Refresh Data</button>
   <p class="sub" style="font-size:10px;line-height:1.6;">If the portal looks stuck or out of sync after a refresh, the issue is usually on GitHub Pages or Supabase directly — check github.com (Actions tab) or supabase.com (Project dashboard) for a paused project or failed deploy.</p>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:24px 0 10px;">Account</h3>
+  <button id="set-sign-out" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;">Sign Out</button>
 </section>
 
 </main>
@@ -450,15 +467,7 @@ var RATE_KEY  = "kmds_rates_v1";
 var statusDesc = {new:"Order received, not yet reviewed.",pay:"Customer has paid you \u2014 now pay your supplier.",ship:"Goods paid for and on the way from supplier.",done:"Customer has received their item."};
 
 // ===== CLOUD SYNC (Supabase) =====
-// Fill these in from your Supabase project: Settings -> API
-var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";
-var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
-var sb = null;
-try{
-  if(window.supabase && SUPABASE_URL.indexOf("YOUR_")!==0 && SUPABASE_ANON_KEY.indexOf("YOUR_")!==0){
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-}catch(e){sb=null;}
+// sb client already created at top of file, before the login gate.
 
 var ordersCache=[], paysCache=[], supCache=[], ratesCache={usd:610,cny:85}, fwdCache=[];
 
@@ -1129,6 +1138,11 @@ document.getElementById("set-force-refresh").addEventListener("click",function()
 });
 applyPrivacyState();
 fillSettingsRates();
+var signOutBtn=document.getElementById("set-sign-out");
+if(signOutBtn)signOutBtn.addEventListener("click",function(){
+  if(sb)sb.auth.signOut();
+  location.reload();
+});
 
 })();
 </script>
