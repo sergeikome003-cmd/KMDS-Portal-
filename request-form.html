@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>KMDS — Order Request</title>
 <style>
 :root{
@@ -121,7 +118,9 @@ textarea{resize:vertical;min-height:70px;}
         </select>
       </div>
 
-      <button type="submit" class="btn-gold">Submit Order Request</button>
+      <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Leave empty</label><input type="text" id="f-hp" tabindex="-1" autocomplete="off"></div>
+      <div id="err" style="display:none;color:#e57373;font-size:12px;line-height:1.6;border:1px solid #e57373;padding:10px"></div>
+      <button type="submit" id="submit-btn" class="btn-gold">Submit Order Request</button>
     </form>
 
     <div class="foot">
@@ -133,45 +132,82 @@ textarea{resize:vertical;min-height:70px;}
 
   <div id="success">
     <h2>Your request has been submitted successfully.</h2>
-    <p>We will review your order and contact you within 24 hours with pricing.<br><br>You can also send us your product photo directly on WhatsApp.</p>
+    <p>Your reference: <strong id="ref" style="color:#d4af37"></strong><br><br>We will review your order and contact you within 24 hours with pricing.<br><br>You can also send us your product photo directly on WhatsApp (quote your reference).</p>
     <a id="wa-link" class="btn-gold" style="display:inline-block;text-decoration:none;" href="#" target="_blank">Open WhatsApp</a>
   </div>
 </main>
 
 <script>
-document.getElementById("req-form").addEventListener("submit", function(e){
-  e.preventDefault();
-  var name=document.getElementById("f-name").value.trim();
-  var phone=document.getElementById("f-phone").value.trim();
-  var wa=document.getElementById("f-wa").value.trim();
-  var email=document.getElementById("f-email").value.trim();
-  var city=document.getElementById("f-city").value.trim();
-  var quarter=document.getElementById("f-quarter").value.trim();
-  var address=document.getElementById("f-address").value.trim();
-  var shipping=document.getElementById("f-shipping").value;
-  var item=document.getElementById("f-item").value.trim();
-  var qty=document.getElementById("f-qty").value.trim();
-  var notes=document.getElementById("f-notes").value.trim();
-  var payment=document.getElementById("f-payment").value;
+// ====== FILL THESE TWO LINES (Supabase > Project Settings > API) ======
+var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";      // e.g. https://xxxx.supabase.co
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+// =====================================================================
+var WA_NUMBER = "237641560868";
 
-  var msg="*New KMDS Order Request*\n\n"+
-    "Name: "+name+"\n"+
-    "Phone: "+phone+"\n"+
-    (wa?"WhatsApp: "+wa+"\n":"")+
-    (email?"Email: "+email+"\n":"")+
-    "City: "+city+"\n"+
-    (quarter?"Quarter: "+quarter+"\n":"")+
-    "Address: "+address+"\n"+
-    "Shipping: "+shipping+"\n"+
-    "Payment: "+payment+"\n"+
-    "Item: "+item+"\n"+
-    "Qty: "+qty+"\n"+
-    (notes?"Notes: "+notes+"\n":"");
-
-  document.getElementById("wa-link").href="https://wa.me/237641560868?text="+encodeURIComponent(msg);
-  document.getElementById("form-wrap").style.display="none";
-  document.getElementById("success").style.display="block";
+function $(id){return document.getElementById(id);}
+function makeRef(){
+  var d=new Date(), p=function(n){return ("0"+n).slice(-2);};
+  var rnd=Math.random().toString(36).substr(2,4).toUpperCase();
+  return "KMDS-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+rnd;
+}
+function showSuccess(ref,msg){
+  $("ref").textContent=ref;
+  $("wa-link").href="https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(msg);
+  $("form-wrap").style.display="none";
+  $("success").style.display="block";
   window.scrollTo(0,0);
+}
+$("req-form").addEventListener("submit", function(e){
+  e.preventDefault();
+  if($("f-hp").value){return;} // bot trap
+  var btn=$("submit-btn"), err=$("err");
+  err.style.display="none";
+  var row={
+    ref:makeRef(),
+    name:$("f-name").value.trim(),
+    phone:$("f-phone").value.trim(),
+    whatsapp:$("f-wa").value.trim()||null,
+    email:$("f-email").value.trim()||null,
+    city:$("f-city").value.trim(),
+    quarter:$("f-quarter").value.trim()||null,
+    address:$("f-address").value.trim(),
+    shipping:$("f-shipping").value,
+    payment:$("f-payment").value,
+    item:$("f-item").value.trim(),
+    qty:parseInt($("f-qty").value,10)||1,
+    notes:$("f-notes").value.trim()||null
+  };
+  var msg="*New KMDS Order Request* ("+row.ref+")\n\n"+
+    "Name: "+row.name+"\nPhone: "+row.phone+"\n"+
+    (row.whatsapp?"WhatsApp: "+row.whatsapp+"\n":"")+
+    (row.email?"Email: "+row.email+"\n":"")+
+    "City: "+row.city+"\n"+(row.quarter?"Quarter: "+row.quarter+"\n":"")+
+    "Address: "+row.address+"\nShipping: "+row.shipping+"\nPayment: "+row.payment+"\n"+
+    "Item: "+row.item+"\nQty: "+row.qty+"\n"+(row.notes?"Notes: "+row.notes+"\n":"");
+  btn.disabled=true; btn.textContent="Sending...";
+  var ctrl=("AbortController" in window)?new AbortController():null;
+  var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); },15000);
+  fetch(SUPABASE_URL+"/rest/v1/requests",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":"Bearer "+SUPABASE_ANON_KEY,
+      "Prefer":"return=minimal"
+    },
+    body:JSON.stringify(row),
+    signal:ctrl?ctrl.signal:undefined
+  }).then(function(r){
+    clearTimeout(timer);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    showSuccess(row.ref,msg);
+  }).catch(function(){
+    clearTimeout(timer);
+    // Safety net: never lose an order. Offer WhatsApp instead.
+    btn.disabled=false; btn.textContent="Submit Order Request";
+    err.innerHTML='We could not reach our system just now. Please tap here to send your request on WhatsApp instead: <a style="color:#d4af37" target="_blank" href="https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg)+'">Send on WhatsApp</a>';
+    err.style.display="block";
+  });
 });
 </script>
 </body>

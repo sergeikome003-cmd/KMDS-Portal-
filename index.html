@@ -156,7 +156,9 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
     var res = await sb.auth.signInWithPassword({ email: emailInput.value.trim(), password: input.value });
     btn.textContent="Sign In";
     if(res.error){
-      err.textContent="Incorrect email or password.";
+      var em=(res.error.message||"").toLowerCase();
+      var wrongPw=(res.error.status===400)||em.indexOf("invalid login")>-1||em.indexOf("invalid credentials")>-1;
+      err.textContent=wrongPw?"Incorrect email or password.":"Cannot reach the system ("+(res.error.message||"network error")+"). The Supabase project may be paused or you may be offline.";
       err.style.display='block';
       input.value=''; input.focus();
     } else {
@@ -524,6 +526,38 @@ function cloudLoadAll(){
     setSyncStatus("synced");
     return true;
   });
+}
+
+// ===== INCOMING REQUESTS (from the public request form) =====
+var importing=false;
+function importRequests(){
+  if(!sb||importing)return Promise.resolve();
+  importing=true;
+  return sb.from("requests").select("*").eq("status","new").order("created_at",{ascending:true}).then(function(res){
+    if(res.error||!res.data||!res.data.length){importing=false;return;}
+    var orders=loadOrders().slice();
+    var have={};orders.forEach(function(o){have[o.ref]=1;});
+    var ids=[],added=0;
+    res.data.forEach(function(r){
+      ids.push(r.id);
+      if(have[r.ref])return;
+      orders.unshift({id:Date.now()+added,ref:r.ref,name:r.name,phone:r.phone||"",wa:r.whatsapp||"",email:r.email||"",city:r.city||"",quarter:r.quarter||"",address:r.address||"",ship:r.shipping||"",pay:r.payment||"",item:r.item,qty:String(r.qty||""),cost:0,duty:0,tracking:"",notes:r.notes||"",status:"new",created:r.created_at,source:"request-form"});
+      added++;
+    });
+    if(!added){
+      return sb.from("requests").update({status:"imported"}).in("id",ids).then(function(){importing=false;});
+    }
+    ordersCache=orders;
+    try{localStorage.setItem(ORDER_KEY,JSON.stringify(orders));}catch(e){}
+    // only mark requests as imported once the cloud copy of the orders is saved
+    return sb.from("kmds_kv").upsert({key:"orders",value:orders,updated_at:new Date().toISOString()}).then(function(up){
+      if(up.error){console.error("Import save failed",up.error);setSyncStatus("offline");importing=false;return;}
+      setSyncStatus("synced");
+      return sb.from("requests").update({status:"imported"}).in("id",ids).then(function(){
+        importing=false;refreshActiveTab();
+      });
+    });
+  }).catch(function(e){importing=false;console.error(e);});
 }
 
 function bootFromLocalCache(){
@@ -1080,7 +1114,19 @@ if(!sb){
   setSyncStatus("nocloud");
 }else{
   setSyncStatus("connecting");
-  cloudLoadAll().then(function(){refreshActiveTab();});
+  cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});
+  // Pull in new customer requests when a request arrives, after sign-in, and when the app is reopened
+  sb.channel("kmds-requests")
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"requests"},function(){
+      cloudLoadAll().then(function(ok){if(ok)importRequests();});
+    })
+    .subscribe();
+  sb.auth.onAuthStateChange(function(ev){
+    if(ev==="SIGNED_IN"){cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});}
+  });
+  document.addEventListener("visibilitychange",function(){
+    if(!document.hidden){cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});}
+  });
   // Cross-device sync: when any device writes to kmds_kv, all open portals refresh.
   sb.channel("kmds-sync")
     .on("postgres_changes",{event:"*",schema:"public",table:"kmds_kv"},function(){
