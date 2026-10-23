@@ -145,6 +145,8 @@ var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 var WA_NUMBER = "237641560868";
 
 function $(id){return document.getElementById(id);}
+function titleCase(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase();});}
+$("f-name").addEventListener("blur",function(){this.value=titleCase(this.value);});
 function makeRef(){
   var d=new Date(), p=function(n){return ("0"+n).slice(-2);};
   var rnd=Math.random().toString(36).substr(2,4).toUpperCase();
@@ -164,7 +166,7 @@ $("req-form").addEventListener("submit", function(e){
   err.style.display="none";
   var row={
     ref:makeRef(),
-    name:$("f-name").value.trim(),
+    name:titleCase($("f-name").value),
     phone:$("f-phone").value.trim(),
     whatsapp:$("f-wa").value.trim()||null,
     email:$("f-email").value.trim()||null,

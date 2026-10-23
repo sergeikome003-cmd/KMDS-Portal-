@@ -217,7 +217,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   </div>
   <div class="stat-grid">
     <div class="stat"><div class="n" id="d-today">0</div><div class="l">Received Today</div></div>
-    <div class="stat"><div class="n" id="d-total-paid">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="stat"><div class="n profit-figure" id="d-total-paid">0</div><div class="l">Total Received (XAF)</div></div>
     <div class="stat"><div class="n profit-figure" id="d-profit">0</div><div class="l">Total Profit (XAF)</div></div>
   </div>
   <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:8px;">Today's Orders</h2>
@@ -272,7 +272,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   <h2 class="title">Payments</h2>
   <p class="sub">Record and track all client payments</p>
   <div class="pay-summary">
-    <div class="pay-stat"><div class="n" id="p-total">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="pay-stat"><div class="n profit-figure" id="p-total">0</div><div class="l">Total Received (XAF)</div></div>
     <div class="pay-stat"><div class="n profit-figure" id="p-profit">0</div><div class="l">Your Profit (XAF)</div></div>
   </div>
   <form id="pay-form" style="margin-bottom:24px;">
@@ -432,6 +432,18 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
   </div>
   <button id="set-save-rates" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:24px;">Save Rates</button>
 
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Payment Details (shown on invoices)</h3>
+  <p class="sub" style="margin-bottom:12px;">Write the number and the account name, e.g. 6XX XXX XXX — Serge Ikome. Leave blank any method you do not use.</p>
+  <label style="margin-bottom:4px;">MTN Mobile Money</label><input type="text" id="set-pay-momo" style="margin-bottom:10px;">
+  <label style="margin-bottom:4px;">Orange Money</label><input type="text" id="set-pay-om" style="margin-bottom:10px;">
+  <label style="margin-bottom:4px;">Bank Transfer (bank, account name, number)</label><input type="text" id="set-pay-bank" style="margin-bottom:10px;">
+  <button id="set-save-pay" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:24px;">Save Payment Details</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Backup</h3>
+  <p class="sub" style="margin-bottom:12px;">Download a copy of all your data to your phone. Do this at least once a week.</p>
+  <button id="set-backup-json" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:10px;">Download Full Backup</button>
+  <button id="set-backup-csv" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:24px;">Download Orders (spreadsheet)</button>
+
   <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Privacy</h3>
   <p class="sub" style="margin-bottom:12px;">Blur profit figures on screen. Tap a blurred number to reveal it briefly — useful if someone else can see your screen.</p>
   <button id="set-toggle-privacy" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:24px;">Turn On Profit Privacy</button>
@@ -466,6 +478,8 @@ var SUP_KEY   = "kmds_sup_v2";
 var FWD_KEY   = "kmds_fwd_v1";
 var activeFilter = "all";
 var RATE_KEY  = "kmds_rates_v1";
+var PAYDET_KEY = "kmds_paydetails_v1";
+var payDetCache = {momo:"",om:"",bank:""};
 var statusDesc = {new:"Order received, not yet reviewed.",pay:"Customer has paid you \u2014 now pay your supplier.",ship:"Goods paid for and on the way from supplier.",done:"Customer has received their item."};
 
 // ===== CLOUD SYNC (Supabase) =====
@@ -497,6 +511,7 @@ function saveOrders(l){ordersCache=l;localStorage.setItem(ORDER_KEY,JSON.stringi
 function savePays(l){paysCache=l;localStorage.setItem(PAY_KEY,JSON.stringify(l));cloudSave("pays",l);}
 function saveSup(l){supCache=l;localStorage.setItem(SUP_KEY,JSON.stringify(l));cloudSave("suppliers",l);}
 function saveRates(r){ratesCache=r;localStorage.setItem(RATE_KEY,JSON.stringify(r));cloudSave("rates",r);}
+function savePayDet(d){payDetCache=d;localStorage.setItem(PAYDET_KEY,JSON.stringify(d));cloudSave("paydetails",d);}
 function saveFwd(l){fwdCache=l;localStorage.setItem(FWD_KEY,JSON.stringify(l));cloudSave("forwarders",l);}
 
 function cloudSave(key,value){
@@ -517,12 +532,14 @@ function cloudLoadAll(){
       if(row.key==="suppliers")supCache=row.value||[];
       if(row.key==="rates")ratesCache=row.value||{usd:610,cny:85};
       if(row.key==="forwarders")fwdCache=row.value||[];
+      if(row.key==="paydetails")payDetCache=row.value||{momo:"",om:"",bank:""};
     });
     localStorage.setItem(ORDER_KEY,JSON.stringify(ordersCache));
     localStorage.setItem(PAY_KEY,JSON.stringify(paysCache));
     localStorage.setItem(SUP_KEY,JSON.stringify(supCache));
     localStorage.setItem(RATE_KEY,JSON.stringify(ratesCache));
     localStorage.setItem(FWD_KEY,JSON.stringify(fwdCache));
+    localStorage.setItem(PAYDET_KEY,JSON.stringify(payDetCache));
     setSyncStatus("synced");
     return true;
   });
@@ -541,7 +558,7 @@ function importRequests(){
     res.data.forEach(function(r){
       ids.push(r.id);
       if(have[r.ref])return;
-      orders.unshift({id:Date.now()+added,ref:r.ref,name:r.name,phone:r.phone||"",wa:r.whatsapp||"",email:r.email||"",city:r.city||"",quarter:r.quarter||"",address:r.address||"",ship:r.shipping||"",pay:r.payment||"",item:r.item,qty:String(r.qty||""),cost:0,duty:0,tracking:"",notes:r.notes||"",status:"new",created:r.created_at,source:"request-form"});
+      orders.unshift({id:Date.now()+added,ref:r.ref,name:titleCase(r.name),phone:r.phone||"",wa:r.whatsapp||"",email:r.email||"",city:r.city||"",quarter:r.quarter||"",address:r.address||"",ship:r.shipping||"",pay:r.payment||"",item:r.item,qty:String(r.qty||""),cost:0,duty:0,tracking:"",notes:r.notes||"",status:"new",created:r.created_at,source:"request-form"});
       added++;
     });
     if(!added){
@@ -566,6 +583,7 @@ function bootFromLocalCache(){
   try{supCache=JSON.parse(localStorage.getItem(SUP_KEY))||[];}catch(e){supCache=[];}
   try{ratesCache=JSON.parse(localStorage.getItem(RATE_KEY))||{usd:610,cny:85};}catch(e){ratesCache={usd:610,cny:85};}
   try{fwdCache=JSON.parse(localStorage.getItem(FWD_KEY))||[];}catch(e){fwdCache=[];}
+  try{payDetCache=JSON.parse(localStorage.getItem(PAYDET_KEY))||{momo:"",om:"",bank:""};}catch(e){payDetCache={momo:"",om:"",bank:""};}
 }
 
 function refreshActiveTab(){
@@ -579,6 +597,14 @@ function refreshActiveTab(){
   if(tab==="freight")renderFreight();
 }
 
+function titleCase(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase();});}
+function payLines(){
+  var p=payDetCache||{},out=[];
+  if(p.momo)out.push("MTN Mobile Money: "+p.momo);
+  if(p.om)out.push("Orange Money: "+p.om);
+  if(p.bank)out.push("Bank Transfer: "+p.bank);
+  return out;
+}
 function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
 function fmtXAF(n){return Number(n||0).toLocaleString()+" XAF";}
 function fmtDate(iso){if(!iso)return"?";return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
@@ -1002,7 +1028,7 @@ function renderInvoice(){
       (t.delivery>0?"<tr><td colspan='3'>Last Mile Delivery"+(o.size?" ("+(SIZE_LABELS[o.size]||o.size)+")":"")+"</td><td>"+fmtXAF(t.delivery)+"</td></tr>":"")+
     "</table>"+
     "<div class='inv-total'><span>Total Due</span><span>"+fmtXAF(t.total)+"</span></div>"+
-    "<div class='inv-foot'>Payment within 3 days — MTN Mobile Money | Orange Money | Bank Transfer<br>WhatsApp: +237 641 560 868 · Call: +237 676 347 228 · kmdscameroon@gmail.com<br><br>Thank you for trusting KMDS — The Kingmakers Delivery Service</div>"+
+    "<div class='inv-foot'><strong style='color:#111'>How to pay (within 3 days)</strong><br>"+(payLines().length?payLines().map(esc).join("<br>")+"<br>Please write <strong>"+esc(o.ref)+"</strong> as your payment reference and send us the confirmation.":"MTN Mobile Money | Orange Money | Bank Transfer — contact us for payment details.")+"<br><br>WhatsApp: +237 641 560 868 · Call: +237 676 347 228 · kmdscameroon@gmail.com<br><br>Thank you for trusting KMDS — The Kingmakers Delivery Service</div>"+
   "</div>";
 }
 document.getElementById("inv-print").addEventListener("click",function(){window.print();});
@@ -1010,7 +1036,7 @@ document.getElementById("inv-wa").addEventListener("click",function(){
   var id=Number(document.getElementById("inv-select").value);
   var o=loadOrders().find(function(x){return x.id===id;});if(!o)return;
   var t=calcFees(o.cost,o.duty,o.delivery);
-  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+(t.delivery>0?"\nLast Mile Delivery: "+fmtXAF(t.delivery):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\nPayment: MTN MoMo | Orange Money | Bank\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
+  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+(t.delivery>0?"\nLast Mile Delivery: "+fmtXAF(t.delivery):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\n*How to pay (within 3 days)*\n"+(payLines().length?payLines().join("\n")+"\nReference: "+o.ref:"MTN MoMo | Orange Money | Bank")+"\n\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
   window.open("https://wa.me/237641560868?text="+encodeURIComponent(msg),"_blank");
 });
 
@@ -1156,6 +1182,9 @@ document.getElementById("set-toggle-privacy").addEventListener("click",function(
   applyPrivacyState();
 });
 function fillSettingsRates(){
+  var pd=payDetCache||{};
+  var a=document.getElementById("set-pay-momo"),b=document.getElementById("set-pay-om"),c2=document.getElementById("set-pay-bank");
+  if(a)a.value=pd.momo||""; if(b)b.value=pd.om||""; if(c2)c2.value=pd.bank||"";
   var r=loadRates();
   var u=document.getElementById("set-rate-usd"),c=document.getElementById("set-rate-cny");
   if(u)u.value=r.usd; if(c)c.value=r.cny;
@@ -1167,6 +1196,28 @@ document.getElementById("set-save-rates").addEventListener("click",function(){
   var btn=document.getElementById("set-save-rates");
   var orig=btn.textContent; btn.textContent="Saved ✓";
   setTimeout(function(){btn.textContent=orig;},1200);
+});
+document.getElementById("set-save-pay").addEventListener("click",function(){
+  savePayDet({momo:document.getElementById("set-pay-momo").value.trim(),om:document.getElementById("set-pay-om").value.trim(),bank:document.getElementById("set-pay-bank").value.trim()});
+  var btn=document.getElementById("set-save-pay");var orig=btn.textContent;btn.textContent="Saved ✓";
+  setTimeout(function(){btn.textContent=orig;},1200);
+});
+function downloadFile(name,text,type){
+  var blob=new Blob([text],{type:type});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1500);
+}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+document.getElementById("set-backup-json").addEventListener("click",function(){
+  var data={exported:new Date().toISOString(),orders:loadOrders(),payments:loadPays(),suppliers:loadSup(),forwarders:loadFwd(),rates:loadRates(),paymentDetails:payDetCache};
+  downloadFile("kmds-backup-"+todayStr()+".json",JSON.stringify(data,null,2),"application/json");
+});
+document.getElementById("set-backup-csv").addEventListener("click",function(){
+  var cols=["ref","created","name","phone","email","city","quarter","address","item","qty","cost","duty","delivery","status","tracking","notes"];
+  function q(v){v=(v===undefined||v===null)?"":String(v);return '"'+v.replace(/"/g,'""')+'"';}
+  var rows=[cols.join(",")].concat(loadOrders().map(function(o){return cols.map(function(c){return q(o[c]);}).join(",");}));
+  downloadFile("kmds-orders-"+todayStr()+".csv","\ufeff"+rows.join("\n"),"text/csv");
 });
 document.getElementById("set-force-refresh").addEventListener("click",function(){
   var btn=document.getElementById("set-force-refresh");
