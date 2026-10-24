@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KMDS Marketplace</title>
+<meta name="description" content="Shops, wholesalers and supermarkets across Cameroon. Browse, enquire, and let KMDS handle delivery.">
+<style>
+:root{--black:#0a0a0a;--panel:#141414;--panel2:#1c1c1c;--gold:#d4af37;--gold2:#a8852b;--text:#f2f2f2;--dim:#9a9a9a;--line:#2a2a2a;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--black);color:var(--text);font-family:Georgia,"Times New Roman",serif;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:#000;border-bottom:1px solid var(--gold2);padding:14px 16px;position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;max-width:1100px;margin:0 auto}
+.crown{color:var(--gold);font-size:22px}
+.brand b{color:var(--gold);letter-spacing:2px;font-size:18px}
+.brand small{color:var(--dim);display:block;font-size:11px;letter-spacing:1px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.hero{padding:22px 16px 6px;max-width:1100px;margin:0 auto}
+.hero h1{font-size:26px;color:#fff}.hero h1 span{color:var(--gold)}
+.hero p{color:var(--dim);font-size:14px;margin-top:6px;max-width:620px}
+.search{display:flex;gap:8px;margin:14px 0 10px}
+.search input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px;font-size:16px}
+.search input:focus,select:focus{outline:none;border-color:var(--gold)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:9px 15px;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
+.lab{font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin:10px 0 2px}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin:8px 0 14px}
+.tabs button{flex:1;background:none;border:none;padding:12px;color:var(--dim);border-bottom:2px solid transparent;cursor:pointer;font-size:15px}
+.tabs button.on{color:var(--gold);border-color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.card:hover{border-color:var(--gold2)}
+.ph{aspect-ratio:1/1;background:var(--panel2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--gold2);font-size:30px}
+.cb{padding:10px 11px 12px}
+.cb h3{font-size:14px;font-weight:normal;line-height:1.3}
+.price{color:var(--gold);font-weight:bold;margin-top:4px}
+.meta{color:var(--dim);font-size:12px;margin-top:3px}
+.tag{display:inline-block;font-size:10px;letter-spacing:1px;text-transform:uppercase;border:1px solid var(--gold2);color:var(--gold);border-radius:4px;padding:1px 6px;margin-top:6px}
+.btn{background:var(--gold);color:#000;border:none;border-radius:10px;padding:13px 16px;font-weight:bold;font-size:15px;cursor:pointer;width:100%}
+.btn.ghost{background:none;border:1px solid var(--gold2);color:var(--gold)}
+.more{margin:18px auto;display:block;max-width:240px}
+.empty{color:var(--dim);text-align:center;padding:40px 10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.open{display:flex}
+.sheet{background:var(--panel);border:1px solid var(--gold2);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:18px}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:16px}}
+.sheet h2{color:var(--gold);font-size:20px;margin-bottom:4px}
+.x{float:right;background:none;border:none;color:var(--dim);font-size:26px;cursor:pointer;line-height:1}
+.gal{display:flex;gap:8px;overflow-x:auto;margin:10px 0}
+.gal img{height:180px;border-radius:10px;border:1px solid var(--line)}
+label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
+.sheet input,.sheet textarea{width:100%;background:var(--black);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:16px}
+.sheet input:focus,.sheet textarea:focus{outline:none;border-color:var(--gold)}
+.note{background:var(--panel2);border-left:3px solid var(--gold);padding:10px 12px;font-size:12.5px;color:var(--dim);margin:12px 0;border-radius:4px}
+.err{color:#ff8a80;font-size:13px;margin-top:8px}
+footer{border-top:1px solid var(--line);color:var(--dim);font-size:12px;text-align:center;padding:22px 16px}
+footer b{color:var(--gold)}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="crown">♛</span><div><b>KMDS MARKETPLACE</b><small>KINGMAKERS DELIVERY SERVICE</small></div></div></header>
+
+<div class="hero">
+  <h1>Shops and suppliers across <span>Cameroon</span></h1>
+  <p>Browse verified shops, wholesalers and supermarkets. Tell us what you want and KMDS connects you, and delivers.</p>
+  <div class="search"><input id="q" type="search" placeholder="Search products or shops..." autocomplete="off"></div>
+  <div class="lab">Region</div><div class="chips" id="regions"></div>
+  <div class="lab">Category</div><div class="chips" id="cats"></div>
+</div>
+
+<div class="wrap">
+  <div class="tabs"><button id="t-prod" class="on">Products</button><button id="t-shop">Shops</button></div>
+  <div id="list" class="grid"></div>
+  <div id="msg" class="empty" style="display:none"></div>
+  <button id="more" class="btn ghost more" style="display:none">Load more</button>
+</div>
+
+<footer><b>KMDS</b> · Kingmakers Delivery Service · Limbe, Cameroon<br>Can't find it? <a id="srcLink" style="color:var(--gold)" target="_blank" rel="noopener">Ask KMDS to source it for you</a></footer>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+var SB="https://qfocanqogkugdyzatjty.supabase.co";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+var WA="237641560868";
+var PAGE=24;
+var REGIONS=["All","Limbe","Buea","Douala","Bamenda","Yaoundé","Other"];
+var CATS=["All","Food & Groceries","Electronics","Fashion","Home & Furniture","Beauty","Building & Hardware","Agriculture","General"];
+var st={tab:"prod",region:"All",cat:"All",q:"",offset:0,busy:false,rows:[]};
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function xaf(n){return Number(n||0).toLocaleString("en-US")+" XAF"}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:KEY,Authorization:"Bearer "+KEY},opt.headers||{});return fetch(SB+"/rest/v1/"+path,opt)}
+function chips(el,arr,key){$(el).innerHTML=arr.map(function(x){return '<button class="chip'+(st[key]===x?' on':'')+'" data-v="'+esc(x)+'">'+esc(x)+'</button>'}).join("")}
+function drawChips(){chips("regions",REGIONS,"region");chips("cats",CATS,"cat")}
+function ilike(q){return "*"+q.replace(/[*,()%]/g," ").trim()+"*"}
+function load(reset){
+  if(st.busy)return;st.busy=true;
+  if(reset){st.offset=0;st.rows=[];$("list").innerHTML=""}
+  var shops=st.tab==="shop",view=shops?"mk_public_sellers":"mk_public_products";
+  var p="select=*&limit="+PAGE+"&offset="+st.offset+"&order="+(shops?"shop_name":"title")+".asc";
+  if(st.region!=="All")p+="&region=eq."+encodeURIComponent(st.region);
+  if(st.cat!=="All"){p+=shops?"&categories=cs.{"+encodeURIComponent('"'+st.cat+'"')+"}":"&category=eq."+encodeURIComponent(st.cat)}
+  if(st.q){var l=ilike(st.q);p+="&or=("+(shops?"shop_name.ilike."+l+",description.ilike."+l:"title.ilike."+l+",shop_name.ilike."+l)+")"}
+  $("msg").style.display="none";
+  api(p).then(function(r){if(!r.ok)throw new Error("x");return r.json()}).then(function(rows){
+    st.rows=st.rows.concat(rows);
+    $("list").insertAdjacentHTML("beforeend",rows.map(shops?shopCard:prodCard).join(""));
+    st.offset+=rows.length;
+    $("more").style.display=rows.length===PAGE?"block":"none";
+    if(!st.rows.length){$("msg").textContent="Nothing here yet. Try another region or category, or ask KMDS to source it for you.";$("msg").style.display="block"}
+  }).catch(function(){$("msg").textContent="The marketplace could not load. Please check your connection and try again.";$("msg").style.display="block"})
+  .then(function(){st.busy=false});
+}
+function img(u,alt){return u?'<div class="ph" role="img" aria-label="'+esc(alt)+'" style="background-image:url(\''+encodeURI(u)+'\')"></div>':'<div class="ph">♛</div>'}
+function prodCard(p){var im=(p.image_urls||[])[0];return '<div class="card" data-p="'+esc(p.id)+'">'+img(im,p.title)+'<div class="cb"><h3>'+esc(p.title)+'</h3><div class="price">'+xaf(p.price_xaf)+'</div><div class="meta">'+esc(p.shop_name)+' · '+esc(p.town_area||p.region)+'</div>'+(p.in_stock?'':'<span class="tag">Out of stock</span>')+'</div></div>'}
+function shopCard(s){return '<div class="card" data-s="'+esc(s.id)+'">'+img(s.logo_url||s.cover_url,s.shop_name)+'<div class="cb"><h3>'+esc(s.shop_name)+'</h3><div class="meta">'+esc(s.town_area||s.region)+'</div><span class="tag">'+esc(s.seller_type)+'</span></div></div>'}
+function open_(h){$("sheet").innerHTML='<button class="x" aria-label="Close" onclick="closeM()">×</button>'+h;$("modal").classList.add("open")}
+function closeM(){$("modal").classList.remove("open")}
+function showProduct(id){
+  var p=st.rows.find(function(r){return r.id===id});if(!p)return;
+  var g=(p.image_urls||[]).map(function(u){return '<img loading="lazy" src="'+encodeURI(u)+'" alt="'+esc(p.title)+'">'}).join("");
+  open_('<h2>'+esc(p.title)+'</h2><div class="price" style="font-size:20px">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+(g?'<div class="gal">'+g+'</div>':'')+
+   '<p style="margin:8px 0">'+esc(p.description||"")+'</p><div class="meta">Sold by <b style="color:#fff">'+esc(p.shop_name)+'</b> · '+esc(p.town_area||p.region)+'</div>'+
+   '<button class="btn" style="margin-top:14px" onclick="enquire(\''+esc(p.id)+'\')">Enquire through KMDS</button>'+
+   '<button class="btn ghost" style="margin-top:8px" onclick="showShop(\''+esc(p.seller_id)+'\')">View shop</button>');
+}
+function showShop(id){
+  api("mk_public_sellers?id=eq."+encodeURIComponent(id)).then(function(r){return r.json()}).then(function(a){
+    var s=a[0];if(!s)return;
+    api("mk_public_products?seller_id=eq."+encodeURIComponent(id)+"&limit=24&order=title.asc").then(function(r){return r.json()}).then(function(ps){
+      st.rows=st.rows.concat(ps);
+      open_('<h2>'+esc(s.shop_name)+'</h2><div class="meta">'+esc(s.seller_type)+' · '+esc(s.town_area||s.region)+(s.address?' · '+esc(s.address):'')+'</div>'+
+        (s.cover_url?'<div class="gal"><img loading="lazy" src="'+encodeURI(s.cover_url)+'" alt=""></div>':'')+'<p style="margin:10px 0">'+esc(s.description||"")+'</p>'+
+        '<div class="lab">Products</div><div class="grid" style="grid-template-columns:repeat(2,1fr)">'+(ps.length?ps.map(prodCard).join(""):'<div class="meta">No products listed yet.</div>')+'</div>');
+    });
+  });
+}
+function enquire(pid){
+  var p=st.rows.find(function(r){return r.id===pid});if(!p)return;
+  open_('<h2>Enquire through KMDS</h2><div class="meta">'+esc(p.title)+' · '+xaf(p.price_xaf)+' · '+esc(p.shop_name)+'</div>'+
+   '<label>Your name</label><input id="e-name" autocomplete="name"><label>Phone / WhatsApp number</label><input id="e-phone" type="tel" autocomplete="tel" placeholder="6XX XXX XXX">'+
+   '<label>Quantity</label><input id="e-qty" type="number" min="1" value="1"><label>Delivery location</label><input id="e-loc" placeholder="Town and quarter">'+
+   '<label>Message (optional)</label><textarea id="e-msg" rows="2"></textarea>'+
+   '<div class="note">This is an enquiry, not a confirmed order. KMDS will confirm the price, availability and delivery with you on WhatsApp. Never pay anyone before KMDS confirms your order.</div>'+
+   '<button class="btn" id="e-go" onclick="sendEnq(\''+esc(pid)+'\')">Continue on WhatsApp</button><div class="err" id="e-err"></div>');
+}
+function mkRef(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];var d=new Date();return "KMDS-MK-"+String(d.getFullYear()).slice(2)+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+s}
+function title(s){return s.trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase()})}
+function sendEnq(pid){
+  var p=st.rows.find(function(r){return r.id===pid});
+  var name=title($("e-name").value),phone=$("e-phone").value.trim(),qty=parseInt($("e-qty").value,10)||1,loc=$("e-loc").value.trim(),msg=$("e-msg").value.trim();
+  var er=$("e-err");er.textContent="";
+  if(name.length<2||phone.replace(/\D/g,"").length<8){er.textContent="Please enter your name and a valid phone number.";return}
+  var ref=mkRef();$("e-go").disabled=true;$("e-go").textContent="Please wait...";
+  var text="Hello KMDS Marketplace.\nRef: "+ref+"\nI want: "+p.title+" x"+qty+" ("+xaf(p.price_xaf)+" each)\nShop: "+p.shop_name+" ("+(p.town_area||p.region)+")\nName: "+name+"\nPhone: "+phone+(loc?"\nDeliver to: "+loc:"")+(msg?"\nNote: "+msg:"");
+  var url="https://wa.me/"+WA+"?text="+encodeURIComponent(text);
+  api("mk_enquiries",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({ref:ref,seller_id:p.seller_id,product_id:p.id,product_title:p.title,qty:qty,buyer_name:name,buyer_phone:phone,delivery_location:loc||null,message:msg||null})})
+   .then(function(r){if(!r.ok)throw new Error("x");closeM();window.location.href=url})
+   .catch(function(){$("e-go").disabled=false;$("e-go").textContent="Continue on WhatsApp";er.innerHTML='We could not save your enquiry. You can still <a style="color:var(--gold)" target="_blank" rel="noopener" href="'+url+'">send it on WhatsApp</a>.'});
+}
+document.addEventListener("click",function(e){
+  var c=e.target.closest(".chip");
+  if(c){var par=c.parentNode.id,v=c.getAttribute("data-v");st[par==="regions"?"region":"cat"]=v;drawChips();load(true);return}
+  var card=e.target.closest(".card");
+  if(card&&card.getAttribute("data-p"))showProduct(card.getAttribute("data-p"));
+  else if(card&&card.getAttribute("data-s"))showShop(card.getAttribute("data-s"));
+  if(e.target===$("modal"))closeM();
+});
+$("t-prod").onclick=function(){st.tab="prod";$("t-prod").className="on";$("t-shop").className="";load(true)};
+$("t-shop").onclick=function(){st.tab="shop";$("t-shop").className="on";$("t-prod").className="";load(true)};
+$("more").onclick=function(){load(false)};
+var tm;$("q").addEventListener("input",function(){clearTimeout(tm);tm=setTimeout(function(){st.q=$("q").value;load(true)},350)});
+$("srcLink").href="https://wa.me/"+WA+"?text="+encodeURIComponent("Hello KMDS, I could not find a product on the marketplace. Please help me source it: ");
+drawChips();load(true);
+</script>
+</body>
+</html>
