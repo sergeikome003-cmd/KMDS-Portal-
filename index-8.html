@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>KMDS Procurement Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+var sb = null;
+try{
+  if(window.supabase){ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+}catch(e){ sb=null; }
+</script>
+<style>
+:root{
+  --black:#0a0a0a;--panel:#141414;--panel2:#1c1c1c;
+  --gold:#d4af37;--gold2:#a8852b;--text:#eaeaea;--dim:#8c8c8c;--line:#2a2a2a;
+  --new:#3b82c4;--pay:#c47a1f;--ship:#16a085;--done:#2f9e5c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
+.topbar{position:sticky;top:0;z-index:100;background:var(--black);}
+body.hide-profit .profit-figure{filter:blur(6px);transition:filter .15s;cursor:pointer;}
+body.hide-profit .profit-figure.revealed{filter:none;}
+header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+.brand{display:flex;align-items:center;gap:10px;}
+.crest{width:40px;height:40px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:10px;letter-spacing:1px;}
+.brand h1{color:var(--gold);font-size:18px;letter-spacing:2px;font-weight:normal;}
+.brand p{color:var(--dim);font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--line);}
+nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
+nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
+main{padding:16px;}
+section{display:none;}
+section.active{display:block;animation:fd .2s ease;}
+@keyframes fd{from{opacity:0}to{opacity:1}}
+h2.title{color:var(--gold);font-size:20px;font-weight:normal;margin-bottom:4px;}
+.sub{color:var(--dim);font-size:11px;margin-bottom:16px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
+.stat .n{font-size:28px;color:var(--gold);font-weight:bold;}
+.stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);padding:14px;margin-bottom:10px;}
+.card.s-pay{border-left-color:var(--pay);}
+.card.s-ship{border-left-color:var(--ship);}
+.card.s-done{border-left-color:var(--done);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card-ref{color:var(--gold);font-size:12px;}
+.card-name{font-size:15px;font-weight:bold;margin-top:2px;}
+.card-item{font-size:12px;color:var(--dim);margin-top:2px;}
+.card-total{font-size:13px;color:var(--gold);margin-top:6px;font-weight:bold;}
+.badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border:1px solid var(--new);color:var(--new);white-space:nowrap;flex-shrink:0;}
+.badge.s-pay{border-color:var(--pay);color:var(--pay);}
+.badge.s-ship{border-color:var(--ship);color:var(--ship);}
+.badge.s-done{border-color:var(--done);color:var(--done);}
+.card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.card-actions button{background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;font-family:inherit;}
+.card-actions button.gold{border-color:var(--gold2);color:var(--gold);}
+.card-actions button.green{border-color:var(--done);color:var(--done);}
+.card-actions button.danger{border-color:#7a2a2a;color:#c45a5a;}
+.detail-box{background:var(--panel2);border:1px solid var(--line);padding:12px;margin-top:10px;display:none;}
+.detail-box.open{display:block;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;padding:16px;overflow-y:auto;}
+.modal-overlay.show{display:block;}
+.modal-box{background:var(--panel);border:1px solid var(--gold2);max-width:520px;margin:20px auto;padding:18px;}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px;}
+.modal-head #om-title{color:var(--gold);font-size:16px;letter-spacing:1px;}
+.modal-close{background:none;border:1px solid var(--line);color:var(--dim);font-size:18px;line-height:1;padding:4px 10px;font-family:inherit;}
+.modal-close:active{color:var(--gold);}
+.drow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);}
+.drow:last-child{border-bottom:none;}
+.drow span:first-child{color:var(--dim);}
+.fee-note{background:var(--panel2);border:1px solid var(--gold2);padding:12px;margin-bottom:16px;font-size:12px;line-height:1.7;color:var(--dim);}
+.fee-note strong{color:var(--gold);}
+form{display:flex;flex-direction:column;gap:12px;}
+label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px;}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:12px;font-family:inherit;font-size:14px;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);}
+.btn-gold{background:var(--gold);color:var(--black);border:none;padding:14px;font-family:inherit;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;width:100%;}
+.btn-out{background:none;border:1px solid var(--line);color:var(--dim);padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-top:8px;}
+.empty{text-align:center;padding:36px 20px;color:var(--dim);font-size:13px;border:1px dashed var(--line);}
+.filter-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;}
+.filter-row button{background:none;border:1px solid var(--line);color:var(--dim);padding:7px 12px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:inherit;white-space:nowrap;}
+.filter-row button.active{border-color:var(--gold);color:var(--gold);}
+.paste-area{background:var(--panel2);border:1px solid var(--gold2);padding:14px;margin-bottom:20px;}
+.paste-area p{color:var(--dim);font-size:12px;margin-bottom:10px;line-height:1.6;}
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:var(--dim);font-size:11px;letter-spacing:1px;}
+.divider::before,.divider::after{content:"";flex:1;border-top:1px solid var(--line);}
+/* PLATFORM GRID */
+.plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.plat-btn{background:var(--panel);border:1px solid var(--line);padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;text-decoration:none;}
+.plat-btn:hover{border-color:var(--gold2);}
+.plat-icon{font-size:22px;}
+.plat-name{color:var(--gold);font-size:11px;letter-spacing:1px;text-transform:uppercase;text-align:center;}
+.plat-desc{color:var(--dim);font-size:10px;text-align:center;}
+/* PAYMENTS */
+.pay-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.pay-stat{background:var(--panel);border:1px solid var(--line);padding:14px;}
+.pay-stat .n{font-size:22px;color:var(--gold);font-weight:bold;}
+.pay-stat .l{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.pay-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--done);padding:13px;margin-bottom:10px;}
+.pay-name{font-size:14px;font-weight:bold;color:var(--text);}
+.pay-amt{font-size:18px;color:var(--gold);font-weight:bold;margin-top:4px;}
+.pay-detail{font-size:11px;color:var(--dim);margin-top:3px;}
+/* INVOICE */
+.inv-card{background:#fff;color:#111;padding:20px;font-family:Georgia,serif;}
+.inv-top{display:flex;justify-content:space-between;border-bottom:2px solid #d4af37;padding-bottom:12px;margin-bottom:12px;}
+.inv-logo{font-size:20px;font-weight:bold;letter-spacing:1px;}
+.inv-sub{font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
+.inv-badge{background:#111;color:#d4af37;font-size:9px;letter-spacing:2px;padding:5px 10px;text-transform:uppercase;}
+.inv-meta{font-size:10px;color:#555;text-align:right;margin-top:6px;line-height:1.6;}
+.inv-bill{display:flex;justify-content:space-between;margin-bottom:14px;}
+.inv-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:3px;}
+table.itbl{width:100%;border-collapse:collapse;margin-bottom:14px;}
+table.itbl th{background:#111;color:#fff;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:7px;text-align:left;}
+table.itbl th:last-child,table.itbl td:last-child{text-align:right;}
+table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
+.inv-total{display:flex;justify-content:space-between;font-size:15px;font-weight:bold;padding-top:8px;border-top:2px solid #111;}
+.inv-foot{text-align:center;font-size:10px;color:#777;margin-top:16px;line-height:1.8;}
+@media print{
+  header,nav,.card-actions,.filter-row,#inv-select,label+select,.btn-gold,.btn-out,.paste-area,.divider,p.sub,h2.title+p{display:none!important;}
+  body{padding:0;background:#fff;}
+  section{display:none!important;}
+  section#invoice{display:block!important;}
+}
+</style>
+</head>
+<body>
+<div id="kmds-lock" style="position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:340px;width:100%;text-align:center;">
+    <div style="width:60px;height:60px;border:1px solid #d4af37;display:flex;align-items:center;justify-content:center;color:#d4af37;font-size:13px;letter-spacing:1px;margin:0 auto 20px;">KMDS</div>
+    <h1 style="color:#d4af37;font-size:20px;font-weight:normal;letter-spacing:2px;margin-bottom:6px;font-family:Georgia,serif;">KMDS PORTAL</h1>
+    <p style="color:#8c8c8c;font-size:11px;margin-bottom:24px;letter-spacing:1px;">SIGN IN TO CONTINUE</p>
+    <input type="email" id="kmds-lock-email" placeholder="Email" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:10px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="username">
+    <input type="password" id="kmds-lock-input" placeholder="Password" style="width:100%;background:#141414;border:1px solid #2a2a2a;color:#eaeaea;padding:14px;font-size:15px;margin-bottom:14px;box-sizing:border-box;font-family:Georgia,serif;" autocomplete="current-password">
+    <button id="kmds-lock-btn" style="width:100%;background:#d4af37;color:#0a0a0a;border:none;padding:14px;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-family:Georgia,serif;cursor:pointer;">Sign In</button>
+    <p id="kmds-lock-error" style="color:#c0392b;font-size:11px;margin-top:14px;display:none;">Incorrect email or password.</p>
+  </div>
+</div>
+<script>
+(function(){
+  var lock = document.getElementById('kmds-lock');
+  var emailInput = document.getElementById('kmds-lock-email');
+  var input = document.getElementById('kmds-lock-input');
+  var btn = document.getElementById('kmds-lock-btn');
+  var err = document.getElementById('kmds-lock-error');
+
+  async function tryUnlock(){
+    if(!sb){ err.textContent="Cannot connect right now. Check your internet and reload."; err.style.display='block'; return; }
+    btn.textContent="Signing In…";
+    var res = await sb.auth.signInWithPassword({ email: emailInput.value.trim(), password: input.value });
+    btn.textContent="Sign In";
+    if(res.error){
+      var em=(res.error.message||"").toLowerCase();
+      var wrongPw=(res.error.status===400)||em.indexOf("invalid login")>-1||em.indexOf("invalid credentials")>-1;
+      err.textContent=wrongPw?"Incorrect email or password.":"Cannot reach the system ("+(res.error.message||"network error")+"). The Supabase project may be paused or you may be offline.";
+      err.style.display='block';
+      input.value=''; input.focus();
+    } else {
+      lock.style.display='none';
+    }
+  }
+
+  async function checkSession(){
+    if(!sb) return;
+    var { data } = await sb.auth.getSession();
+    if(data && data.session){ lock.style.display='none'; }
+  }
+  checkSession();
+
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ tryUnlock(); } });
+  emailInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ input.focus(); } });
+
+  if(sb){
+    sb.auth.onAuthStateChange(function(event){
+      if(event==='SIGNED_OUT'){ lock.style.display='flex'; }
+    });
+  }
+})();
+</script>
+<div class="topbar">
+<header>
+  <div class="brand">
+    <div class="crest">KMDS</div>
+    <div><h1>KMDS</h1><p>Procurement Portal</p></div>
+  </div>
+  <div id="sync-status" style="font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;text-align:right;">Connecting…</div>
+</header>
+<nav id="nav">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="neworder">New Order</button>
+  <button data-tab="orders">Orders</button>
+  <button data-tab="payments">Payments</button>
+  <button data-tab="invoice">Invoice</button>
+  <button data-tab="suppliers">Suppliers</button>
+  <button data-tab="freight">Freight & Tracking</button>
+  <button data-tab="trade">Import/Export</button>
+  <button data-tab="market">Marketplace</button>
+  <button data-tab="mk">Shop Admin</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+</div>
+<main>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="active">
+  <h2 class="title">Overview</h2>
+  <p class="sub">Live business snapshot</p>
+  <div class="stat-grid">
+    <div class="stat"><div class="n" id="d-new">0</div><div class="l">New Orders</div></div>
+    <div class="stat"><div class="n" id="d-pay">0</div><div class="l">Pending Payment</div></div>
+    <div class="stat" id="stat-ship-block" style="cursor:pointer;"><div class="n" id="d-ship">0</div><div class="l">In Shipment — Tap to View</div></div>
+    <div class="stat"><div class="n" id="d-done">0</div><div class="l">Completed</div></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat"><div class="n" id="d-today">0</div><div class="l">Received Today</div></div>
+    <div class="stat"><div class="n profit-figure" id="d-total-paid">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="stat"><div class="n profit-figure" id="d-profit">0</div><div class="l">Total Profit (XAF)</div></div>
+  </div>
+  <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:8px;">Today's Orders</h2>
+  <div id="d-today-list"></div>
+  <h2 class="title" style="font-size:15px;margin-top:20px;margin-bottom:10px;">Recent Orders</h2>
+  <div id="d-recent"></div>
+</section>
+
+<!-- NEW ORDER -->
+<section id="neworder">
+  <h2 class="title">New Order</h2>
+  <p class="sub">Paste from WhatsApp or enter manually</p>
+  <div class="fee-note">
+    <strong>Standard KMDS Fees (automatic):</strong><br>
+    Markup: 1,000 XAF per 10,000 XAF (10%)<br>
+    Service Fee: 500 XAF per 10,000 XAF (5%)
+  </div>
+  <div class="paste-area">
+    <p>Copy the customer's WhatsApp message and paste it here — order is created instantly.</p>
+    <textarea id="paste-box" style="height:90px;margin-bottom:10px;" placeholder="Paste WhatsApp message here..."></textarea>
+    <button class="btn-gold" id="paste-btn">Create Order from Paste</button>
+  </div>
+  <div class="divider">OR ENTER MANUALLY</div>
+  <form id="order-form">
+    <div><label>Client Name *</label><input type="text" id="f-name" required placeholder="e.g. Mballa Jean"></div>
+    <div><label>Phone</label><input type="tel" id="f-phone" placeholder="e.g. 677 000 000"></div>
+    <div><label>Item / Product *</label><textarea id="f-item" rows="2" required placeholder="e.g. 50 iPhone 14 cases, black"></textarea></div>
+    <div><label>Quantity</label><input type="text" id="f-qty" placeholder="e.g. 50 units"></div>
+    <div><label>Cost Price (XAF) — what you pay the supplier</label><input type="number" id="f-cost" placeholder="e.g. 150000"></div>
+    <div><label>Tracking Number (optional)</label><input type="text" id="f-track" placeholder="e.g. 1Z999AA10123456784"></div>
+    <div><label>Notes</label><textarea id="f-notes" rows="2" placeholder="Optional..."></textarea></div>
+    <button type="submit" class="btn-gold">Add New Order</button>
+  </form>
+</section>
+
+<!-- ORDERS -->
+<section id="orders">
+  <h2 class="title">Orders</h2>
+  <p class="sub">Manage your order pipeline</p>
+  <div class="filter-row" id="filter-row">
+    <button data-f="all" class="active">All</button>
+    <button data-f="new">New</button>
+    <button data-f="pay">Pending Payment</button>
+    <button data-f="ship">In Shipment</button>
+    <button data-f="done">Completed</button>
+  </div>
+  <div id="orders-list"></div>
+</section>
+
+<!-- PAYMENTS -->
+<section id="payments">
+  <h2 class="title">Payments</h2>
+  <p class="sub">Record and track all client payments</p>
+  <div class="pay-summary">
+    <div class="pay-stat"><div class="n profit-figure" id="p-total">0</div><div class="l">Total Received (XAF)</div></div>
+    <div class="pay-stat"><div class="n profit-figure" id="p-profit">0</div><div class="l">Your Profit (XAF)</div></div>
+  </div>
+  <form id="pay-form" style="margin-bottom:24px;">
+    <div><label>Select Order *</label><select id="p-order"></select></div>
+    <div><label>Amount Paid (XAF) *</label><input type="number" id="p-amount" required placeholder="e.g. 172500"></div>
+    <div><label>Payment Method</label>
+      <select id="p-method">
+        <option>MTN Mobile Money</option>
+        <option>Orange Money</option>
+        <option>Bank Transfer</option>
+      </select>
+    </div>
+    <div><label>Transaction Reference (optional)</label><input type="text" id="p-ref" placeholder="e.g. MTN ref: 12345678"></div>
+    <button type="submit" class="btn-gold">Record Payment</button>
+  </form>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Transactions — Amount Sent vs Your Profit</h2>
+  <p class="sub" style="margin-bottom:12px;">Auto-generated from every order once it's Pending Payment or further along — no manual entry needed.</p>
+  <div id="tx-list" style="margin-bottom:24px;"></div>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Payment History</h2>
+  <p class="sub" style="margin-bottom:12px;">Optional — log the method/reference for your own records.</p>
+  <div id="pay-list"></div>
+</section>
+
+<!-- INVOICE -->
+<section id="invoice">
+  <h2 class="title">Invoice Generator</h2>
+  <p class="sub">Generate and share professional invoices</p>
+  <div style="margin-bottom:14px;">
+    <label>Select Order</label>
+    <select id="inv-select"></select>
+  </div>
+  <div id="inv-wrap"></div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">
+    <button class="btn-gold" id="inv-print">Print / Save as PDF</button>
+    <button class="btn-out" id="inv-wa">Send via WhatsApp</button>
+  </div>
+</section>
+
+<!-- SUPPLIERS -->
+<section id="suppliers">
+  <h2 class="title">Suppliers</h2>
+  <p class="sub">Tap a platform to open it directly</p>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://www.alibaba.com" target="_blank">
+      <div class="plat-icon">🛒</div>
+      <div class="plat-name">Alibaba</div>
+      <div class="plat-desc">China wholesale B2B</div>
+    </a>
+    <a class="plat-btn" href="https://www.1688.com" target="_blank">
+      <div class="plat-icon">🏭</div>
+      <div class="plat-name">1688</div>
+      <div class="plat-desc">China domestic prices</div>
+    </a>
+    <a class="plat-btn" href="https://www.taobao.com" target="_blank">
+      <div class="plat-icon">🛍</div>
+      <div class="plat-name">Taobao</div>
+      <div class="plat-desc">China retail market</div>
+    </a>
+    <a class="plat-btn" href="https://www.aliexpress.com" target="_blank">
+      <div class="plat-icon">✈</div>
+      <div class="plat-name">AliExpress</div>
+      <div class="plat-desc">Ships internationally</div>
+    </a>
+    <a class="plat-btn" href="https://www.dhgate.com" target="_blank">
+      <div class="plat-icon">📦</div>
+      <div class="plat-name">DHgate</div>
+      <div class="plat-desc">Small batch orders</div>
+    </a>
+    <a class="plat-btn" href="https://www.google.com/search?q=Dragon+Mart+Dubai+wholesale" target="_blank">
+      <div class="plat-icon">🕌</div>
+      <div class="plat-name">Dubai</div>
+      <div class="plat-desc">Dragon Mart wholesale</div>
+    </a>
+  </div>
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">My Suppliers</h2>
+  <form id="sup-form" style="margin-bottom:16px;">
+    <div><label>Supplier Name *</label><input type="text" id="s-name" required placeholder="e.g. Yiwu Trading Co."></div>
+    <div><label>Platform</label>
+      <select id="s-plat"><option>Alibaba</option><option>1688</option><option>Taobao</option><option>AliExpress</option><option>DHgate</option><option>Dubai</option><option>Other</option></select>
+    </div>
+    <div><label>Product Category</label><input type="text" id="s-cat" placeholder="e.g. Electronics"></div>
+    <div><label>Contact (WeChat / Phone)</label><input type="text" id="s-cont" placeholder="e.g. WeChat: trader88"></div>
+    <button type="submit" class="btn-gold">Save Supplier</button>
+  </form>
+  <div id="sup-list"></div>
+</section>
+
+<!-- FREIGHT & TRACKING -->
+<section id="freight">
+  <h2 class="title">Freight & Tracking</h2>
+  <p class="sub">Freight forwarders directory and shipment tracking</p>
+
+  <div class="paste-area">
+    <p>Paste any tracking number below. "Track Shipment" checks it against every major carrier at once. If you know it's DHL specifically, use that button instead for a more direct result.</p>
+    <input type="text" id="track-input" style="margin-bottom:10px;" placeholder="e.g. 1Z999AA10123456784">
+    <button class="btn-gold" id="track-btn">Track Shipment (All Carriers)</button>
+    <button class="btn-out" id="track-dhl-btn">Track on DHL</button>
+  </div>
+
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">Shipping Lines & Logistics Platforms</h2>
+  <p class="sub">Tap a platform to open it directly — for quotes, bookings, or contacting them</p>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://www.dhl.com" target="_blank">
+      <div class="plat-icon">📦</div>
+      <div class="plat-name">DHL Express</div>
+      <div class="plat-desc">Door-to-door air & courier</div>
+    </a>
+    <a class="plat-btn" href="https://www.maersk.com" target="_blank">
+      <div class="plat-icon">🚢</div>
+      <div class="plat-name">Maersk</div>
+      <div class="plat-desc">Ocean freight, FCL/LCL</div>
+    </a>
+    <a class="plat-btn" href="https://www.msc.com" target="_blank">
+      <div class="plat-icon">🚢</div>
+      <div class="plat-name">MSC</div>
+      <div class="plat-desc">Ocean freight to Douala</div>
+    </a>
+    <a class="plat-btn" href="https://www.cma-cgm.com" target="_blank">
+      <div class="plat-icon">⚓</div>
+      <div class="plat-name">CMA CGM</div>
+      <div class="plat-desc">Major line serving Douala</div>
+    </a>
+    <a class="plat-btn" href="https://www.freightos.com" target="_blank">
+      <div class="plat-icon">🌐</div>
+      <div class="plat-name">Freightos</div>
+      <div class="plat-desc">Compare forwarder quotes</div>
+    </a>
+    <a class="plat-btn" href="https://www.google.com/search?q=freight+forwarder+China+to+Douala+Cameroon" target="_blank">
+      <div class="plat-icon">🔎</div>
+      <div class="plat-name">Find More</div>
+      <div class="plat-desc">Search China–Cameroon agents</div>
+    </a>
+  </div>
+
+  <h2 class="title" style="font-size:15px;margin-bottom:12px;">My Saved Forwarders</h2>
+  <p class="sub" style="margin-bottom:12px;">Save your own contacts once you've picked who to work with</p>
+  <form id="fwd-form" style="margin-bottom:16px;">
+    <div><label>Company / Forwarder Name *</label><input type="text" id="fw-name" required placeholder="e.g. DHL, or agent name"></div>
+    <div><label>Phone Number (with country code, for WhatsApp)</label><input type="text" id="fw-phone" placeholder="e.g. 237677000000"></div>
+    <div><label>Email Address</label><input type="email" id="fw-email" placeholder="e.g. contact@dhl.com"></div>
+    <div><label>Notes / Trade Lane</label><input type="text" id="fw-notes" placeholder="e.g. China to Douala sea freight LCL"></div>
+    <button type="submit" class="btn-gold">Save Forwarder</button>
+  </form>
+  <div id="fwd-list"></div>
+</section>
+
+<!-- MARKETPLACE ADMIN -->
+<section id="mk">
+  <h2 class="title">Marketplace Admin</h2>
+  <p class="sub">Register sellers, add products, and manage enquiries, orders and settlements for the public KMDS Marketplace. Only verified sellers appear to the public.</p>
+  <div class="filter-row" id="mk-tabs">
+    <button data-v="sellers" class="active">Sellers</button>
+    <button data-v="products">Products</button>
+    <button data-v="enquiries">Enquiries</button>
+    <button data-v="orders">Orders</button>
+    <button data-v="settle">Settlements</button>
+  </div>
+  <div id="mk-body"><div class="empty">Loading...</div></div>
+</section>
+
+<!-- SETTINGS -->
+<!-- IMPORT / EXPORT -->
+<section id="trade">
+  <h2 class="title">Import / Export</h2>
+  <p class="sub">Agricultural and food products, seeds. Track each deal from first inquiry to payment.</p>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:6px 0 10px;">Find Markets</h3>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://www.trademap.org" target="_blank" rel="noopener"><div class="plat-icon">📊</div><div class="plat-name">ITC Trade Map</div><div class="plat-desc">Which countries buy a product</div></a>
+    <a class="plat-btn" href="https://www.macmap.org" target="_blank" rel="noopener"><div class="plat-icon">📜</div><div class="plat-name">Market Access Map</div><div class="plat-desc">Tariffs and import rules</div></a>
+    <a class="plat-btn" href="https://www.alibaba.com" target="_blank" rel="noopener"><div class="plat-icon">🌐</div><div class="plat-name">Alibaba</div><div class="plat-desc">Buyer and supplier listings</div></a>
+    <a class="plat-btn" href="https://www.go4worldbusiness.com" target="_blank" rel="noopener"><div class="plat-icon">🤝</div><div class="plat-name">Go4WorldBusiness</div><div class="plat-desc">Buy and sell leads</div></a>
+    <a class="plat-btn" href="https://www.ec21.com" target="_blank" rel="noopener"><div class="plat-icon">🚢</div><div class="plat-name">EC21</div><div class="plat-desc">B2B trade leads</div></a>
+    <a class="plat-btn" href="https://www.tradekey.com" target="_blank" rel="noopener"><div class="plat-icon">🔑</div><div class="plat-name">TradeKey</div><div class="plat-desc">Import and export leads</div></a>
+  </div>
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Africa Markets</h3>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://au-afcfta.org" target="_blank" rel="noopener"><div class="plat-icon">🌍</div><div class="plat-name">AfCFTA</div><div class="plat-desc">African free trade area, rules and tariffs</div></a>
+    <a class="plat-btn" href="https://www.afreximbank.com" target="_blank" rel="noopener"><div class="plat-icon">🏦</div><div class="plat-name">Afreximbank</div><div class="plat-desc">African trade finance and market info</div></a>
+    <a class="plat-btn" href="https://www.intracen.org" target="_blank" rel="noopener"><div class="plat-icon">📈</div><div class="plat-name">ITC</div><div class="plat-desc">Trade help and market guides for exporters</div></a>
+  </div>
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Europe Markets</h3>
+  <div class="plat-grid">
+    <a class="plat-btn" href="https://trade.ec.europa.eu/access-to-markets" target="_blank" rel="noopener"><div class="plat-icon">🇪🇺</div><div class="plat-name">EU Access2Markets</div><div class="plat-desc">EU import duties, rules and papers by product</div></a>
+    <a class="plat-btn" href="https://www.cbi.eu" target="_blank" rel="noopener"><div class="plat-icon">🌱</div><div class="plat-name">CBI Netherlands</div><div class="plat-desc">Export to Europe: seeds, oils, spices, cocoa, coffee</div></a>
+    <a class="plat-btn" href="https://www.go4worldbusiness.com" target="_blank" rel="noopener"><div class="plat-icon">🤝</div><div class="plat-name">Go4WorldBusiness</div><div class="plat-desc">Find European buyers</div></a>
+  </div>
+  <div class="fee-note"><strong>Stay safe:</strong> check every buyer or supplier before you commit. Do not send money first to someone you have not verified. Ask for company papers, samples and references, and confirm the export documents required for your product (for example a phytosanitary certificate and certificate of origin) with the Cameroon authorities.</div>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">New Deal</h3>
+  <form id="trade-form" style="margin-bottom:16px;">
+    <div><label>Direction *</label>
+      <select id="t-dir"><option value="export">Export — sell from Cameroon</option><option value="import">Import — buy into Cameroon</option></select>
+    </div>
+    <div><label>Product *</label><input type="text" id="t-product" list="t-products" required placeholder="e.g. Ginger, Egusi (melon seeds)">
+      <datalist id="t-products"><option value="Egusi (melon seeds)"><option value="Ginger"><option value="Sesame seeds"><option value="Hibiscus (zobo)"><option value="Cocoa beans"><option value="Coffee"><option value="Palm oil"><option value="Palm kernel oil"><option value="Groundnut oil"><option value="Honey"><option value="Black pepper"><option value="Cashew nuts"><option value="Vegetable seeds"></datalist>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;"><label>Quantity</label><input type="number" id="t-qty" min="0" step="any"></div>
+      <div style="flex:1;"><label>Unit</label><select id="t-unit"><option>kg</option><option>tonnes</option><option>bags</option><option>litres</option><option>drums</option><option>containers</option></select></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;"><label>Price per unit</label><input type="number" id="t-price" min="0" step="any"></div>
+      <div style="flex:1;"><label>Currency</label><select id="t-cur"><option>XAF</option><option>USD</option><option>EUR</option></select></div>
+    </div>
+    <div><label>Buyer / Supplier name *</label><input type="text" id="t-party" required></div>
+    <div><label>Country</label><input type="text" id="t-country" placeholder="e.g. Nigeria, UAE, France"></div>
+    <div><label>Market region</label><select id="t-region"><option value="">Choose</option><option>Africa</option><option>Europe</option><option>Other</option></select></div>
+    <div><label>Contact (phone / WhatsApp / email)</label><input type="text" id="t-contact"></div>
+    <div><label>Notes</label><textarea id="t-notes" style="min-height:60px;"></textarea></div>
+    <button type="submit" class="btn-gold">Save Deal</button>
+  </form>
+
+  <div class="filter-row" id="trade-filters">
+    <button data-f="all" class="active">All</button>
+    <button data-f="inq">Inquiry</button>
+    <button data-f="quo">Quoted</button>
+    <button data-f="agr">Agreed</button>
+    <button data-f="shp">Shipped</button>
+    <button data-f="paid">Paid</button>
+  </div>
+  <div id="trade-list"></div>
+</section>
+
+<!-- LOCAL MARKETPLACE -->
+<section id="market">
+  <h2 class="title">Local Marketplace</h2>
+  <p class="sub">Sellers in Limbe, Buea and beyond. The client pays KMDS first; KMDS pays the seller once the item is confirmed.</p>
+  <div class="filter-row" id="market-tabs">
+    <button data-m="sellers" class="active">Sellers</button>
+    <button data-m="requests">Client Requests</button>
+  </div>
+
+  <div id="market-sellers">
+    <form id="seller-form" style="margin-bottom:16px;">
+      <div><label>Seller Name *</label><input type="text" id="m-name" required></div>
+      <div><label>Shop / Business</label><input type="text" id="m-shop"></div>
+      <div><label>Phone / WhatsApp *</label><input type="tel" id="m-phone" required placeholder="e.g. 677 000 000"></div>
+      <div><label>Location</label>
+        <select id="m-loc"><option>Limbe</option><option>Buea</option><option>Douala</option><option>Other</option></select></div>
+      <div><label>Category</label>
+        <select id="m-cat"><option>Cars</option><option>Phones &amp; electronics</option><option>Furniture</option><option>Food</option><option>Fashion</option><option>Building materials</option><option>Other</option></select></div>
+      <div><label>What they sell / notes</label><textarea id="m-notes" style="min-height:60px;"></textarea></div>
+      <button type="submit" class="btn-gold">Save Seller</button>
+    </form>
+    <input type="text" id="m-search" placeholder="Search sellers (name, shop, product, place)…" style="margin-bottom:12px;">
+    <div id="seller-list"></div>
+  </div>
+
+  <div id="market-requests" style="display:none;">
+    <form id="mreq-form" style="margin-bottom:16px;">
+      <div><label>Client Name *</label><input type="text" id="r-client" required></div>
+      <div><label>Client Phone *</label><input type="tel" id="r-phone" required></div>
+      <div><label>What does the client want? *</label><input type="text" id="r-want" required placeholder="e.g. Toyota Corolla 2010, iPhone 13"></div>
+      <div><label>Client budget (XAF)</label><input type="number" id="r-budget" min="0"></div>
+      <div><label>Matched seller</label><select id="r-seller"></select></div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;"><label>Agreed price (XAF)</label><input type="number" id="r-price" min="0"></div>
+        <div style="flex:1;"><label>KMDS fee (XAF)</label><input type="number" id="r-fee" min="0"></div>
+      </div>
+      <button type="submit" class="btn-gold">Save Request</button>
+    </form>
+    <div id="mreq-list"></div>
+  </div>
+</section>
+
+<section id="settings">
+  <h2 class="title">Settings</h2>
+  <p class="sub" style="margin-bottom:12px;">System-wide controls</p>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Exchange Rates</h3>
+  <p class="sub" style="margin-bottom:12px;">Used across every order's currency conversion.</p>
+  <div style="display:flex;gap:10px;margin-bottom:10px;">
+    <div style="flex:1;"><label style="margin-bottom:4px;">XAF per USD</label><input type="number" id="set-rate-usd"></div>
+    <div style="flex:1;"><label style="margin-bottom:4px;">XAF per CNY</label><input type="number" id="set-rate-cny"></div>
+  </div>
+  <button id="set-save-rates" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:24px;">Save Rates</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Payment Details (shown on invoices)</h3>
+  <p class="sub" style="margin-bottom:12px;">Write the number and the account name, e.g. 6XX XXX XXX — Serge Ikome. Leave blank any method you do not use.</p>
+  <label style="margin-bottom:4px;">MTN Mobile Money</label><input type="text" id="set-pay-momo" style="margin-bottom:10px;">
+  <label style="margin-bottom:4px;">Orange Money</label><input type="text" id="set-pay-om" style="margin-bottom:10px;">
+  <label style="margin-bottom:4px;">Bank Transfer (bank, account name, number)</label><input type="text" id="set-pay-bank" style="margin-bottom:10px;">
+  <button id="set-save-pay" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:24px;">Save Payment Details</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Backup</h3>
+  <p class="sub" style="margin-bottom:12px;">Download a copy of all your data to your phone. Do this at least once a week.</p>
+  <button id="set-backup-json" class="btn-gold" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-bottom:10px;">Download Full Backup</button>
+  <button id="set-backup-csv" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:24px;">Download Orders (spreadsheet)</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">Privacy</h3>
+  <p class="sub" style="margin-bottom:12px;">Blur profit figures on screen. Tap a blurred number to reveal it briefly — useful if someone else can see your screen.</p>
+  <button id="set-toggle-privacy" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:24px;">Turn On Profit Privacy</button>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">System Status</h3>
+  <div id="set-sync-status" style="font-size:11px;color:var(--dim);margin-bottom:10px;">Checking…</div>
+  <button id="set-force-refresh" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:10px;">Force Refresh Data</button>
+  <p class="sub" style="font-size:10px;line-height:1.6;">If the portal looks stuck or out of sync after a refresh, the issue is usually on GitHub Pages or Supabase directly — check github.com (Actions tab) or supabase.com (Project dashboard) for a paused project or failed deploy.</p>
+
+  <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:24px 0 10px;">Account</h3>
+  <button id="set-sign-out" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;">Sign Out</button>
+</section>
+
+</main>
+
+<div id="order-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div id="om-title"></div>
+      <button id="om-close" class="modal-close">&times;</button>
+    </div>
+    <div id="om-body"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var ORDER_KEY = "kmds_orders_v2";
+var PAY_KEY   = "kmds_pays_v2";
+var SUP_KEY   = "kmds_sup_v2";
+var FWD_KEY   = "kmds_fwd_v1";
+var activeFilter = "all";
+var RATE_KEY  = "kmds_rates_v1";
+var PAYDET_KEY = "kmds_paydetails_v1";
+var payDetCache = {momo:"",om:"",bank:""};
+var TRADE_KEY="kmds_trade_v1",SELL_KEY="kmds_sellers_v1",MREQ_KEY="kmds_mreq_v1";
+var tradeCache=[],sellCache=[],mreqCache=[];
+var statusDesc = {new:"Order received, not yet reviewed.",pay:"Customer has paid you \u2014 now pay your supplier.",ship:"Goods paid for and on the way from supplier.",done:"Customer has received their item."};
+
+// ===== CLOUD SYNC (Supabase) =====
+// sb client already created at top of file, before the login gate.
+
+var ordersCache=[], paysCache=[], supCache=[], ratesCache={usd:610,cny:85}, fwdCache=[];
+
+function setSyncStatus(state){
+  var el=document.getElementById("sync-status");
+  var el2=document.getElementById("set-sync-status");
+  var txt="",col="";
+  if(state==="synced"){txt="\u25CF Cloud Synced";col="var(--done)";}
+  else if(state==="offline"){txt="\u25CB Offline \u2014 Local Only";col="#c45a5a";}
+  else if(state==="nocloud"){txt="\u25CB Local Only (cloud not set up)";col="var(--dim)";}
+  else{txt="Connecting\u2026";col="var(--dim)";}
+  if(el){el.textContent=txt;el.style.color=col;}
+  if(el2){el2.textContent=txt;el2.style.color=col;}
+}
+
+// In-memory reads are synchronous (rest of the app depends on this) —
+// the cache is kept current by cloudLoadAll() and every save() call below.
+function loadOrders(){return ordersCache;}
+function loadPays(){return paysCache;}
+function loadSup(){return supCache;}
+function loadRates(){return ratesCache;}
+function loadFwd(){return fwdCache;}
+
+function saveOrders(l){ordersCache=l;localStorage.setItem(ORDER_KEY,JSON.stringify(l));cloudSave("orders",l);}
+function savePays(l){paysCache=l;localStorage.setItem(PAY_KEY,JSON.stringify(l));cloudSave("pays",l);}
+function saveSup(l){supCache=l;localStorage.setItem(SUP_KEY,JSON.stringify(l));cloudSave("suppliers",l);}
+function saveRates(r){ratesCache=r;localStorage.setItem(RATE_KEY,JSON.stringify(r));cloudSave("rates",r);}
+function saveTrade(l){tradeCache=l;localStorage.setItem(TRADE_KEY,JSON.stringify(l));cloudSave("trade",l);}
+function saveSellers(l){sellCache=l;localStorage.setItem(SELL_KEY,JSON.stringify(l));cloudSave("sellers",l);}
+function saveMreq(l){mreqCache=l;localStorage.setItem(MREQ_KEY,JSON.stringify(l));cloudSave("mreq",l);}
+function savePayDet(d){payDetCache=d;localStorage.setItem(PAYDET_KEY,JSON.stringify(d));cloudSave("paydetails",d);}
+function saveFwd(l){fwdCache=l;localStorage.setItem(FWD_KEY,JSON.stringify(l));cloudSave("forwarders",l);}
+
+function cloudSave(key,value){
+  if(!sb){setSyncStatus("nocloud");return;}
+  sb.from("kmds_kv").upsert({key:key,value:value,updated_at:new Date().toISOString()}).then(function(res){
+    if(res.error){console.error("Cloud save failed for "+key,res.error);setSyncStatus("offline");}
+    else{setSyncStatus("synced");}
+  });
+}
+
+function cloudLoadAll(){
+  if(!sb){setSyncStatus("nocloud");return Promise.resolve(false);}
+  return sb.from("kmds_kv").select("key,value").then(function(res){
+    if(res.error){console.error("Cloud load failed",res.error);setSyncStatus("offline");return false;}
+    (res.data||[]).forEach(function(row){
+      if(row.key==="orders")ordersCache=row.value||[];
+      if(row.key==="pays")paysCache=row.value||[];
+      if(row.key==="suppliers")supCache=row.value||[];
+      if(row.key==="rates")ratesCache=row.value||{usd:610,cny:85};
+      if(row.key==="forwarders")fwdCache=row.value||[];
+      if(row.key==="paydetails")payDetCache=row.value||{momo:"",om:"",bank:""};
+      if(row.key==="trade")tradeCache=row.value||[];
+      if(row.key==="sellers")sellCache=row.value||[];
+      if(row.key==="mreq")mreqCache=row.value||[];
+    });
+    localStorage.setItem(ORDER_KEY,JSON.stringify(ordersCache));
+    localStorage.setItem(PAY_KEY,JSON.stringify(paysCache));
+    localStorage.setItem(SUP_KEY,JSON.stringify(supCache));
+    localStorage.setItem(RATE_KEY,JSON.stringify(ratesCache));
+    localStorage.setItem(FWD_KEY,JSON.stringify(fwdCache));
+    localStorage.setItem(PAYDET_KEY,JSON.stringify(payDetCache));
+    localStorage.setItem(TRADE_KEY,JSON.stringify(tradeCache));
+    localStorage.setItem(SELL_KEY,JSON.stringify(sellCache));
+    localStorage.setItem(MREQ_KEY,JSON.stringify(mreqCache));
+    setSyncStatus("synced");
+    return true;
+  });
+}
+
+// ===== INCOMING REQUESTS (from the public request form) =====
+var importing=false;
+function importRequests(){
+  if(!sb||importing)return Promise.resolve();
+  importing=true;
+  return sb.from("requests").select("*").eq("status","new").order("created_at",{ascending:true}).then(function(res){
+    if(res.error||!res.data||!res.data.length){importing=false;return;}
+    var orders=loadOrders().slice();
+    var have={};orders.forEach(function(o){have[o.ref]=1;});
+    var ids=[],added=0;
+    res.data.forEach(function(r){
+      ids.push(r.id);
+      if(have[r.ref])return;
+      orders.unshift({id:Date.now()+added,ref:r.ref,name:titleCase(r.name),phone:r.phone||"",wa:r.whatsapp||"",email:r.email||"",city:r.city||"",quarter:r.quarter||"",address:r.address||"",ship:r.shipping||"",pay:r.payment||"",item:r.item,qty:String(r.qty||""),cost:0,duty:0,tracking:"",notes:r.notes||"",status:"new",created:r.created_at,source:"request-form"});
+      added++;
+    });
+    if(!added){
+      return sb.from("requests").update({status:"imported"}).in("id",ids).then(function(){importing=false;});
+    }
+    ordersCache=orders;
+    try{localStorage.setItem(ORDER_KEY,JSON.stringify(orders));}catch(e){}
+    // only mark requests as imported once the cloud copy of the orders is saved
+    return sb.from("kmds_kv").upsert({key:"orders",value:orders,updated_at:new Date().toISOString()}).then(function(up){
+      if(up.error){console.error("Import save failed",up.error);setSyncStatus("offline");importing=false;return;}
+      setSyncStatus("synced");
+      return sb.from("requests").update({status:"imported"}).in("id",ids).then(function(){
+        importing=false;refreshActiveTab();
+      });
+    });
+  }).catch(function(e){importing=false;console.error(e);});
+}
+
+function bootFromLocalCache(){
+  try{ordersCache=JSON.parse(localStorage.getItem(ORDER_KEY))||[];}catch(e){ordersCache=[];}
+  try{paysCache=JSON.parse(localStorage.getItem(PAY_KEY))||[];}catch(e){paysCache=[];}
+  try{supCache=JSON.parse(localStorage.getItem(SUP_KEY))||[];}catch(e){supCache=[];}
+  try{ratesCache=JSON.parse(localStorage.getItem(RATE_KEY))||{usd:610,cny:85};}catch(e){ratesCache={usd:610,cny:85};}
+  try{fwdCache=JSON.parse(localStorage.getItem(FWD_KEY))||[];}catch(e){fwdCache=[];}
+  try{payDetCache=JSON.parse(localStorage.getItem(PAYDET_KEY))||{momo:"",om:"",bank:""};}catch(e){payDetCache={momo:"",om:"",bank:""};}
+  try{tradeCache=JSON.parse(localStorage.getItem(TRADE_KEY))||[];}catch(e){tradeCache=[];}
+  try{sellCache=JSON.parse(localStorage.getItem(SELL_KEY))||[];}catch(e){sellCache=[];}
+  try{mreqCache=JSON.parse(localStorage.getItem(MREQ_KEY))||[];}catch(e){mreqCache=[];}
+}
+
+function refreshActiveTab(){
+  var activeBtn=document.querySelector("nav button.active");
+  var tab=activeBtn?activeBtn.getAttribute("data-tab"):"dashboard";
+  renderDashboard();
+  if(tab==="orders")renderOrders();
+  if(tab==="payments"){populatePayOrders();renderPayments();}
+  if(tab==="invoice"){populateInvSelect();renderInvoice();}
+  if(tab==="suppliers")renderSuppliers();
+  if(tab==="freight")renderFreight();
+  if(tab==="trade")renderTrade();
+  if(tab==="market")renderMarket();
+}
+
+function titleCase(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase();});}
+function payLines(){
+  var p=payDetCache||{},out=[];
+  if(p.momo)out.push("MTN Mobile Money: "+p.momo);
+  if(p.om)out.push("Orange Money: "+p.om);
+  if(p.bank)out.push("Bank Transfer: "+p.bank);
+  return out;
+}
+function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+function fmtXAF(n){return Number(n||0).toLocaleString()+" XAF";}
+function fmtDate(iso){if(!iso)return"?";return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function genRef(){return"KMDS-"+Math.floor(1000+Math.random()*9000);}
+var SIZE_FEES={small:2500,medium:3900,large:5300};
+var SIZE_LABELS={small:"Small",medium:"Medium",large:"Large"};
+function calcFees(cost,duty,delivery){
+  var c=Number(cost)||0;
+  var d=Number(duty)||0;
+  var dl=Number(delivery)||0;
+  var mu=Math.round(c*0.10);
+  var fe=Math.round(c*0.05);
+  return{cost:c,markup:mu,fee:fe,duty:d,delivery:dl,total:c+mu+fe+d+dl};
+}
+function statusLabel(s){return{new:"New",pay:"Pending Payment",ship:"In Shipment",done:"Completed"}[s]||s;}
+function statusClass(s){return{pay:"s-pay",ship:"s-ship",done:"s-done"}[s]||"";}
+
+// NAV
+document.getElementById("nav").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-tab]");if(!btn)return;
+  var tab=btn.getAttribute("data-tab");
+  document.querySelectorAll("nav button").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  document.querySelectorAll("main > section").forEach(function(s){s.classList.remove("active");});
+  document.getElementById(tab).classList.add("active");
+  if(tab==="dashboard") renderDashboard();
+  if(tab==="orders") renderOrders();
+  if(tab==="payments"){populatePayOrders();renderPayments();}
+  if(tab==="invoice"){populateInvSelect();renderInvoice();}
+  if(tab==="suppliers") renderSuppliers();
+  if(tab==="freight") renderFreight();
+  if(tab==="trade") renderTrade();
+  if(tab==="market") renderMarket();
+  if(tab==="settings") fillSettingsRates();
+});
+
+// PASTE
+document.getElementById("paste-btn").addEventListener("click",function(){
+  var text=document.getElementById("paste-box").value.trim();
+  if(!text){alert("Please paste a WhatsApp message first.");return;}
+  function extract(label){var re=new RegExp(label+"[:\\s]+([^\\n]+)","i");var m=text.match(re);return m?m[1].trim():"";}
+  var name=extract("Name")||extract("Client")||"Unknown Client";
+  var phone=extract("Phone")||extract("Tel")||"";
+  var wa=extract("WhatsApp")||"";
+  var email=extract("Email")||"";
+  var city=extract("City")||"";
+  var quarter=extract("Quarter")||"";
+  var address=extract("Address")||"";
+  var ship=extract("Shipping")||"";
+  var pay=extract("Payment")||"";
+  var item=extract("Item")||extract("Product")||extract("Order")||text.split("\n")[0];
+  var qty=extract("Qty")||extract("Quantity")||"";
+  var notes=extract("Notes")||"";
+  var tracking=extract("Tracking Number")||extract("Tracking")||"";
+  var orders=loadOrders();
+  orders.unshift({id:Date.now(),ref:genRef(),name:name,phone:phone,wa:wa,email:email,city:city,quarter:quarter,address:address,ship:ship,pay:pay,item:item,qty:qty,cost:0,duty:0,tracking:tracking,notes:notes,status:"new",created:new Date().toISOString()});
+  saveOrders(orders);
+  document.getElementById("paste-box").value="";
+  alert("Order created! Set the Cost Price inside Manage Order to calculate fees. Go to Orders tab.");
+  renderDashboard();
+});
+
+// MANUAL ORDER
+document.getElementById("order-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("f-name").value.trim();
+  var item=document.getElementById("f-item").value.trim();
+  if(!name||!item)return;
+  var orders=loadOrders();
+  orders.unshift({id:Date.now(),ref:genRef(),name:name,phone:document.getElementById("f-phone").value.trim(),item:item,qty:document.getElementById("f-qty").value.trim(),cost:Number(document.getElementById("f-cost").value)||0,tracking:document.getElementById("f-track").value.trim(),notes:document.getElementById("f-notes").value.trim(),status:"new",created:new Date().toISOString()});
+  saveOrders(orders);
+  document.getElementById("order-form").reset();
+  document.querySelector("nav button[data-tab='orders']").click();
+});
+
+// BUILD CARD
+function buildCard(o){
+  var sc=statusClass(o.status);
+  var t=calcFees(o.cost,o.duty,o.delivery);
+  var totalLine=t.total>0?"<div class='card-total'>Client Pays: "+fmtXAF(t.total)+"</div>":"";
+  var trackBadge=o.tracking?"<div style='margin-top:6px;'><span style='border:1px solid var(--gold2);color:var(--gold);font-size:9px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase;'>Tracking: "+esc(o.tracking)+"</span></div>":"";
+  var actions="";
+  if(o.status==="new") actions+="<button data-a='to-pay' data-id='"+o.id+"' class='green'>Mark Pending Payment</button>";
+  if(o.status==="pay") actions+="<button data-a='to-ship' data-id='"+o.id+"' class='green'>Mark In Shipment</button>";
+  if(o.status==="ship") actions+="<button data-a='to-done' data-id='"+o.id+"' class='green'>Mark Completed</button>";
+  actions+="<button data-a='invoice' data-id='"+o.id+"' class='gold'>Invoice</button>";
+  actions+="<button data-a='detail' data-id='"+o.id+"'>Manage Order</button>";
+  actions+="<button data-a='delete' data-id='"+o.id+"' class='danger'>Delete</button>";
+  return "<div class='card "+sc+"' data-id='"+o.id+"'>"+
+    "<div class='card-top'><div><div class='card-ref'>"+esc(o.ref)+" · "+fmtDate(o.created)+"</div><div class='card-name'>"+esc(o.name)+"</div><div class='card-item'>"+esc(o.item)+"</div>"+totalLine+trackBadge+"</div><span class='badge "+sc+"'>"+statusLabel(o.status)+"</span></div>"+
+    "<div class='card-actions'>"+actions+"</div></div>";
+}
+
+// ORDER DETAIL MODAL
+function openOrderModal(id){
+  var orders=loadOrders();
+  var o=orders.find(function(x){return x.id===id;});
+  if(!o)return;
+  var t=calcFees(o.cost,o.duty,o.delivery);
+  var rates=loadRates();
+  var usd=rates.usd>0?Math.round(o.cost/rates.usd):0;
+  var cny=rates.cny>0?Math.round(o.cost/rates.cny):0;
+  var locked=o.status==="done";
+  document.getElementById("om-title").textContent=o.ref+" — "+o.name;
+  document.getElementById("om-body").innerHTML=
+    "<div class='drow'><span>Phone</span><span>"+(o.phone||"—")+"</span></div>"+
+    (o.wa?"<div class='drow'><span>WhatsApp</span><span>"+esc(o.wa)+"</span></div>":"")+
+    (o.tracking?"<div class='drow'><span>Tracking Number</span><span>"+esc(o.tracking)+"</span></div>":"")+
+    (o.email?"<div class='drow'><span>Email</span><span>"+esc(o.email)+"</span></div>":"")+
+    (o.city?"<div class='drow'><span>City</span><span>"+esc(o.city)+"</span></div>":"")+
+    (o.quarter?"<div class='drow'><span>Quarter</span><span>"+esc(o.quarter)+"</span></div>":"")+
+    (o.address?"<div class='drow'><span>Address</span><span>"+esc(o.address)+"</span></div>":"")+
+    (o.ship?"<div class='drow'><span>Shipping</span><span>"+esc(o.ship)+"</span></div>":"")+
+    (o.pay?"<div class='drow'><span>Payment Method</span><span>"+esc(o.pay)+"</span></div>":"")+
+    "<div class='drow'><span>Item</span><span>"+esc(o.item)+"</span></div>"+
+    (o.qty?"<div class='drow'><span>Qty</span><span>"+esc(o.qty)+"</span></div>":"")+
+    "<div class='drow'><span>Cost Price</span><span>"+fmtXAF(o.cost)+"</span></div>"+
+    "<div class='drow'><span>Markup (10%)</span><span>"+fmtXAF(t.markup)+"</span></div>"+
+    "<div class='drow'><span>Service Fee (5%)</span><span>"+fmtXAF(t.fee)+"</span></div>"+
+    "<div class='drow'><span>Customs Duty</span><span>"+fmtXAF(t.duty)+"</span></div>"+
+    (o.size?"<div class='drow'><span>Size</span><span>"+(SIZE_LABELS[o.size]||o.size)+"</span></div>":"")+
+    "<div class='drow'><span>Last Mile Delivery Fee</span><span>"+fmtXAF(t.delivery)+"</span></div>"+
+    "<div class='drow'><span><strong>Client Pays</strong></span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
+    "<div class='drow'><span><strong>Your Profit</strong></span><span class='profit-figure'><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
+    (o.notes?"<div class='drow'><span>Notes</span><span>"+esc(o.notes)+"</span></div>":"")+
+    "<div class='drow'><span>Date</span><span>"+fmtDate(o.created)+"</span></div>"+
+    "<div style='margin-top:14px;border-top:1px solid var(--line);padding-top:12px;'>"+
+      "<label style='margin-bottom:6px;'>Cost Price In Other Currencies (editable rate below)</label>"+
+      "<div class='drow'><span>US Dollars (approx.)</span><span>$"+usd.toLocaleString()+"</span></div>"+
+      "<div class='drow'><span>Chinese Yuan (approx.)</span><span>¥"+cny.toLocaleString()+"</span></div>"+
+      "<div style='display:flex;gap:8px;margin-top:10px;'>"+
+        "<div style='flex:1;'><label style='margin-bottom:4px;'>XAF per USD</label><input type='number' id='om-rate-usd' value='"+rates.usd+"'></div>"+
+        "<div style='flex:1;'><label style='margin-bottom:4px;'>XAF per CNY</label><input type='number' id='om-rate-cny' value='"+rates.cny+"'></div>"+
+      "</div>"+
+      "<button id='om-save-rate' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-top:8px;'>Save Rates</button>"+
+    "</div>"+
+    "<div style='margin-top:14px;border-top:1px solid var(--line);padding-top:12px;'>"+
+      "<label style='margin-bottom:6px;'>Order Status</label>"+
+      "<select class='status-sel' data-id='"+o.id+"' style='margin-bottom:6px;'>"+
+        "<option value='new'"+(o.status==="new"?" selected":"")+">New</option>"+
+        "<option value='pay'"+(o.status==="pay"?" selected":"")+">Pending Payment</option>"+
+        "<option value='ship'"+(o.status==="ship"?" selected":"")+">In Shipment</option>"+
+        "<option value='done'"+(o.status==="done"?" selected":"")+">Completed</option>"+
+      "</select>"+
+      "<div style='color:var(--dim);font-size:11px;line-height:1.6;margin-bottom:10px;'>"+statusDesc[o.status]+"</div>"+
+    "</div>"+
+    "<div style='margin-top:6px;'>"+
+      "<label style='margin-bottom:6px;'>Tracking Number</label>"+
+      "<input type='text' class='track-inp' data-id='"+o.id+"' value='"+esc(o.tracking||"")+"' placeholder='e.g. 1Z999AA10123456784' style='margin-bottom:8px;'>"+
+      (locked?
+        "<div style='border:1px solid var(--gold2);background:var(--panel2);padding:10px;margin-bottom:8px;font-size:11px;color:var(--dim);line-height:1.6;'>"+
+          "\uD83D\uDD12 <strong style='color:var(--gold);'>Financial fields locked.</strong> This order is Completed, so Cost Price and Customs Duty can no longer be edited here to protect against tampering. Change the status above (e.g. back to In Shipment) if you need to correct them."+
+        "</div>"+
+        "<div class='drow'><span>Cost Price (locked)</span><span>"+fmtXAF(o.cost)+"</span></div>"+
+        "<div class='drow'><span>Customs Duty (locked)</span><span>"+fmtXAF(o.duty)+"</span></div>"+
+        "<div class='drow'><span>Delivery Fee (locked)</span><span>"+fmtXAF(o.delivery)+"</span></div>"+
+        "<button data-a='save-track' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;margin-top:4px;'>Save Tracking Number</button>"
+      :
+        "<label style='margin-bottom:6px;'>Update Cost Price (XAF) — what you pay the supplier</label>"+
+        "<input type='number' class='cost-inp' data-id='"+o.id+"' value='"+Number(o.cost||0)+"' style='margin-bottom:8px;'>"+
+        "<label style='margin-bottom:6px;'>Customs Duty (XAF) — enter based on your own estimate</label>"+
+        "<input type='number' class='duty-inp' data-id='"+o.id+"' value='"+Number(o.duty||0)+"' style='margin-bottom:8px;'>"+
+        "<label style='margin-bottom:6px;'>Package Size — from supplier dimensions</label>"+
+        "<select class='size-inp' data-id='"+o.id+"' style='margin-bottom:8px;'>"+
+          "<option value=''"+(!o.size?" selected":"")+">— Select size —</option>"+
+          "<option value='small'"+(o.size==="small"?" selected":"")+">Small (2,500 XAF)</option>"+
+          "<option value='medium'"+(o.size==="medium"?" selected":"")+">Medium (3,900 XAF)</option>"+
+          "<option value='large'"+(o.size==="large"?" selected":"")+">Large (5,300 XAF)</option>"+
+        "</select>"+
+        "<label style='margin-bottom:6px;'>Last Mile Delivery Fee (XAF) — auto-fills from size, editable</label>"+
+        "<input type='number' class='delivery-inp' data-id='"+o.id+"' value='"+Number(o.delivery||0)+"' style='margin-bottom:8px;'>"+
+        "<button data-a='save-cost' data-id='"+o.id+"' class='btn-gold' style='padding:10px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;border:none;width:100%;'>Save Tracking, Cost, Duty &amp; Delivery</button>"
+      )+
+    "</div>";
+  document.getElementById("order-modal").classList.add("show");
+}
+function closeOrderModal(){document.getElementById("order-modal").classList.remove("show");}
+document.getElementById("om-close").addEventListener("click",closeOrderModal);
+document.getElementById("order-modal").addEventListener("click",function(e){if(e.target.id==="order-modal")closeOrderModal();});
+document.getElementById("om-body").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-a],#om-save-rate");if(!btn)return;
+  if(btn.id==="om-save-rate"){
+    var u=Number(document.getElementById("om-rate-usd").value)||1;
+    var c=Number(document.getElementById("om-rate-cny").value)||1;
+    saveRates({usd:u,cny:c});
+    btn.textContent="Saved!";
+    var openId=Number(document.querySelector(".status-sel").getAttribute("data-id"));
+    setTimeout(function(){openOrderModal(openId);},600);
+    return;
+  }
+  var action=btn.getAttribute("data-a");
+  var id=Number(btn.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  var tinp=document.querySelector(".track-inp[data-id='"+id+"']");
+  if(action==="save-cost"){
+    if(!order)return;
+    if(order.status==="done"){alert("This order is Completed. Financial fields are locked and cannot be changed from here.");return;}
+    var inp=document.querySelector(".cost-inp[data-id='"+id+"']");
+    var dinp=document.querySelector(".duty-inp[data-id='"+id+"']");
+    var sinp=document.querySelector(".size-inp[data-id='"+id+"']");
+    var delinp=document.querySelector(".delivery-inp[data-id='"+id+"']");
+    if(!inp)return;
+    order.cost=Number(inp.value)||0;
+    order.duty=dinp?(Number(dinp.value)||0):0;
+    order.size=sinp?sinp.value:"";
+    order.delivery=delinp?(Number(delinp.value)||0):0;
+    if(tinp)order.tracking=tinp.value.trim();
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    renderOrders();renderDashboard();
+    setTimeout(function(){openOrderModal(id);},600);
+  }
+  if(action==="save-track"){
+    if(!order||!tinp)return;
+    order.tracking=tinp.value.trim();
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    renderOrders();renderDashboard();
+    setTimeout(function(){openOrderModal(id);},600);
+  }
+});
+document.getElementById("om-body").addEventListener("change",function(e){
+  var sizeSel=e.target.closest("select.size-inp");
+  if(sizeSel){
+    var id=Number(sizeSel.getAttribute("data-id"));
+    var delinp=document.querySelector(".delivery-inp[data-id='"+id+"']");
+    if(delinp&&SIZE_FEES[sizeSel.value]!==undefined)delinp.value=SIZE_FEES[sizeSel.value];
+    return;
+  }
+  var sel=e.target.closest("select.status-sel");if(!sel)return;
+  var id=Number(sel.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  if(order){order.status=sel.value;saveOrders(orders);renderDashboard();renderOrders();openOrderModal(id);}
+});
+
+function handleActions(e){
+  var btn=e.target.closest("button[data-a]");if(!btn)return;
+  var action=btn.getAttribute("data-a");
+  var id=Number(btn.getAttribute("data-id"));
+  var orders=loadOrders();
+  var order=orders.find(function(o){return o.id===id;});
+  if(action==="detail"){openOrderModal(id);return;}
+  if(action==="invoice"){
+    document.querySelector("nav button[data-tab='invoice']").click();
+    setTimeout(function(){document.getElementById("inv-select").value=String(id);renderInvoice();},200);
+    return;
+  }
+  if(action==="save-cost"){
+    var inp=document.querySelector(".cost-inp[data-id='"+id+"']");if(!inp)return;
+    if(order){order.cost=Number(inp.value)||0;}
+    saveOrders(orders);
+    btn.textContent="Saved!";
+    setTimeout(function(){btn.textContent="Save Cost";renderOrders();renderDashboard();},1000);
+    return;
+  }
+  if(action==="delete"){
+    if(!confirm("Delete this order?"))return;
+    saveOrders(orders.filter(function(o){return o.id!==id;}));
+    renderDashboard();renderOrders();return;
+  }
+  var sm={"to-pay":"pay","to-ship":"ship","to-done":"done"};
+  if(sm[action]&&order){order.status=sm[action];saveOrders(orders);renderDashboard();renderOrders();}
+}
+
+document.getElementById("stat-ship-block").addEventListener("click",function(){
+  document.querySelector("nav button[data-tab='orders']").click();
+  document.querySelector("#filter-row button[data-f='ship']").click();
+});
+
+document.getElementById("filter-row").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-f]");if(!btn)return;
+  activeFilter=btn.getAttribute("data-f");
+  document.querySelectorAll("#filter-row button").forEach(function(b){b.classList.remove("active");});
+  btn.classList.add("active");
+  renderOrders();
+});
+
+function isToday(iso){
+  if(!iso)return false;
+  var d=new Date(iso), n=new Date();
+  return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();
+}
+function renderDashboard(){
+  var orders=loadOrders();
+  var pays=loadPays();
+  document.getElementById("d-new").textContent=orders.filter(function(o){return o.status==="new";}).length;
+  document.getElementById("d-pay").textContent=orders.filter(function(o){return o.status==="pay";}).length;
+  document.getElementById("d-ship").textContent=orders.filter(function(o){return o.status==="ship";}).length;
+  document.getElementById("d-done").textContent=orders.filter(function(o){return o.status==="done";}).length;
+  var todays=orders.filter(function(o){return isToday(o.created);});
+  document.getElementById("d-today").textContent=todays.length;
+  var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
+  var totalPaid=0, totalProfit=0;
+  paidOrders.forEach(function(o){
+    var t=calcFees(o.cost,o.duty,o.delivery);
+    totalPaid+=t.total;
+    totalProfit+=t.markup+t.fee;
+  });
+  document.getElementById("d-total-paid").textContent=totalPaid.toLocaleString();
+  document.getElementById("d-profit").textContent=totalProfit.toLocaleString();
+  var tw=document.getElementById("d-today-list");
+  if(todays.length===0){tw.innerHTML="<div class='empty'>No orders received today yet.</div>";}
+  else{tw.innerHTML=todays.map(buildCard).join("");tw.removeEventListener("click",handleActions);tw.addEventListener("click",handleActions);}
+  var rec=orders.slice(0,3);
+  var rw=document.getElementById("d-recent");
+  if(rec.length===0){rw.innerHTML="<div class='empty'>No orders yet.</div>";}
+  else{rw.innerHTML=rec.map(buildCard).join("");rw.removeEventListener("click",handleActions);rw.addEventListener("click",handleActions);}
+}
+
+function renderOrders(){
+  var orders=loadOrders();
+  if(activeFilter!=="all") orders=orders.filter(function(o){return o.status===activeFilter;});
+  var c=document.getElementById("orders-list");
+  if(orders.length===0){c.innerHTML="<div class='empty'>No orders here.</div>";return;}
+  c.innerHTML=orders.map(buildCard).join("");
+  c.removeEventListener("click",handleActions);
+  c.addEventListener("click",handleActions);
+}
+
+// PAYMENTS
+function populatePayOrders(){
+  var orders=loadOrders();
+  var sel=document.getElementById("p-order");
+  sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
+    orders.map(function(o){var t=calcFees(o.cost,o.duty,o.delivery);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+}
+document.getElementById("pay-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var orderId=Number(document.getElementById("p-order").value);
+  var amount=Number(document.getElementById("p-amount").value)||0;
+  var method=document.getElementById("p-method").value;
+  var ref=document.getElementById("p-ref").value.trim();
+  if(!orderId||amount<=0){alert("Please select an order and enter the amount.");return;}
+  var pays=loadPays();
+  pays.unshift({id:Date.now(),orderId:orderId,amount:amount,method:method,ref:ref,date:new Date().toISOString()});
+  savePays(pays);
+  document.getElementById("pay-form").reset();
+  renderPayments();
+  renderDashboard();
+});
+function renderPayments(){
+  var pays=loadPays();
+  var orders=loadOrders();
+  var paidOrders=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
+  var totalReceived=0, totalProfit=0;
+  paidOrders.forEach(function(o){
+    var t=calcFees(o.cost,o.duty,o.delivery);
+    totalReceived+=t.total;
+    totalProfit+=t.markup+t.fee;
+  });
+  document.getElementById("p-total").textContent=totalReceived.toLocaleString();
+  document.getElementById("p-profit").textContent=totalProfit.toLocaleString();
+
+  var tx=document.getElementById("tx-list");
+  if(paidOrders.length===0){tx.innerHTML="<div class='empty'>No paid orders yet. Orders appear here once marked Pending Payment or further.</div>";}
+  else{
+    tx.innerHTML=paidOrders.map(function(o){
+      var t=calcFees(o.cost,o.duty,o.delivery);
+      return "<div class='pay-card'>"+
+        "<div class='pay-name'>"+esc(o.name)+" — "+esc(o.item)+"</div>"+
+        "<div class='drow'><span>Amount Sent By Client</span><span><strong>"+fmtXAF(t.total)+"</strong></span></div>"+
+        "<div class='drow'><span>Cost + Duty + Delivery (pass-through)</span><span>"+fmtXAF(t.cost+t.duty+t.delivery)+"</span></div>"+
+        "<div class='drow'><span><strong>Our Profit</strong></span><span><strong>"+fmtXAF(t.markup+t.fee)+"</strong></span></div>"+
+        "<div class='pay-detail'>"+esc(o.ref)+" · "+statusLabel(o.status)+" · "+fmtDate(o.created)+"</div>"+
+      "</div>";
+    }).join("");
+  }
+
+  var c=document.getElementById("pay-list");
+  if(pays.length===0){c.innerHTML="<div class='empty'>No payments logged yet.</div>";return;}
+  c.innerHTML=pays.map(function(p){
+    var o=orders.find(function(x){return x.id===p.orderId;});
+    var oName=o?o.name:"Unknown";
+    var oRef=o?o.ref:"";
+    return "<div class='pay-card'>"+
+      "<div class='pay-name'>"+esc(oName)+"</div>"+
+      "<div class='pay-amt'>"+fmtXAF(p.amount)+"</div>"+
+      "<div class='pay-detail'>"+esc(p.method)+(oRef?" · "+esc(oRef):"")+(p.ref?" · Ref: "+esc(p.ref):"")+"</div>"+
+      "<div class='pay-detail'>"+fmtDate(p.date)+"</div>"+
+    "</div>";
+  }).join("");
+}
+
+// INVOICE
+function populateInvSelect(){
+  var orders=loadOrders();
+  var sel=document.getElementById("inv-select");
+  sel.innerHTML=orders.length===0?"<option>No orders yet</option>":
+    orders.map(function(o){var t=calcFees(o.cost,o.duty,o.delivery);return"<option value='"+o.id+"'>"+esc(o.ref)+" — "+esc(o.name)+" ("+fmtXAF(t.total)+")</option>";}).join("");
+}
+document.getElementById("inv-select").addEventListener("change",renderInvoice);
+function renderInvoice(){
+  var id=Number(document.getElementById("inv-select").value);
+  var wrap=document.getElementById("inv-wrap");
+  var o=loadOrders().find(function(x){return x.id===id;});
+  if(!o){wrap.innerHTML="<div class='empty'>Select an order above.</div>";return;}
+  var t=calcFees(o.cost,o.duty,o.delivery);
+  var due=new Date(new Date(o.created).getTime()+3*24*60*60*1000);
+  var shipLine=[o.address,o.quarter,o.city].filter(Boolean).join(", ");
+  wrap.innerHTML="<div class='inv-card'>"+
+    "<div class='inv-top'>"+
+      "<div><div class='inv-logo'>KMDS</div><div class='inv-sub'>The Kingmakers Delivery Service</div><div class='inv-sub'>Limbe, Cameroon</div></div>"+
+      "<div style='text-align:right'><span class='inv-badge'>Invoice</span><div class='inv-meta'>Ref: "+esc(o.ref)+"<br>Date: "+fmtDate(o.created)+"<br>Due: "+fmtDate(due.toISOString())+"</div></div>"+
+    "</div>"+
+    "<div class='inv-bill'>"+
+      "<div><div class='inv-lbl'>Bill To</div><strong>"+esc(o.name)+"</strong>"+
+        (o.phone?"<div style='font-size:12px'>Tel: "+esc(o.phone)+"</div>":"")+
+        (o.wa&&o.wa!==o.phone?"<div style='font-size:12px'>WhatsApp: "+esc(o.wa)+"</div>":"")+
+        (o.email?"<div style='font-size:12px'>"+esc(o.email)+"</div>":"")+
+        (shipLine?"<div style='font-size:12px'>"+esc(shipLine)+"</div>":"")+
+        (o.ship?"<div style='font-size:12px'>Shipping: "+esc(o.ship)+"</div>":"")+
+        (o.pay?"<div style='font-size:12px'>Payment: "+esc(o.pay)+"</div>":"")+
+      "</div><div style='text-align:right'><div class='inv-lbl'>Status</div><strong>"+statusLabel(o.status)+"</strong></div>"+
+    "</div>"+
+    "<table class='itbl'>"+
+      "<tr><th>Description</th><th>Qty</th><th>Unit</th><th>Total</th></tr>"+
+      "<tr><td>"+esc(o.item)+"</td><td>"+(o.qty||1)+"</td><td>"+fmtXAF(t.cost)+"</td><td>"+fmtXAF(t.cost)+"</td></tr>"+
+      "<tr><td colspan='3'>Markup (10% — 1,000 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.markup)+"</td></tr>"+
+      "<tr><td colspan='3'>Service Fee (5% — 500 XAF per 10,000 XAF)</td><td>"+fmtXAF(t.fee)+"</td></tr>"+
+      (t.duty>0?"<tr><td colspan='3'>Customs Duty</td><td>"+fmtXAF(t.duty)+"</td></tr>":"")+
+      (t.delivery>0?"<tr><td colspan='3'>Last Mile Delivery"+(o.size?" ("+(SIZE_LABELS[o.size]||o.size)+")":"")+"</td><td>"+fmtXAF(t.delivery)+"</td></tr>":"")+
+    "</table>"+
+    "<div class='inv-total'><span>Total Due</span><span>"+fmtXAF(t.total)+"</span></div>"+
+    "<div class='inv-foot'><strong style='color:#111'>How to pay (within 3 days)</strong><br>"+(payLines().length?payLines().map(esc).join("<br>")+"<br>Please write <strong>"+esc(o.ref)+"</strong> as your payment reference and send us the confirmation.":"MTN Mobile Money | Orange Money | Bank Transfer — contact us for payment details.")+"<br><br>WhatsApp: +237 641 560 868 · Call: +237 676 347 228 · kmdscameroon@gmail.com<br><br>Thank you for trusting KMDS — The Kingmakers Delivery Service</div>"+
+  "</div>";
+}
+document.getElementById("inv-print").addEventListener("click",function(){window.print();});
+document.getElementById("inv-wa").addEventListener("click",function(){
+  var id=Number(document.getElementById("inv-select").value);
+  var o=loadOrders().find(function(x){return x.id===id;});if(!o)return;
+  var t=calcFees(o.cost,o.duty,o.delivery);
+  var msg="*KMDS Invoice — "+o.ref+"*\nClient: "+o.name+"\nItem: "+o.item+"\n\nCost: "+fmtXAF(t.cost)+"\nMarkup (10%): "+fmtXAF(t.markup)+"\nService Fee (5%): "+fmtXAF(t.fee)+(t.duty>0?"\nCustoms Duty: "+fmtXAF(t.duty):"")+(t.delivery>0?"\nLast Mile Delivery: "+fmtXAF(t.delivery):"")+"\n*Total Due: "+fmtXAF(t.total)+"*\n\n*How to pay (within 3 days)*\n"+(payLines().length?payLines().join("\n")+"\nReference: "+o.ref:"MTN MoMo | Orange Money | Bank")+"\n\nWhatsApp: +237 641 560 868 · Call: +237 676 347 228";
+  window.open("https://wa.me/237641560868?text="+encodeURIComponent(msg),"_blank");
+});
+
+// SUPPLIERS
+document.getElementById("sup-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("s-name").value.trim();if(!name)return;
+  var sups=loadSup();
+  sups.unshift({id:Date.now(),name:name,plat:document.getElementById("s-plat").value,cat:document.getElementById("s-cat").value.trim(),contact:document.getElementById("s-cont").value.trim()});
+  saveSup(sups);
+  document.getElementById("sup-form").reset();
+  renderSuppliers();
+});
+document.getElementById("sup-list").addEventListener("click",function(e){
+  var btn=e.target.closest("button[data-del]");if(!btn)return;
+  saveSup(loadSup().filter(function(s){return s.id!==Number(btn.getAttribute("data-del"));}));
+  renderSuppliers();
+});
+function renderSuppliers(){
+  var sups=loadSup();
+  var c=document.getElementById("sup-list");
+  if(sups.length===0){c.innerHTML="<div class='empty'>No saved suppliers yet.</div>";return;}
+  c.innerHTML=sups.map(function(s){
+    return "<div style='background:var(--panel);border:1px solid var(--line);padding:13px;margin-bottom:10px;'>"+
+      "<div style='color:var(--gold);font-size:14px;'>"+esc(s.name)+"</div>"+
+      (s.plat?"<span style='display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold2);padding:2px 7px;margin-top:5px;'>"+esc(s.plat)+"</span>":"")+
+      (s.cat?"<div style='font-size:12px;color:var(--dim);margin-top:4px;'>"+esc(s.cat)+"</div>":"")+
+      (s.contact?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>"+esc(s.contact)+"</div>":"")+
+      "<div class='card-actions'><button data-del='"+s.id+"' class='danger'>Remove</button></div>"+
+    "</div>";
+  }).join("");
+}
+
+// FREIGHT FORWARDERS & TRACKING
+document.getElementById("fwd-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("fw-name").value.trim();if(!name)return;
+  var fwds=loadFwd();
+  fwds.unshift({
+    id:Date.now(),
+    name:name,
+    phone:document.getElementById("fw-phone").value.trim(),
+    email:document.getElementById("fw-email").value.trim(),
+    notes:document.getElementById("fw-notes").value.trim()
+  });
+  saveFwd(fwds);
+  document.getElementById("fwd-form").reset();
+  renderFreight();
+});
+document.getElementById("fwd-list").addEventListener("click",function(e){
+  var del=e.target.closest("button[data-del]");
+  if(del){
+    saveFwd(loadFwd().filter(function(f){return f.id!==Number(del.getAttribute("data-del"));}));
+    renderFreight();
+    return;
+  }
+  var wa=e.target.closest("button[data-wa]");
+  if(wa){
+    var phone=wa.getAttribute("data-wa").replace(/[^0-9]/g,"");
+    if(!phone)return;
+    window.open("https://wa.me/"+phone,"_blank");
+  }
+});
+function renderFreight(){
+  var fwds=loadFwd();
+  var c=document.getElementById("fwd-list");
+  if(fwds.length===0){c.innerHTML="<div class='empty'>No freight forwarders saved yet.</div>";return;}
+  c.innerHTML=fwds.map(function(f){
+    return "<div style='background:var(--panel);border:1px solid var(--line);padding:13px;margin-bottom:10px;'>"+
+      "<div style='color:var(--gold);font-size:14px;'>"+esc(f.name)+"</div>"+
+      (f.notes?"<div style='font-size:12px;color:var(--dim);margin-top:4px;'>"+esc(f.notes)+"</div>":"")+
+      (f.phone?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>Tel: "+esc(f.phone)+"</div>":"")+
+      (f.email?"<div style='font-size:12px;color:var(--dim);margin-top:2px;'>"+esc(f.email)+"</div>":"")+
+      "<div class='card-actions'>"+
+        (f.phone?"<button data-wa='"+esc(f.phone)+"' class='gold'>WhatsApp</button>":"")+
+        (f.phone?"<a href='tel:"+esc(f.phone)+"' style='display:inline-block;background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;text-decoration:none;'>Call</a>":"")+
+        (f.email?"<a href='mailto:"+esc(f.email)+"' style='display:inline-block;background:none;border:1px solid var(--line);color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 10px;text-decoration:none;'>Email</a>":"")+
+        "<button data-del='"+f.id+"' class='danger'>Remove</button>"+
+      "</div>"+
+    "</div>";
+  }).join("");
+}
+document.getElementById("track-btn").addEventListener("click",function(){
+  var num=document.getElementById("track-input").value.trim();
+  if(!num)return;
+  window.open("https://t.17track.net/en#nums="+encodeURIComponent(num),"_blank");
+});
+document.getElementById("track-dhl-btn").addEventListener("click",function(){
+  var num=document.getElementById("track-input").value.trim();
+  if(!num)return;
+  window.open("https://www.dhl.com/global-en/home/tracking.html?tracking-id="+encodeURIComponent(num),"_blank");
+});
+
+// ===== IMPORT / EXPORT =====
+var tradeFilter="all";
+var TRADE_STATUS={inq:"Inquiry",quo:"Quoted",agr:"Agreed",shp:"Shipped",paid:"Paid"};
+var TRADE_CLASS={inq:"",quo:"s-pay",agr:"s-pay",shp:"s-ship",paid:"s-done"};
+var TRADE_NEXT={inq:["quo","Mark Quoted"],quo:["agr","Mark Agreed"],agr:["shp","Mark Shipped"],shp:["paid","Mark Paid"]};
+function fmtMoney(n,cur){return Number(n||0).toLocaleString()+" "+(cur||"XAF");}
+document.getElementById("trade-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var product=document.getElementById("t-product").value.trim();
+  var party=document.getElementById("t-party").value.trim();
+  if(!product||!party)return;
+  var l=tradeCache.slice();
+  l.unshift({id:Date.now(),ref:"TRD-"+Math.floor(1000+Math.random()*9000),dir:document.getElementById("t-dir").value,product:product,qty:Number(document.getElementById("t-qty").value)||0,unit:document.getElementById("t-unit").value,price:Number(document.getElementById("t-price").value)||0,cur:document.getElementById("t-cur").value,party:party,country:document.getElementById("t-country").value.trim(),region:document.getElementById("t-region").value,contact:document.getElementById("t-contact").value.trim(),notes:document.getElementById("t-notes").value.trim(),status:"inq",created:new Date().toISOString()});
+  saveTrade(l);
+  document.getElementById("trade-form").reset();
+  renderTrade();
+});
+document.getElementById("trade-filters").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-f]");if(!b)return;
+  tradeFilter=b.getAttribute("data-f");
+  document.querySelectorAll("#trade-filters button").forEach(function(x){x.classList.toggle("active",x===b);});
+  renderTrade();
+});
+function renderTrade(){
+  var wrap=document.getElementById("trade-list");if(!wrap)return;
+  var l=tradeCache.filter(function(d){return tradeFilter==="all"||d.status===tradeFilter;});
+  if(!l.length){wrap.innerHTML="<div class='empty'>No deals here yet.</div>";return;}
+  wrap.innerHTML=l.map(function(d){
+    var sc=TRADE_CLASS[d.status]||"";
+    var val=(d.qty&&d.price)?"<div class='card-total'>Value: "+fmtMoney(d.qty*d.price,d.cur)+"</div>":"";
+    var nx=TRADE_NEXT[d.status];
+    var actions=(nx?"<button data-ta='next' data-id='"+d.id+"' class='green'>"+nx[1]+"</button>":"")+"<button data-ta='del' data-id='"+d.id+"' class='danger'>Delete</button>";
+    return "<div class='card "+sc+"'>"+
+      "<div class='card-top'><div><div class='card-ref'>"+esc(d.ref)+" · "+fmtDate(d.created)+" · "+(d.dir==="import"?"IMPORT":"EXPORT")+"</div>"+
+      "<div class='card-name'>"+esc(d.product)+"</div>"+
+      "<div class='card-item'>"+(d.qty?esc(String(d.qty))+" "+esc(d.unit)+(d.price?" @ "+fmtMoney(d.price,d.cur):""):"")+"</div>"+
+      "<div class='card-item'>"+esc(d.party)+(d.country?" · "+esc(d.country):"")+(d.region?" · "+esc(d.region):"")+(d.contact?" · "+esc(d.contact):"")+"</div>"+
+      (d.notes?"<div class='card-item'>"+esc(d.notes)+"</div>":"")+val+
+      "</div><span class='badge "+sc+"'>"+esc(TRADE_STATUS[d.status]||d.status)+"</span></div>"+
+      "<div class='card-actions'>"+actions+"</div></div>";
+  }).join("");
+}
+document.getElementById("trade-list").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-ta]");if(!b)return;
+  var id=Number(b.getAttribute("data-id")),a=b.getAttribute("data-ta");
+  var l=tradeCache.slice();
+  if(a==="next"){l=l.map(function(d){if(d.id===id&&TRADE_NEXT[d.status])d.status=TRADE_NEXT[d.status][0];return d;});}
+  if(a==="del"){if(!confirm("Delete this deal?"))return;l=l.filter(function(d){return d.id!==id;});}
+  saveTrade(l);renderTrade();
+});
+
+// ===== LOCAL MARKETPLACE =====
+var MREQ_STATUS={look:"Looking",match:"Seller matched",paid:"Client paid KMDS",seller:"Seller paid",done:"Delivered"};
+var MREQ_CLASS={look:"",match:"s-pay",paid:"s-pay",seller:"s-ship",done:"s-done"};
+var MREQ_NEXT={look:["match","Mark Seller Matched"],match:["paid","Mark Client Paid"],paid:["seller","Mark Seller Paid"],seller:["done","Mark Delivered"]};
+function waNumber(p){var d=String(p||"").replace(/\D/g,"");if(d.length===9&&d.charAt(0)==="6")d="237"+d;return d;}
+document.getElementById("market-tabs").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-m]");if(!b)return;
+  var m=b.getAttribute("data-m");
+  document.querySelectorAll("#market-tabs button").forEach(function(x){x.classList.toggle("active",x===b);});
+  document.getElementById("market-sellers").style.display=(m==="sellers")?"block":"none";
+  document.getElementById("market-requests").style.display=(m==="requests")?"block":"none";
+  renderMarket();
+});
+document.getElementById("seller-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var name=document.getElementById("m-name").value.trim();
+  var phone=document.getElementById("m-phone").value.trim();
+  if(!name||!phone)return;
+  var l=sellCache.slice();
+  l.unshift({id:Date.now(),name:titleCase(name),shop:document.getElementById("m-shop").value.trim(),phone:phone,loc:document.getElementById("m-loc").value,cat:document.getElementById("m-cat").value,notes:document.getElementById("m-notes").value.trim(),created:new Date().toISOString()});
+  saveSellers(l);
+  document.getElementById("seller-form").reset();
+  renderMarket();
+});
+document.getElementById("m-search").addEventListener("input",function(){renderMarket();});
+document.getElementById("seller-list").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-sa]");if(!b)return;
+  var id=Number(b.getAttribute("data-id")),a=b.getAttribute("data-sa");
+  var s=sellCache.find(function(x){return x.id===id;});if(!s)return;
+  if(a==="call"){window.location.href="tel:+"+waNumber(s.phone);}
+  if(a==="wa"){window.open("https://wa.me/"+waNumber(s.phone),"_blank");}
+  if(a==="del"){if(!confirm("Delete this seller?"))return;saveSellers(sellCache.filter(function(x){return x.id!==id;}));renderMarket();}
+});
+document.getElementById("mreq-form").addEventListener("submit",function(e){
+  e.preventDefault();
+  var client=document.getElementById("r-client").value.trim();
+  var want=document.getElementById("r-want").value.trim();
+  var phone=document.getElementById("r-phone").value.trim();
+  if(!client||!want||!phone)return;
+  var sid=Number(document.getElementById("r-seller").value)||0;
+  var l=mreqCache.slice();
+  l.unshift({id:Date.now(),ref:"MKT-"+Math.floor(1000+Math.random()*9000),client:titleCase(client),phone:phone,want:want,budget:Number(document.getElementById("r-budget").value)||0,sellerId:sid,price:Number(document.getElementById("r-price").value)||0,fee:Number(document.getElementById("r-fee").value)||0,status:sid?"match":"look",created:new Date().toISOString()});
+  saveMreq(l);
+  document.getElementById("mreq-form").reset();
+  renderMarket();
+});
+document.getElementById("mreq-list").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-ra]");if(!b)return;
+  var id=Number(b.getAttribute("data-id")),a=b.getAttribute("data-ra");
+  var l=mreqCache.slice();
+  if(a==="next"){l=l.map(function(r){if(r.id===id&&MREQ_NEXT[r.status])r.status=MREQ_NEXT[r.status][0];return r;});}
+  if(a==="del"){if(!confirm("Delete this request?"))return;l=l.filter(function(r){return r.id!==id;});}
+  saveMreq(l);renderMarket();
+});
+function renderMarket(){
+  var sl=document.getElementById("seller-list");if(!sl)return;
+  var q=(document.getElementById("m-search").value||"").trim().toLowerCase();
+  var sellers=sellCache.filter(function(s){
+    if(!q)return true;
+    return [s.name,s.shop,s.loc,s.cat,s.notes].join(" ").toLowerCase().indexOf(q)>-1;
+  });
+  sl.innerHTML=sellers.length?sellers.map(function(s){
+    return "<div class='card'><div class='card-top'><div>"+
+      "<div class='card-name'>"+esc(s.name)+"</div>"+
+      "<div class='card-item'>"+(s.shop?esc(s.shop)+" · ":"")+esc(s.loc)+" · "+esc(s.cat)+"</div>"+
+      "<div class='card-item'>"+esc(s.phone)+"</div>"+
+      (s.notes?"<div class='card-item'>"+esc(s.notes)+"</div>":"")+
+      "</div></div><div class='card-actions'>"+
+      "<button data-sa='call' data-id='"+s.id+"' class='green'>Call</button>"+
+      "<button data-sa='wa' data-id='"+s.id+"' class='gold'>WhatsApp</button>"+
+      "<button data-sa='del' data-id='"+s.id+"' class='danger'>Delete</button></div></div>";
+  }).join(""):"<div class='empty'>"+(sellCache.length?"No sellers match your search.":"No sellers saved yet. Add your first seller above.")+"</div>";
+  var sel=document.getElementById("r-seller");
+  if(sel){
+    var cur=sel.value;
+    sel.innerHTML="<option value=''>— none yet —</option>"+sellCache.map(function(s){return "<option value='"+s.id+"'>"+esc(s.name)+(s.shop?" ("+esc(s.shop)+")":"")+" — "+esc(s.loc)+"</option>";}).join("");
+    sel.value=cur;
+  }
+  var rl=document.getElementById("mreq-list");
+  rl.innerHTML=mreqCache.length?mreqCache.map(function(r){
+    var sc=MREQ_CLASS[r.status]||"";
+    var sd=sellCache.find(function(x){return x.id===r.sellerId;});
+    var total=(r.price||r.fee)?"<div class='card-total'>Client pays KMDS: "+fmtXAF((r.price||0)+(r.fee||0))+"  ·  KMDS fee: "+fmtXAF(r.fee||0)+"</div>":"";
+    var nx=MREQ_NEXT[r.status];
+    return "<div class='card "+sc+"'><div class='card-top'><div>"+
+      "<div class='card-ref'>"+esc(r.ref)+" · "+fmtDate(r.created)+"</div>"+
+      "<div class='card-name'>"+esc(r.client)+" · "+esc(r.phone)+"</div>"+
+      "<div class='card-item'>Wants: "+esc(r.want)+(r.budget?" (budget "+fmtXAF(r.budget)+")":"")+"</div>"+
+      "<div class='card-item'>Seller: "+(sd?esc(sd.name)+" · "+esc(sd.phone):"not matched yet")+"</div>"+total+
+      "</div><span class='badge "+sc+"'>"+esc(MREQ_STATUS[r.status]||r.status)+"</span></div>"+
+      "<div class='card-actions'>"+(nx?"<button data-ra='next' data-id='"+r.id+"' class='green'>"+nx[1]+"</button>":"")+"<button data-ra='del' data-id='"+r.id+"' class='danger'>Delete</button></div></div>";
+  }).join(""):"<div class='empty'>No client requests yet.</div>";
+}
+
+// INIT
+bootFromLocalCache();
+renderDashboard();
+renderSuppliers();
+renderFreight();
+
+if(!sb){
+  setSyncStatus("nocloud");
+}else{
+  setSyncStatus("connecting");
+  cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});
+  // Pull in new customer requests when a request arrives, after sign-in, and when the app is reopened
+  sb.channel("kmds-requests")
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"requests"},function(){
+      cloudLoadAll().then(function(ok){if(ok)importRequests();});
+    })
+    .subscribe();
+  sb.auth.onAuthStateChange(function(ev){
+    if(ev==="SIGNED_IN"){cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});}
+  });
+  document.addEventListener("visibilitychange",function(){
+    if(!document.hidden){cloudLoadAll().then(function(ok){refreshActiveTab();if(ok)importRequests();});}
+  });
+  // Cross-device sync: when any device writes to kmds_kv, all open portals refresh.
+  sb.channel("kmds-sync")
+    .on("postgres_changes",{event:"*",schema:"public",table:"kmds_kv"},function(){
+      cloudLoadAll().then(function(){refreshActiveTab();});
+    })
+    .subscribe();
+}
+
+// ---- Settings tab ----
+var PRIVACY_KEY="kmds_hide_profit_v1";
+function applyPrivacyState(){
+  var on=localStorage.getItem(PRIVACY_KEY)==="1";
+  document.body.classList.toggle("hide-profit",on);
+  var btn=document.getElementById("set-toggle-privacy");
+  if(btn)btn.textContent=on?"Turn Off Profit Privacy":"Turn On Profit Privacy";
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest(".profit-figure");
+  if(t&&document.body.classList.contains("hide-profit")){
+    t.classList.add("revealed");
+    setTimeout(function(){t.classList.remove("revealed");},2500);
+  }
+});
+document.getElementById("set-toggle-privacy").addEventListener("click",function(){
+  var on=localStorage.getItem(PRIVACY_KEY)==="1";
+  localStorage.setItem(PRIVACY_KEY,on?"0":"1");
+  applyPrivacyState();
+});
+function fillSettingsRates(){
+  var pd=payDetCache||{};
+  var a=document.getElementById("set-pay-momo"),b=document.getElementById("set-pay-om"),c2=document.getElementById("set-pay-bank");
+  if(a)a.value=pd.momo||""; if(b)b.value=pd.om||""; if(c2)c2.value=pd.bank||"";
+  var r=loadRates();
+  var u=document.getElementById("set-rate-usd"),c=document.getElementById("set-rate-cny");
+  if(u)u.value=r.usd; if(c)c.value=r.cny;
+}
+document.getElementById("set-save-rates").addEventListener("click",function(){
+  var u=Number(document.getElementById("set-rate-usd").value)||1;
+  var c=Number(document.getElementById("set-rate-cny").value)||1;
+  saveRates({usd:u,cny:c});
+  var btn=document.getElementById("set-save-rates");
+  var orig=btn.textContent; btn.textContent="Saved ✓";
+  setTimeout(function(){btn.textContent=orig;},1200);
+});
+document.getElementById("set-save-pay").addEventListener("click",function(){
+  savePayDet({momo:document.getElementById("set-pay-momo").value.trim(),om:document.getElementById("set-pay-om").value.trim(),bank:document.getElementById("set-pay-bank").value.trim()});
+  var btn=document.getElementById("set-save-pay");var orig=btn.textContent;btn.textContent="Saved ✓";
+  setTimeout(function(){btn.textContent=orig;},1200);
+});
+function downloadFile(name,text,type){
+  var blob=new Blob([text],{type:type});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1500);
+}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+document.getElementById("set-backup-json").addEventListener("click",function(){
+  var data={exported:new Date().toISOString(),orders:loadOrders(),payments:loadPays(),suppliers:loadSup(),forwarders:loadFwd(),rates:loadRates(),paymentDetails:payDetCache,importExport:tradeCache,sellers:sellCache,marketRequests:mreqCache};
+  downloadFile("kmds-backup-"+todayStr()+".json",JSON.stringify(data,null,2),"application/json");
+});
+document.getElementById("set-backup-csv").addEventListener("click",function(){
+  var cols=["ref","created","name","phone","email","city","quarter","address","item","qty","cost","duty","delivery","status","tracking","notes"];
+  function q(v){v=(v===undefined||v===null)?"":String(v);return '"'+v.replace(/"/g,'""')+'"';}
+  var rows=[cols.join(",")].concat(loadOrders().map(function(o){return cols.map(function(c){return q(o[c]);}).join(",");}));
+  downloadFile("kmds-orders-"+todayStr()+".csv","\ufeff"+rows.join("\n"),"text/csv");
+});
+document.getElementById("set-force-refresh").addEventListener("click",function(){
+  var btn=document.getElementById("set-force-refresh");
+  var orig=btn.textContent; btn.textContent="Refreshing…";
+  if(sb){
+    setSyncStatus("connecting");
+    cloudLoadAll().then(function(){
+      refreshActiveTab(); fillSettingsRates();
+      btn.textContent="Refreshed ✓"; setTimeout(function(){btn.textContent=orig;},1200);
+    });
+  }else{
+    fillSettingsRates();
+    btn.textContent="No Cloud Connected"; setTimeout(function(){btn.textContent=orig;},1500);
+  }
+});
+applyPrivacyState();
+fillSettingsRates();
+var signOutBtn=document.getElementById("set-sign-out");
+if(signOutBtn)signOutBtn.addEventListener("click",function(){
+  if(sb)sb.auth.signOut();
+  location.reload();
+});
+
+})();
+</script>
+<script>
+// ===== MARKETPLACE ADMIN (talks to the mk_* tables in Supabase) =====
+var MK_REGIONS=["Limbe","Buea","Douala","Bamenda","Yaoundé","Other"];
+var MK_CATS=["Electronics & Appliances","Fashion & Beauty","Home & Living","Food & Beverages","Health & Personal Care","Sports & Outdoors","Automotive","Agriculture & Farming","Industrial & Tools","Toys & Kids","Office & Business","Other"];
+var MK_TYPES=["shop","retailer","wholesaler","supermarket","supplier"];
+var mk={tab:"sellers",sellers:[],products:[],enq:[],orders:[],pay:[],led:[],err:"",form:"",q:"",loaded:false};
+var $m=function(i){return document.getElementById(i);};
+function fx(n){return Number(n||0).toLocaleString("en-US")+" XAF";}
+function opts(arr,sel){return arr.map(function(x){return "<option"+(x===sel?" selected":"")+">"+esc(x)+"</option>";}).join("");}
+function sellerName(id){var s=mk.sellers.find(function(x){return x.id===id;});return s?s.shop_name:"?";}
+function selOpts(sel){return mk.sellers.map(function(s){return "<option value='"+s.id+"'"+(s.id===sel?" selected":"")+">"+esc(s.shop_name)+" ("+esc(s.region)+")</option>";}).join("");}
+
+async function mkLoad(){
+  try{
+    var q=function(t,o,l){return sb.from(t).select("*").order(o,{ascending:false}).limit(l);};
+    var r=await Promise.all([q("mk_sellers","created_at",1000),q("mk_products","created_at",2000),q("mk_enquiries","created_at",300),q("mk_orders","created_at",500),q("mk_payouts","created_at",300),sb.from("mk_ledger").select("*").limit(5000)]);
+    for(var i=0;i<r.length;i++){if(r[i].error)throw r[i].error;}
+    mk.sellers=r[0].data;mk.products=r[1].data;mk.enq=r[2].data;mk.orders=r[3].data;mk.pay=r[4].data;mk.led=r[5].data;mk.err="";mk.loaded=true;
+  }catch(e){mk.err=e.message||String(e);}
+  mkRender();
+}
+function mkInit(){mkLoad();}
+
+function mkImgResize(file,max){return new Promise(function(res){var img=new Image(),u=URL.createObjectURL(file);img.onload=function(){var s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);c.toBlob(function(b){URL.revokeObjectURL(u);res(b||file);},"image/jpeg",0.8);};img.onerror=function(){res(file);};img.src=u;});}
+async function mkUpload(file,bucket,folder){
+  var blob=await mkImgResize(file,1100);
+  var path=folder+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,8)+".jpg";
+  var r=await sb.storage.from(bucket).upload(path,blob,{contentType:"image/jpeg"});
+  if(r.error)throw r.error;
+  return bucket==="mk-public"?sb.storage.from(bucket).getPublicUrl(path).data.publicUrl:path;
+}
+
+function mkRender(){
+  document.querySelectorAll("#mk-tabs button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-v")===mk.tab);});
+  var body=$m("mk-body");
+  if(mk.err){body.innerHTML="<div class='fee-note'><strong>Could not load the marketplace data.</strong> "+esc(mk.err)+"<br>If this says a table does not exist, the marketplace database setup has not been run yet.</div>";return;}
+  if(!mk.loaded){body.innerHTML="<div class='empty'>Loading...</div>";return;}
+  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml})[mk.tab]();
+}
+
+/* ---------- SELLERS ---------- */
+function mkSellerForm(s){
+  s=s||{};
+  return "<form id='mk-sform' data-id='"+esc(s.id||"")+"' style='margin-bottom:16px;'>"+
+  "<div><label>Shop / company name *</label><input name='shop_name' required value='"+esc(s.shop_name||"")+"'></div>"+
+  "<div style='display:flex;gap:10px'><div style='flex:1'><label>Type</label><select name='seller_type'>"+opts(MK_TYPES,s.seller_type)+"</select></div><div style='flex:1'><label>Region</label><select name='region'>"+opts(MK_REGIONS,s.region)+"</select></div></div>"+
+  "<div><label>Town / area</label><input name='town_area' value='"+esc(s.town_area||"")+"' placeholder='e.g. Down Beach, Mile 4'></div>"+
+  "<div><label>Shop address (where it is)</label><input name='address' value='"+esc(s.address||"")+"'></div>"+
+  "<div><label>What they sell (public description)</label><textarea name='description' style='min-height:60px'>"+esc(s.description||"")+"</textarea></div>"+
+  "<div><label>Categories (comma separated, from: "+esc(MK_CATS.join(", "))+")</label><input name='categories' value='"+esc((s.categories||[]).join(", "))+"'></div>"+
+  "<div><label>Shop logo (photo)</label><input type='file' name='logo' accept='image/*'></div>"+
+  "<div><label>Cover photo of the shop or goods</label><input type='file' name='cover' accept='image/*'></div>"+
+  "<h3 style='font-size:12px;color:var(--gold);letter-spacing:1px;margin:14px 0 6px'>PRIVATE (never shown to the public)</h3>"+
+  "<div><label>Owner name</label><input name='owner_name' value='"+esc(s.owner_name||"")+"'></div>"+
+  "<div><label>Owner phone / WhatsApp</label><input name='phone' type='tel' value='"+esc(s.phone||"")+"'></div>"+
+  "<div><label>ID card number</label><input name='id_number' value='"+esc(s.id_number||"")+"'></div>"+
+  "<div><label>Photo of ID card</label><input type='file' name='iddoc' accept='image/*'></div>"+
+  "<div><label>Payout method (MTN MoMo / Orange Money / bank)</label><input name='payout_method' value='"+esc(s.payout_method||"")+"'></div>"+
+  "<div><label>Payout number / account</label><input name='payout_account' value='"+esc(s.payout_account||"")+"'></div>"+
+  "<div style='display:flex;gap:10px'><div style='flex:1'><label>Own commission % (empty = default 10)</label><input name='commission_rate' type='number' step='0.01' min='0' max='100' value='"+(s.commission_rate==null?"":s.commission_rate)+"'></div>"+
+  "<div style='flex:1'><label>Status</label><select name='status'>"+opts(["pending","verified","suspended"],s.status||"pending")+"</select></div></div>"+
+  "<div><label>Staff notes (private)</label><textarea name='staff_notes' style='min-height:50px'>"+esc(s.staff_notes||"")+"</textarea></div>"+
+  "<button type='submit' class='btn-gold' style='margin-top:12px'>Save seller</button> <button type='button' data-act='cancel' class='btn-gold' style='background:none;color:var(--dim);border:1px solid var(--line);margin-top:8px'>Cancel</button></form>";
+}
+function mkSellersHtml(){
+  var h="<button class='btn-gold' data-act='newseller' style='margin-bottom:12px'>+ Add seller</button>";
+  if(mk.form==="seller")h+=mkSellerForm(mk.editing);
+  h+="<input id='mk-q' placeholder='Search sellers...' value='"+esc(mk.q)+"' style='margin-bottom:12px'>";
+  var q=mk.q.toLowerCase();
+  var l=mk.sellers.filter(function(s){return !q||(s.shop_name+" "+s.region+" "+(s.town_area||"")+" "+(s.owner_name||"")+" "+s.ref).toLowerCase().indexOf(q)>-1;});
+  h+="<div class='sub' style='margin-bottom:8px'>"+l.length+" seller(s) · "+mk.sellers.filter(function(s){return s.status==="verified";}).length+" verified</div>";
+  return h+(l.length?l.slice(0,100).map(function(s){
+    var cls=s.status==="verified"?"s-done":(s.status==="pending"?"s-pay":"");
+    return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(s.ref)+" · "+esc(s.seller_type)+"</div><div class='card-name'>"+esc(s.shop_name)+"</div>"+
+    "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div></div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
+    "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button>"+
+    (s.status!=="verified"?"<button class='green' data-act='setstatus' data-v='verified' data-id='"+s.id+"'>Verify</button>":"<button class='danger' data-act='setstatus' data-v='suspended' data-id='"+s.id+"'>Suspend</button>")+
+    (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+"</div></div>";
+  }).join(""):"<div class='empty'>No sellers yet. Tap + Add seller.</div>");
+}
+async function mkSaveSeller(f){
+  var v=function(n){return f.elements[n].value.trim();};
+  var row={shop_name:titleCase(v("shop_name")),seller_type:v("seller_type"),region:v("region"),town_area:v("town_area")||null,address:v("address")||null,description:v("description")||null,
+    categories:v("categories").split(",").map(function(x){return x.trim();}).filter(Boolean),owner_name:titleCase(v("owner_name"))||null,phone:v("phone")||null,id_number:v("id_number")||null,
+    payout_method:v("payout_method")||null,payout_account:v("payout_account")||null,commission_rate:v("commission_rate")===""?null:Number(v("commission_rate")),status:v("status"),staff_notes:v("staff_notes")||null};
+  var btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Saving...";
+  try{
+    if(f.elements.logo.files[0])row.logo_url=await mkUpload(f.elements.logo.files[0],"mk-public","logos");
+    if(f.elements.cover.files[0])row.cover_url=await mkUpload(f.elements.cover.files[0],"mk-public","covers");
+    if(f.elements.iddoc.files[0])row.id_doc_path=await mkUpload(f.elements.iddoc.files[0],"mk-private","ids");
+    if(row.status==="verified")row.verified_at=new Date().toISOString();
+    var id=f.getAttribute("data-id");
+    var r=id?await sb.from("mk_sellers").update(row).eq("id",id):await sb.from("mk_sellers").insert(row);
+    if(r.error)throw r.error;
+    mk.form="";mk.editing=null;await mkLoad();
+  }catch(e){alert("Could not save: "+(e.message||e));btn.disabled=false;btn.textContent="Save seller";}
+}
+
+/* ---------- PRODUCTS ---------- */
+function mkProductsHtml(){
+  if(!mk.sellers.length)return "<div class='empty'>Add a seller first.</div>";
+  var h="<button class='btn-gold' data-act='newproduct' style='margin-bottom:12px'>+ Add product</button>";
+  if(mk.form==="product")h+="<form id='mk-pform' style='margin-bottom:16px'><div><label>Seller *</label><select name='seller_id' required>"+selOpts()+"</select></div>"+
+    "<div><label>Product name *</label><input name='title' required></div>"+
+    "<div style='display:flex;gap:10px'><div style='flex:1'><label>Price (XAF) *</label><input name='price' type='number' min='0' required></div><div style='flex:1'><label>Unit</label><input name='unit' value='piece'></div></div>"+
+    "<div><label>Category</label><select name='category'>"+opts(MK_CATS)+"</select></div>"+
+    "<div><label>Description</label><textarea name='description' style='min-height:60px'></textarea></div>"+
+    "<div><label>Photos (up to 3)</label><input type='file' name='photos' accept='image/*' multiple></div>"+
+    "<button type='submit' class='btn-gold' style='margin-top:12px'>Save product</button> <button type='button' data-act='cancel' class='btn-gold' style='background:none;color:var(--dim);border:1px solid var(--line);margin-top:8px'>Cancel</button></form>";
+  h+="<input id='mk-q' placeholder='Search products or shop...' value='"+esc(mk.q)+"' style='margin-bottom:12px'>";
+  var q=mk.q.toLowerCase();
+  var l=mk.products.filter(function(p){return !q||(p.title+" "+sellerName(p.seller_id)).toLowerCase().indexOf(q)>-1;});
+  return h+(l.length?l.slice(0,100).map(function(p){
+    return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(p.category)+" · "+esc(sellerName(p.seller_id))+"</div><div class='card-name'>"+esc(p.title)+"</div><div class='card-item'>"+fx(p.price_xaf)+" / "+esc(p.unit||"piece")+" · "+(p.image_urls||[]).length+" photo(s)</div></div>"+
+    "<span class='badge "+(p.active?"s-done":"")+"'>"+(p.active?(p.in_stock?"Live":"Out of stock"):"Hidden")+"</span></div>"+
+    "<div class='card-actions'><button data-act='ptoggle' data-f='active' data-id='"+p.id+"'>"+(p.active?"Hide":"Show")+"</button><button data-act='ptoggle' data-f='in_stock' data-id='"+p.id+"'>"+(p.in_stock?"Mark out of stock":"Mark in stock")+"</button><button class='danger' data-act='pdel' data-id='"+p.id+"'>Delete</button></div></div>";
+  }).join(""):"<div class='empty'>No products yet.</div>");
+}
+async function mkSaveProduct(f){
+  var btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Saving...";
+  try{
+    var urls=[],files=Array.prototype.slice.call(f.elements.photos.files,0,3);
+    for(var i=0;i<files.length;i++)urls.push(await mkUpload(files[i],"mk-public","products"));
+    var r=await sb.from("mk_products").insert({seller_id:f.elements.seller_id.value,title:f.elements.title.value.trim(),price_xaf:Math.round(Number(f.elements.price.value)),unit:f.elements.unit.value.trim()||"piece",category:f.elements.category.value,description:f.elements.description.value.trim()||null,image_urls:urls});
+    if(r.error)throw r.error;
+    mk.form="";await mkLoad();
+  }catch(e){alert("Could not save: "+(e.message||e));btn.disabled=false;btn.textContent="Save product";}
+}
+
+/* ---------- ENQUIRIES ---------- */
+function mkEnqHtml(){
+  var l=mk.enq;
+  return (l.length?l.map(function(e){
+    return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(e.ref)+" · "+fmtDate(e.created_at)+"</div><div class='card-name'>"+esc(e.buyer_name)+" · "+esc(e.buyer_phone)+"</div>"+
+    "<div class='card-item'>"+esc(e.product_title||"")+" x"+e.qty+" · "+esc(sellerName(e.seller_id))+"</div>"+(e.delivery_location?"<div class='card-item'>Deliver to: "+esc(e.delivery_location)+"</div>":"")+(e.message?"<div class='card-item'>"+esc(e.message)+"</div>":"")+"</div>"+
+    "<span class='badge "+(e.status==="new"?"s-pay":(e.status==="converted"?"s-done":""))+"'>"+esc(e.status)+"</span></div>"+
+    "<div class='card-actions'><button data-act='wa' data-p='"+esc(e.buyer_phone)+"'>WhatsApp buyer</button>"+
+    (e.status!=="converted"?"<button class='green' data-act='mkorder' data-id='"+e.id+"'>Create order</button>":"")+
+    (e.status!=="closed"&&e.status!=="converted"?"<button data-act='enqclose' data-id='"+e.id+"'>Close</button>":"")+"</div></div>";
+  }).join(""):"<div class='empty'>No enquiries yet. They appear here when customers tap Enquire on the public marketplace.</div>");
+}
+
+/* ---------- ORDERS ---------- */
+var MK_PAYC={pending:"s-pay",confirmed:"s-done",failed:"",disputed:"",refund_pending:"s-pay",refunded:""};
+var MK_NEXT={processing:["ready_for_dispatch","Ready for dispatch"],ready_for_dispatch:["in_transit","In transit"],in_transit:["delivered","Delivered"]};
+function mkOrdersHtml(){
+  var h="<button class='btn-gold' data-act='neworder' style='margin-bottom:12px'>+ Manual order (phone / walk-in)</button>";
+  if(mk.form==="order")h+="<form id='mk-oform' style='margin-bottom:16px'><div><label>Seller *</label><select name='seller_id' required>"+selOpts()+"</select></div><div><label>Buyer name *</label><input name='buyer_name' required></div><div><label>Buyer phone *</label><input name='buyer_phone' type='tel' required></div><div><label>Delivery location</label><input name='loc'></div><div><label>What was bought *</label><input name='item' required></div><div><label>Agreed price of the goods (XAF, without delivery) *</label><input name='amount' type='number' min='1' required></div><button type='submit' class='btn-gold' style='margin-top:12px'>Create order</button> <button type='button' data-act='cancel' class='btn-gold' style='background:none;color:var(--dim);border:1px solid var(--line);margin-top:8px'>Cancel</button></form>";
+  return h+(mk.orders.length?mk.orders.map(function(o){
+    var nx=MK_NEXT[o.order_status];
+    return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(o.ref)+" · "+fmtDate(o.created_at)+"</div><div class='card-name'>"+esc(o.buyer_name)+" · "+esc(o.buyer_phone)+"</div>"+
+    "<div class='card-item'>"+esc(sellerName(o.seller_id))+(o.delivery_location?" → "+esc(o.delivery_location):"")+"</div>"+
+    "<div class='card-item'>Goods "+fx(o.subtotal_xaf)+" · KMDS commission ("+o.commission_rate+"%) "+fx(o.commission_xaf)+" · Seller gets "+fx(o.seller_payable_xaf)+"</div>"+
+    (o.delivery_fee_xaf?"<div class='card-item'>Delivery fee (separate): "+fx(o.delivery_fee_xaf)+"</div>":"")+
+    "<div class='card-item'>Order: "+esc(o.order_status.replace(/_/g," "))+(o.payment_ref?" · Pay ref "+esc(o.payment_ref):"")+" · Payout: "+esc(o.payout_status.replace(/_/g," "))+"</div></div>"+
+    "<span class='badge "+(MK_PAYC[o.payment_status]||"")+"'>"+esc(o.payment_status.replace(/_/g," "))+"</span></div>"+
+    "<div class='card-actions'>"+(o.payment_status==="pending"?"<button class='green' data-act='confirmpay' data-id='"+o.id+"'>Confirm payment</button>":"")+
+    (nx&&o.order_status!=="cancelled"?"<button class='gold' data-act='nextorder' data-id='"+o.id+"'>"+nx[1]+"</button>":"")+
+    "<button data-act='label' data-id='"+o.id+"'>Print label</button>"+
+    (o.payment_status==="confirmed"&&o.payout_status!=="completed"?"<button class='danger' data-act='refund' data-id='"+o.id+"'>Refund</button>":"")+"</div></div>";
+  }).join(""):"<div class='empty'>No orders yet.</div>");
+}
+async function mkLedger(rows){var r=await sb.from("mk_ledger").insert(rows);if(r.error&&String(r.error.code)!=="23505")throw r.error;}
+function mkEligible(o){return o.payment_status==="confirmed"&&o.order_status==="delivered"&&o.payout_status==="not_due";}
+async function mkOrderAct(act,id){
+  var o=mk.orders.find(function(x){return x.id===id;});if(!o)return;
+  try{
+    if(act==="confirmpay"){
+      var ref=prompt("Payment reference (the MoMo / Orange Money / bank transaction ID):");if(!ref)return;
+      var upd={payment_status:"confirmed",payment_ref:ref.trim()};
+      var r=await sb.from("mk_orders").update(upd).eq("id",id);if(r.error)throw r.error;
+      await mkLedger([{entry_type:"payment",order_id:id,seller_id:o.seller_id,amount_xaf:o.subtotal_xaf,idempotency_key:"pay:"+id,note:"Payment confirmed "+ref},{entry_type:"commission",order_id:id,seller_id:o.seller_id,amount_xaf:o.commission_xaf,idempotency_key:"com:"+id,note:"KMDS commission"}]);
+      if(o.order_status==="delivered")await sb.from("mk_orders").update({payout_status:"pending"}).eq("id",id).eq("payout_status","not_due");
+    }
+    if(act==="nextorder"){
+      var nx=MK_NEXT[o.order_status];if(!nx)return;
+      var u={order_status:nx[0]};
+      if(nx[0]==="ready_for_dispatch"){var p=prompt("Packed by (name):");if(p)u.packed_by=p;}
+      if(nx[0]==="in_transit"){var d=prompt("Dispatched by (rider / driver name):");if(d)u.dispatched_by=d;}
+      if(nx[0]==="delivered"){var w=prompt("Received by (name of person who took the goods):");if(!w)return;u.delivered_to=w;u.delivered_at=new Date().toISOString();if(o.payment_status==="confirmed")u.payout_status="pending";}
+      var r2=await sb.from("mk_orders").update(u).eq("id",id);if(r2.error)throw r2.error;
+    }
+    if(act==="refund"){
+      if(!confirm("Refund this order? This reverses the payment and the commission in the ledger."))return;
+      var r3=await sb.from("mk_orders").update({payment_status:"refunded",order_status:"cancelled",payout_status:"not_due"}).eq("id",id);if(r3.error)throw r3.error;
+      await mkLedger([{entry_type:"refund",order_id:id,seller_id:o.seller_id,amount_xaf:-o.subtotal_xaf,idempotency_key:"ref:"+id,note:"Refund"},{entry_type:"reversal",order_id:id,seller_id:o.seller_id,amount_xaf:-o.commission_xaf,idempotency_key:"revcom:"+id,note:"Commission reversed (refund)"}]);
+    }
+    if(act==="label"){
+      var w2=window.open("","_blank");if(!w2)return;
+      w2.document.write("<html><head><title>"+esc(o.ref)+"</title></head><body style='font-family:Arial;padding:20px'><div style='border:4px solid #000;padding:18px;max-width:420px'><div style='font-size:28px;font-weight:bold;letter-spacing:3px'>KMDS</div><div style='font-size:11px;margin-bottom:12px'>Kingmakers Delivery Service</div><div style='font-size:22px;font-weight:bold'>"+esc(o.ref)+"</div><hr><div style='font-size:12px'>TO:</div><div style='font-size:22px;font-weight:bold'>"+esc(o.buyer_name)+"</div><div style='font-size:18px'>"+esc(o.delivery_location||"")+"</div><div style='font-size:20px'>"+esc(o.buyer_phone)+"</div></div><script>window.print()<\/script></body></html>");
+      w2.document.close();return;
+    }
+    await mkLoad();
+  }catch(e){alert("Could not do that: "+(e.message||e));}
+}
+
+/* ---------- SETTLEMENTS ---------- */
+function mkSettleHtml(){
+  var ledPay=0,ledCom=0,ledPaid=0,ledRef=0;
+  mk.led.forEach(function(l){if(l.entry_type==="payment")ledPay+=l.amount_xaf;if(l.entry_type==="commission")ledCom+=l.amount_xaf;if(l.entry_type==="payout")ledPaid+=-l.amount_xaf;if(l.entry_type==="refund")ledRef+=-l.amount_xaf;if(l.entry_type==="reversal")ledCom+=l.amount_xaf;});
+  var ordPay=0;mk.orders.forEach(function(o){if(o.payment_status==="confirmed")ordPay+=o.subtotal_xaf;});
+  var diff=ordPay-(ledPay-ledRef);
+  var h="<div class='fee-note'><strong>Daily reconciliation</strong><br>Confirmed payments in ledger: "+fx(ledPay-ledRef)+"<br>Confirmed orders: "+fx(ordPay)+"<br>KMDS commission earned: "+fx(ledCom)+"<br>Paid out to sellers: "+fx(ledPaid)+"<br>"+(diff===0?"<span style='color:var(--done)'>Everything matches.</span>":"<span style='color:#c45a5a'>Difference of "+fx(diff)+". Check the orders and ledger.</span>")+"</div>";
+  var rows=mk.sellers.map(function(s){
+    var os=mk.orders.filter(function(o){return o.seller_id===s.id&&o.payment_status==="confirmed";});
+    var sales=0,com=0,pay=0;os.forEach(function(o){sales+=o.subtotal_xaf;com+=o.commission_xaf;pay+=o.seller_payable_xaf;});
+    var paid=0;mk.pay.forEach(function(p){if(p.seller_id===s.id&&p.status==="completed")paid+=p.amount_xaf;});
+    var elig=mk.orders.filter(function(o){return o.seller_id===s.id&&o.payout_status==="pending";});
+    var batched={};mk.pay.forEach(function(p){if(p.status!=="failed")(p.order_refs||[]).forEach(function(r){batched[r]=1;});});
+    var free=elig.filter(function(o){return !batched[o.ref];});
+    var amt=0;free.forEach(function(o){amt+=o.seller_payable_xaf;});
+    return {s:s,sales:sales,com:com,pay:pay,paid:paid,out:pay-paid,free:free,amt:amt};
+  }).filter(function(r){return r.sales>0||r.paid>0;});
+  h+="<h3 style='font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:14px 0 10px'>Seller balances</h3>";
+  h+=rows.length?rows.map(function(r){
+    return "<div class='card'><div class='card-name'>"+esc(r.s.shop_name)+"</div><div class='card-item'>Confirmed sales "+fx(r.sales)+" · KMDS commission "+fx(r.com)+"</div><div class='card-item'>Seller amount "+fx(r.pay)+" · Paid "+fx(r.paid)+" · <b style='color:var(--gold)'>Outstanding "+fx(r.out)+"</b></div>"+
+      "<div class='card-item'>Ready to pay now (delivered and paid): "+fx(r.amt)+"</div><div class='card-item'>Payout to: "+esc(r.s.payout_method||"?")+" "+esc(r.s.payout_account||"")+"</div>"+
+      (r.amt>0?"<div class='card-actions'><button class='green' data-act='batch' data-id='"+r.s.id+"'>Create payout batch</button></div>":"")+"</div>";
+  }).join(""):"<div class='empty'>No confirmed sales yet.</div>";
+  h+="<h3 style='font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px'>Payout batches (approve before paying)</h3>";
+  h+=mk.pay.length?mk.pay.map(function(p){
+    return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(p.ref)+" · "+fmtDate(p.created_at)+"</div><div class='card-name'>"+esc(sellerName(p.seller_id))+" · "+fx(p.amount_xaf)+"</div><div class='card-item'>Orders: "+esc((p.order_refs||[]).join(", "))+"</div>"+(p.provider_ref?"<div class='card-item'>Paid ref: "+esc(p.provider_ref)+"</div>":"")+"</div><span class='badge "+(p.status==="completed"?"s-done":"s-pay")+"'>"+esc(p.status.replace(/_/g," "))+"</span></div>"+
+      "<div class='card-actions'>"+(p.status==="pending_approval"?"<button class='gold' data-act='approve' data-id='"+p.id+"'>Approve</button>":"")+(p.status==="approved"?"<button class='green' data-act='paid' data-id='"+p.id+"'>Mark paid</button><button class='danger' data-act='pfail' data-id='"+p.id+"'>Mark failed</button>":"")+"</div></div>";
+  }).join(""):"<div class='empty'>No payout batches yet.</div>";
+  return h;
+}
+async function mkSettleAct(act,id){
+  try{
+    if(act==="batch"){
+      var s=mk.sellers.find(function(x){return x.id===id;});
+      var batched={};mk.pay.forEach(function(p){if(p.status!=="failed")(p.order_refs||[]).forEach(function(r){batched[r]=1;});});
+      var free=mk.orders.filter(function(o){return o.seller_id===id&&o.payout_status==="pending"&&!batched[o.ref];});
+      var amt=0;free.forEach(function(o){amt+=o.seller_payable_xaf;});if(!amt)return;
+      var refs=free.map(function(o){return o.ref;}).sort();
+      if(!confirm("Create payout batch of "+fx(amt)+" for "+s.shop_name+"? It still needs approval before any money is sent."))return;
+      var r=await sb.from("mk_payouts").insert({seller_id:id,amount_xaf:amt,order_refs:refs,idempotency_key:"batch:"+id+":"+refs.join(",")});
+      if(r.error){alert(String(r.error.code)==="23505"?"This batch already exists.":r.error.message);return;}
+    }
+    var p=mk.pay.find(function(x){return x.id===id;});
+    if(act==="approve"){var u=await sb.auth.getUser();var r2=await sb.from("mk_payouts").update({status:"approved",approved_by:u.data.user.id,approved_at:new Date().toISOString()}).eq("id",id).eq("status","pending_approval");if(r2.error)throw r2.error;}
+    if(act==="paid"){
+      var ref=prompt("Payment reference from MoMo / Orange Money / bank (proof the money was sent):");if(!ref)return;
+      var r3=await sb.from("mk_payouts").update({status:"completed",provider_ref:ref.trim()}).eq("id",id).eq("status","approved");if(r3.error)throw r3.error;
+      await mkLedger([{entry_type:"payout",seller_id:p.seller_id,payout_id:id,amount_xaf:-p.amount_xaf,idempotency_key:"payout:"+id,note:"Payout "+p.ref+" ref "+ref}]);
+      await sb.from("mk_orders").update({payout_status:"completed"}).in("ref",p.order_refs);
+    }
+    if(act==="pfail"){if(!confirm("Mark this payout as failed? Its orders become available for a new batch."))return;var r4=await sb.from("mk_payouts").update({status:"failed"}).eq("id",id);if(r4.error)throw r4.error;}
+    await mkLoad();
+  }catch(e){alert("Could not do that: "+(e.message||e));}
+}
+
+/* ---------- events ---------- */
+document.getElementById("nav").addEventListener("click",function(e){var b=e.target.closest("button[data-tab]");if(b&&b.getAttribute("data-tab")==="mk")mkInit();});
+$m("mk-tabs").addEventListener("click",function(e){var b=e.target.closest("button[data-v]");if(!b)return;mk.tab=b.getAttribute("data-v");mk.form="";mk.q="";mkRender();});
+$m("mk-body").addEventListener("input",function(e){if(e.target.id==="mk-q"){mk.q=e.target.value;var pos=e.target.selectionStart;mkRender();var i=$m("mk-q");if(i){i.focus();try{i.setSelectionRange(pos,pos);}catch(x){}}}});
+$m("mk-body").addEventListener("submit",function(e){e.preventDefault();var f=e.target;
+  if(f.id==="mk-sform")mkSaveSeller(f);
+  if(f.id==="mk-pform")mkSaveProduct(f);
+  if(f.id==="mk-oform")mkCreateManual(f);
+});
+async function mkCreateManual(f){
+  try{
+    var r=await sb.from("mk_orders").insert({seller_id:f.elements.seller_id.value,buyer_name:titleCase(f.elements.buyer_name.value),buyer_phone:f.elements.buyer_phone.value.trim(),delivery_location:f.elements.loc.value.trim()||null,items:[{title:f.elements.item.value.trim(),qty:1}],subtotal_xaf:Math.round(Number(f.elements.amount.value))}).select().single();
+    if(r.error)throw r.error;
+    alert("Order "+r.data.ref+" created.\nGoods: "+fx(r.data.subtotal_xaf)+"\nKMDS commission: "+fx(r.data.commission_xaf)+"\nSeller gets: "+fx(r.data.seller_payable_xaf));
+    mk.form="";await mkLoad();
+  }catch(e){alert("Could not create: "+(e.message||e));}
+}
+$m("mk-body").addEventListener("click",async function(e){
+  var b=e.target.closest("button[data-act]");if(!b)return;
+  var a=b.getAttribute("data-act"),id=b.getAttribute("data-id");
+  if(a==="newseller"){mk.form="seller";mk.editing=null;mkRender();return;}
+  if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
+  if(a==="newproduct"){mk.form="product";mkRender();return;}
+  if(a==="neworder"){mk.form="order";mkRender();return;}
+  if(a==="cancel"){mk.form="";mkRender();return;}
+  if(a==="wa"){window.open("https://wa.me/"+waNumber(b.getAttribute("data-p")),"_blank");return;}
+  if(a==="viewid"){var r=await sb.storage.from("mk-private").createSignedUrl(b.getAttribute("data-p"),60);if(r.error)alert(r.error.message);else window.open(r.data.signedUrl,"_blank");return;}
+  if(a==="setstatus"){var v=b.getAttribute("data-v");var u={status:v};if(v==="verified")u.verified_at=new Date().toISOString();var r1=await sb.from("mk_sellers").update(u).eq("id",id);if(r1.error)alert(r1.error.message);await mkLoad();return;}
+  if(a==="ptoggle"){var f=b.getAttribute("data-f"),p=mk.products.find(function(x){return x.id===id;});var o={};o[f]=!p[f];var r5=await sb.from("mk_products").update(o).eq("id",id);if(r5.error)alert(r5.error.message);await mkLoad();return;}
+  if(a==="pdel"){if(!confirm("Delete this product?"))return;var r6=await sb.from("mk_products").delete().eq("id",id);if(r6.error)alert(r6.error.message);await mkLoad();return;}
+  if(a==="enqclose"){await sb.from("mk_enquiries").update({status:"closed"}).eq("id",id);await mkLoad();return;}
+  if(a==="mkorder"){
+    var en=mk.enq.find(function(x){return x.id===id;});
+    var amt=prompt("Agreed price for the goods in XAF (without delivery fee):");if(!amt)return;
+    amt=Math.round(Number(amt));if(!(amt>0)){alert("Enter a valid amount.");return;}
+    if(!en.seller_id){alert("This enquiry has no seller. Use Manual order instead.");return;}
+    var r7=await sb.from("mk_orders").insert({enquiry_id:id,seller_id:en.seller_id,buyer_name:en.buyer_name,buyer_phone:en.buyer_phone,delivery_location:en.delivery_location,items:[{title:en.product_title,qty:en.qty}],subtotal_xaf:amt}).select().single();
+    if(r7.error){alert(r7.error.message);return;}
+    await sb.from("mk_enquiries").update({status:"converted"}).eq("id",id);
+    alert("Order "+r7.data.ref+" created.\nKMDS commission: "+fx(r7.data.commission_xaf)+"\nSeller gets: "+fx(r7.data.seller_payable_xaf));
+    mk.tab="orders";await mkLoad();return;
+  }
+  if(["confirmpay","nextorder","refund","label"].indexOf(a)>-1){mkOrderAct(a,id);return;}
+  if(["batch","approve","paid","pfail"].indexOf(a)>-1){mkSettleAct(a,id);return;}
+});
+
+</script>
+</body>
+</html>
