@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMDS — Procurement Request</title>
+<style>
+:root{
+  --black:#0a0a0a;--panel:#141414;--panel2:#1c1c1c;
+  --gold:#d4af37;--gold2:#a8852b;--text:#eaeaea;--dim:#8c8c8c;--line:#2a2a2a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:60px;}
+header{padding:20px 18px;border-bottom:1px solid var(--line);text-align:center;}
+.crest{width:44px;height:44px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:11px;letter-spacing:1px;margin:0 auto 10px;}
+header h1{color:var(--gold);font-size:20px;letter-spacing:3px;font-weight:normal;}
+header p{color:var(--dim);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+main{padding:18px;max-width:520px;margin:0 auto;}
+.intro{color:var(--dim);font-size:12px;line-height:1.6;margin-bottom:18px;}
+.notice{border:1px solid var(--gold2);background:var(--panel2);padding:12px 14px;font-size:11px;line-height:1.7;color:var(--text);margin-bottom:22px;}
+.notice strong{color:var(--gold);}
+h2.section-title{color:var(--gold);font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:normal;margin:22px 0 12px;border-bottom:1px solid var(--line);padding-bottom:8px;}
+h2.section-title:first-of-type{margin-top:0;}
+form{display:flex;flex-direction:column;gap:12px;}
+label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px;}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:12px;font-family:inherit;font-size:14px;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);}
+textarea{resize:vertical;min-height:70px;}
+.btn-gold{background:var(--gold);color:var(--black);border:none;padding:16px;font-family:inherit;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;width:100%;margin-top:8px;cursor:pointer;}
+.foot{color:var(--dim);font-size:10px;line-height:1.8;text-align:center;margin-top:24px;letter-spacing:.3px;}
+.foot strong{color:var(--gold);}
+#success{display:none;text-align:center;padding:30px 10px;}
+#success h2{color:var(--gold);font-size:18px;margin-bottom:12px;letter-spacing:1px;}
+#success p{color:var(--dim);font-size:13px;line-height:1.7;margin-bottom:18px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="crest">KMDS</div>
+  <h1>KMDS</h1>
+  <p>Procurement Request</p>
+</header>
+<main>
+  <div id="form-wrap">
+    <p class="intro">Fill in all required fields below and submit. We will contact you within 24 hours with pricing and next steps.</p>
+
+    <div class="notice">
+      <strong>Standard KMDS Fees:</strong><br>
+      Markup: 1,000 XAF per 10,000 XAF (10%)<br>
+      Service Fee: 500 XAF per 10,000 XAF (5%)<br>
+      These fees are automatically included in your final invoice.
+      <br><br>
+      <strong>Last Mile Delivery Fee:</strong><br>
+      A delivery fee (port/warehouse to your final destination in Cameroon) also applies, starting from a minimum of 2,500 XAF for the smallest parcels. Larger, heavier, or bulkier items (appliances, furniture, bikes, etc.) cost more depending on weight, size, and dimensions. Your exact fee is confirmed once we have your item's details from the supplier and will be added to your final invoice.
+    </div>
+
+    <form id="req-form">
+      <h2 class="section-title">Client Information</h2>
+      <div>
+        <label>Full Name *</label>
+        <input type="text" id="f-name" required>
+      </div>
+      <div>
+        <label>Phone Number *</label>
+        <input type="tel" id="f-phone" required>
+      </div>
+      <div>
+        <label>WhatsApp Number (if different)</label>
+        <input type="tel" id="f-wa">
+      </div>
+      <div>
+        <label>Email Address</label>
+        <input type="email" id="f-email">
+      </div>
+
+      <h2 class="section-title">Shipping Information</h2>
+      <div>
+        <label>City / Town *</label>
+        <input type="text" id="f-city" required>
+      </div>
+      <div>
+        <label>Quarter / Neighbourhood</label>
+        <input type="text" id="f-quarter">
+      </div>
+      <div>
+        <label>Full Delivery Address *</label>
+        <input type="text" id="f-address" required>
+      </div>
+      <div>
+        <label>Preferred Shipping Method</label>
+        <select id="f-shipping">
+          <option value="Air Freight (faster)">Air Freight (faster)</option>
+          <option value="Water Shipment (cheaper)">Water Shipment (cheaper)</option>
+        </select>
+      </div>
+
+      <h2 class="section-title">Product Details</h2>
+      <div>
+        <label>Product Description *</label>
+        <textarea id="f-item" required></textarea>
+      </div>
+      <div>
+        <label>Quantity *</label>
+        <input type="number" id="f-qty" min="1" value="1" required>
+      </div>
+      <div>
+        <label>Additional Notes / Special Requirements</label>
+        <textarea id="f-notes"></textarea>
+      </div>
+
+      <h2 class="section-title">Payment</h2>
+      <div>
+        <label>Preferred Payment Method</label>
+        <select id="f-payment">
+          <option value="MTN Mobile Money">MTN Mobile Money</option>
+          <option value="Orange Money">Orange Money</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
+
+      <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Leave empty</label><input type="text" id="f-hp" tabindex="-1" autocomplete="off"></div>
+      <div id="err" style="display:none;color:#e57373;font-size:12px;line-height:1.6;border:1px solid #e57373;padding:10px"></div>
+      <button type="submit" id="submit-btn" class="btn-gold">Submit Order Request</button>
+    </form>
+
+    <div class="foot">
+      Have a product photo? Send it directly on WhatsApp after submitting.<br>
+      <strong>Kingmakers Delivery Service</strong> — Limbe, Cameroon<br>
+      WhatsApp: +237 641 560 868 · Call: +237 676 347 228 / +237 672 927 112 · kmdscameroon@gmail.com
+    </div>
+  </div>
+
+  <div id="success">
+    <h2>Your request has been submitted successfully.</h2>
+    <p>Your reference: <strong id="ref" style="color:#d4af37"></strong><br><br>We will review your order and contact you within 24 hours with pricing.<br><br>You can also send us your product photo directly on WhatsApp (quote your reference).</p>
+    <a id="wa-link" class="btn-gold" style="display:inline-block;text-decoration:none;" href="#" target="_blank">Open WhatsApp</a>
+  </div>
+</main>
+
+<script>
+// ====== FILL THESE TWO LINES (Supabase > Project Settings > API) ======
+var SUPABASE_URL = "https://qfocanqogkugdyzatjty.supabase.co";      // e.g. https://xxxx.supabase.co
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmb2NhbnFvZ2t1Z2R5emF0anR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNTA5NDQsImV4cCI6MjA5ODgyNjk0NH0.HqcGfD7x8oeBeoJuMgZasWGsEKHEbm9s-4V2v9bSfVU";
+// =====================================================================
+var WA_NUMBER = "237641560868";
+
+function $(id){return document.getElementById(id);}
+function titleCase(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase();});}
+$("f-name").addEventListener("blur",function(){this.value=titleCase(this.value);});
+function makeRef(){
+  var d=new Date(), p=function(n){return ("0"+n).slice(-2);};
+  var rnd=Math.random().toString(36).substr(2,4).toUpperCase();
+  return "KMDS-"+String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+"-"+rnd;
+}
+function showSuccess(ref,msg){
+  $("ref").textContent=ref;
+  $("wa-link").href="https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(msg);
+  $("form-wrap").style.display="none";
+  $("success").style.display="block";
+  window.scrollTo(0,0);
+}
+$("req-form").addEventListener("submit", function(e){
+  e.preventDefault();
+  if($("f-hp").value){return;} // bot trap
+  var btn=$("submit-btn"), err=$("err");
+  err.style.display="none";
+  var row={
+    ref:makeRef(),
+    name:titleCase($("f-name").value),
+    phone:$("f-phone").value.trim(),
+    whatsapp:$("f-wa").value.trim()||null,
+    email:$("f-email").value.trim()||null,
+    city:$("f-city").value.trim(),
+    quarter:$("f-quarter").value.trim()||null,
+    address:$("f-address").value.trim(),
+    shipping:$("f-shipping").value,
+    payment:$("f-payment").value,
+    item:$("f-item").value.trim(),
+    qty:parseInt($("f-qty").value,10)||1,
+    notes:$("f-notes").value.trim()||null
+  };
+  var msg="*New KMDS Order Request* ("+row.ref+")\n\n"+
+    "Name: "+row.name+"\nPhone: "+row.phone+"\n"+
+    (row.whatsapp?"WhatsApp: "+row.whatsapp+"\n":"")+
+    (row.email?"Email: "+row.email+"\n":"")+
+    "City: "+row.city+"\n"+(row.quarter?"Quarter: "+row.quarter+"\n":"")+
+    "Address: "+row.address+"\nShipping: "+row.shipping+"\nPayment: "+row.payment+"\n"+
+    "Item: "+row.item+"\nQty: "+row.qty+"\n"+(row.notes?"Notes: "+row.notes+"\n":"");
+  btn.disabled=true; btn.textContent="Sending...";
+  var ctrl=("AbortController" in window)?new AbortController():null;
+  var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); },15000);
+  fetch(SUPABASE_URL+"/rest/v1/requests",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "Authorization":"Bearer "+SUPABASE_ANON_KEY,
+      "Prefer":"return=minimal"
+    },
+    body:JSON.stringify(row),
+    signal:ctrl?ctrl.signal:undefined
+  }).then(function(r){
+    clearTimeout(timer);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    showSuccess(row.ref,msg);
+  }).catch(function(){
+    clearTimeout(timer);
+    // Safety net: never lose an order. Offer WhatsApp instead.
+    btn.disabled=false; btn.textContent="Submit Order Request";
+    err.innerHTML='We could not reach our system just now. Please tap here to send your request on WhatsApp instead: <a style="color:#d4af37" target="_blank" href="https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg)+'">Send on WhatsApp</a>';
+    err.style.display="block";
+  });
+});
+</script>
+</body>
+</html>
