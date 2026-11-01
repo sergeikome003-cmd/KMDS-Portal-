@@ -1828,6 +1828,11 @@ if(signOutBtn)signOutBtn.addEventListener("click",function(){
 </script>
 <script>
 // ===== MARKETPLACE ADMIN (talks to the mk_* tables in Supabase) =====
+/* MK helpers: the main portal script keeps its own copies private, so the marketplace section needs these. */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function titleCase(s){return String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase();});}
+function fmtDate(iso){if(!iso)return"?";return new Date(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function waNumber(p){var d=String(p||"").replace(/\D/g,"");if(d.length===9&&d.charAt(0)==="6")d="237"+d;return d;}
 var MK_REGIONS=["Limbe","Buea","Douala","Bamenda","Yaoundé","Other"];
 var MK_SEASONS=[["christmas", "Christmas", "🎄", "Trees, decorations, lights, toys and gifts"], ["newyear", "New Year", "🎆", "Party items, gifts and fresh starts"], ["school", "Back to School", "🎒", "Bags, books, uniforms and stationery"], ["valentine", "Valentine's Day", "💝", "Gifts, flowers and treats"], ["easter", "Easter", "🐣", "Family meals, clothes and gifts"], ["blackfriday", "Black Friday", "🏷️", "Special offers from verified sellers"], ["mothers", "Mother's Day", "🌸", "Gifts and treats for mums"]].map(function(x){return {k:x[0],n:x[1]};});
 var MK_CATS=["Electronics & Appliances","Fashion & Beauty","Home & Living","Food & Beverages","Health & Personal Care","Sports & Outdoors","Automotive","Agriculture & Farming","Industrial & Tools","Toys & Kids","Office & Business","Other"];
