@@ -189,6 +189,15 @@ h2.title{letter-spacing:1px;}
   .an-kpis{display:grid;grid-template-columns:1fr 1fr;}
   .an-main{grid-template-columns:1fr;}
 }
+
+/* ===== NAV ARROWS (laptop-friendly tab bar) ===== */
+.navwrap{position:relative;}
+.nav-arrow{position:absolute;top:0;bottom:0;width:38px;border:none;color:var(--gold);font-size:26px;line-height:1;cursor:pointer;z-index:3;display:none;font-family:inherit;}
+.nav-arrow.show{display:block;}
+.nav-arrow.l{left:0;background:linear-gradient(90deg,var(--panel) 55%,rgba(20,20,20,0));}
+.nav-arrow.r{right:0;background:linear-gradient(270deg,var(--panel) 55%,rgba(20,20,20,0));}
+.nav-arrow:hover{color:#fff;}
+@media (hover:none){.nav-arrow{display:none !important;}}
 </style>
 </head>
 <body>
@@ -1636,6 +1645,38 @@ function renderAnalytics(){
   var clients=Object.keys(byClient).map(function(k){return{l:k,v:byClient[k]};}).filter(function(r){return r.v>0;}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
   document.getElementById("an-clients").innerHTML=anHBars(clients,function(v){return anFmt(v)+" XAF";},"#16a085");
 }
+
+
+// ===== NAV: arrows, mouse wheel, auto-scroll to clicked tab =====
+(function(){
+  var nav=document.getElementById("nav");if(!nav||nav.parentNode.classList.contains("navwrap"))return;
+  var wrap=document.createElement("div");wrap.className="navwrap";
+  nav.parentNode.insertBefore(wrap,nav);wrap.appendChild(nav);
+  var L=document.createElement("button"),R=document.createElement("button");
+  L.className="nav-arrow l";R.className="nav-arrow r";L.type=R.type="button";
+  L.setAttribute("aria-label","Scroll tabs left");R.setAttribute("aria-label","Scroll tabs right");
+  L.innerHTML="&#8249;";R.innerHTML="&#8250;";
+  wrap.appendChild(L);wrap.appendChild(R);
+  function upd(){
+    var max=nav.scrollWidth-nav.clientWidth;
+    L.classList.toggle("show",nav.scrollLeft>4);
+    R.classList.toggle("show",nav.scrollLeft<max-4);
+  }
+  function by(dx){nav.scrollBy({left:dx,behavior:"smooth"});}
+  L.addEventListener("click",function(){by(-Math.max(200,nav.clientWidth*0.6));});
+  R.addEventListener("click",function(){by(Math.max(200,nav.clientWidth*0.6));});
+  nav.addEventListener("scroll",upd);
+  window.addEventListener("resize",upd);
+  nav.addEventListener("wheel",function(e){
+    if(nav.scrollWidth<=nav.clientWidth)return;
+    if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){nav.scrollLeft+=e.deltaY;e.preventDefault();}
+  },{passive:false});
+  nav.addEventListener("click",function(e){
+    var b=e.target.closest("button[data-tab]");if(!b)return;
+    nav.scrollTo({left:Math.max(0,b.offsetLeft-(nav.clientWidth-b.offsetWidth)/2),behavior:"smooth"});
+  });
+  setTimeout(upd,50);setTimeout(upd,600);
+})();
 
 // INIT
 bootFromLocalCache();
