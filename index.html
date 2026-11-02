@@ -187,6 +187,16 @@ h2.title{letter-spacing:1px;}
 .an-sect.mk{border-left-color:var(--ship);color:#4fc3a8;}
 .an-split{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 @media (max-width:720px){.an-split{grid-template-columns:1fr 1fr;}}
+.an-filter{display:flex;align-items:center;gap:10px;margin:0 0 12px;}.an-filter label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);}.an-filter select{width:auto;min-width:150px;padding:8px 10px;}
+.an-hero{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:10px;}
+@media (max-width:720px){.an-hero{grid-template-columns:1fr 1fr;}.an-hero .big{grid-column:1 / -1;}}
+.an-kpi{border-radius:8px;background:linear-gradient(160deg,var(--panel),#101010);}
+.an-kpi.big .v{font-size:30px;}
+.an-kpi.mk{border-left-color:var(--ship);}.an-kpi.dl{border-left-color:var(--new);}
+.an-box{border-radius:8px;}
+.an-sect{border-radius:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.an-sect span{font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:none;}
+.an-sect.dl{border-left-color:var(--new);color:#7fb6e8;}
 .an-note{font-size:9px;color:var(--dim);margin-top:8px;line-height:1.5;}
 @media (max-width:720px){
   .an-wrap{grid-template-columns:1fr;}
@@ -312,15 +322,16 @@ h2.title{letter-spacing:1px;}
   <h2 class="title">Analytics</h2>
   <p class="sub">Business monitoring &amp; financial overview</p>
   <div class="an-title">KMDS Business Monitoring &amp; Financial Dashboard</div>
-  <div class="an-sect">KMDS Income At A Glance</div>
-  <div class="an-split">
-    <div class="an-kpi"><div class="k">International Procurement Profit</div><div class="v sm profit-figure" id="an-in-proc">0</div></div>
-    <div class="an-kpi"><div class="k">Local Marketplace Commission</div><div class="v sm profit-figure" id="an-in-mk">0</div></div>
-    <div class="an-kpi"><div class="k">Total KMDS Income (XAF)</div><div class="v sm profit-figure" id="an-in-total">0</div></div>
-    <div class="an-kpi"><div class="k">Delivery &amp; Freight</div><div class="v sm" style="color:var(--dim)">Separate system</div></div>
+  <div class="an-filter"><label for="an-period">Period</label><select id="an-period"><option value="all">All time</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option></select></div>
+  <div class="an-hero">
+    <div class="an-kpi big"><div class="k">Total KMDS Income (XAF)</div><div class="v profit-figure" id="an-in-total">0</div></div>
+    <div class="an-kpi"><div class="k">Procurement: Markup (10%)</div><div class="v sm profit-figure" id="an-in-markup">0</div></div>
+    <div class="an-kpi"><div class="k">Procurement: Service Fee (5%)</div><div class="v sm profit-figure" id="an-in-fee">0</div></div>
+    <div class="an-kpi mk"><div class="k">Marketplace Commission</div><div class="v sm profit-figure" id="an-in-mk">0</div></div>
   </div>
   <div class="an-box" style="margin:12px 0"><h3>Where KMDS Income Comes From</h3><div id="an-source"></div></div>
-  <div class="an-sect proc">International Procurement (orders from China, India, Turkey, UAE and others)</div>
+
+  <div class="an-sect proc">International Procurement <span>China, India, Turkey, UAE and others</span></div>
   <div class="an-wrap">
     <div class="an-kpis">
       <div class="an-kpi"><div class="k">Total Orders</div><div class="v" id="an-orders">0</div></div>
@@ -338,15 +349,28 @@ h2.title{letter-spacing:1px;}
       <div class="an-box"><h3>Top Clients</h3><div id="an-clients"></div></div>
     </div>
   </div>
-  <div class="an-sect mk">Local Marketplace (Cameroon only)</div>
+
+  <div class="an-sect mk">Local Marketplace <span>Cameroon only</span></div>
   <div class="an-split">
-    <div class="an-kpi"><div class="k">Marketplace Sales (XAF)</div><div class="v sm profit-figure" id="an-mk-sales">0</div></div>
-    <div class="an-kpi"><div class="k">KMDS Commission (XAF)</div><div class="v sm profit-figure" id="an-mk-com">0</div></div>
-    <div class="an-kpi"><div class="k">Still Owed To Shops (XAF)</div><div class="v sm profit-figure" id="an-mk-owed">0</div></div>
-    <div class="an-kpi"><div class="k">Shops With Sales</div><div class="v" id="an-mk-shops">0</div></div>
+    <div class="an-kpi mk"><div class="k">Marketplace Sales (XAF)</div><div class="v sm profit-figure" id="an-mk-sales">0</div></div>
+    <div class="an-kpi mk"><div class="k">KMDS Commission (XAF)</div><div class="v sm profit-figure" id="an-mk-com">0</div></div>
+    <div class="an-kpi mk"><div class="k">Still Owed To Shops (XAF)</div><div class="v sm profit-figure" id="an-mk-owed">0</div></div>
+    <div class="an-kpi mk"><div class="k">Shops With Sales</div><div class="v" id="an-mk-shops">0</div></div>
   </div>
   <div class="an-box" style="margin-top:12px"><h3>Shops: Sales, Commission and Payments</h3><div id="an-sellers"></div></div>
-  <p class="an-note">Figures use the same rules as the Dashboard tab: Pending Payment, In Shipment and Completed orders count as received. Tap a blurred number to reveal it when Profit Privacy is on.</p>
+
+  <div class="an-sect dl">Last-Mile Delivery <span>every marketplace sale becomes a delivery</span></div>
+  <div class="an-split">
+    <div class="an-kpi dl"><div class="k">Deliveries To Make</div><div class="v" id="an-dl-total">0</div></div>
+    <div class="an-kpi dl"><div class="k">Delivered</div><div class="v" id="an-dl-done">0</div></div>
+    <div class="an-kpi dl"><div class="k">Waiting / On The Way (now)</div><div class="v" id="an-dl-due">0</div></div>
+    <div class="an-kpi dl"><div class="k">Delivery Fees (XAF)</div><div class="v sm profit-figure" id="an-dl-fees">0</div></div>
+  </div>
+  <div class="an-main" style="margin-top:12px">
+    <div class="an-box"><h3>Deliveries by Status</h3><div id="an-dl-status"></div></div>
+    <div class="an-box"><h3>Deliveries by Destination</h3><div id="an-dl-city"></div></div>
+  </div>
+  <p class="an-note">Delivery figures come from paid marketplace orders. Full delivery finances will live in the separate delivery system. Figures use the same rules as the Dashboard tab: Pending Payment, In Shipment and Completed orders count as received. Tap a blurred number to reveal it when Profit Privacy is on.</p>
 </section>
 
 <!-- NEW ORDER -->
@@ -1600,9 +1624,16 @@ function anMonthBars(months){
   svg+="<div class='an-legend' style='flex-direction:row;gap:16px;'><div><span><span class='sw' style='background:#d4af37'></span>Received</span></div><div><span><span class='sw' style='background:#16a085'></span>Profit</span></div></div>";
   return svg;
 }
+function anInPeriod(iso){var p=window.__anPeriod||"all";if(p==="all")return true;var d=new Date(iso);if(isNaN(d))return false;var n=new Date(),s;
+  if(p==="today")s=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  else if(p==="week"){var wd=(n.getDay()+6)%7;s=new Date(n.getFullYear(),n.getMonth(),n.getDate()-wd);}
+  else if(p==="month")s=new Date(n.getFullYear(),n.getMonth(),1);
+  else s=new Date(n.getFullYear(),0,1);
+  return d>=s;}
+window.anInPeriod=anInPeriod;
 function renderAnalytics(){
   var el=document.getElementById("analytics");if(!el)return;
-  var orders=loadOrders()||[];
+  var orders=(loadOrders()||[]).filter(function(o){return anInPeriod(o.created);});
   var paid=orders.filter(function(o){return o.status==="pay"||o.status==="ship"||o.status==="done";});
   var received=0,profit=0,costSum=0,markup=0,fee=0,duty=0,deliv=0;
   paid.forEach(function(o){
@@ -1667,7 +1698,8 @@ function renderAnalytics(){
   });
   var clients=Object.keys(byClient).map(function(k){return{l:k,v:byClient[k]};}).filter(function(r){return r.v>0;}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
   document.getElementById("an-clients").innerHTML=anHBars(clients,function(v){return anFmt(v)+" XAF";},"#16a085");
-  window.__anProfit=profit;
+  window.__anProfit=profit;window.__anMarkup=markup;window.__anFee=fee;
+  var ap=document.getElementById("an-period");if(ap&&!ap.__w){ap.__w=1;ap.addEventListener("change",function(){window.__anPeriod=ap.value;renderAnalytics();});}
   try{if(window.mkAnalyticsFill&&window.sb)mkAnalyticsFill();}catch(e){}
 }
 
@@ -1974,11 +2006,12 @@ function mkDailyData(day){
   Object.keys(closed).forEach(function(k){if(!live.some(function(s){return s.seller_id===k;})){var c=closed[k];out.push({seller_id:k,lines:c.lines||[],gross:c.gross_xaf,com:c.commission_xaf,net:c.net_xaf,n:c.order_count,closed:true});}});
   return out;
 }
+function mkInP(iso){return window.anInPeriod?anInPeriod(iso):true;}
 function mkSellerReport(){
   return mk.sellers.map(function(s){
-    var os=mk.orders.filter(function(o){return o.seller_id===s.id&&o.payment_status==="confirmed";});
+    var os=mk.orders.filter(function(o){return o.seller_id===s.id&&o.payment_status==="confirmed"&&mkInP(o.created_at);});
     var sales=0,com=0,net=0;os.forEach(function(o){sales+=o.subtotal_xaf;com+=o.commission_xaf;net+=o.seller_payable_xaf;});
-    var paid=0;mk.pay.forEach(function(p){if(p.seller_id===s.id&&p.status==="completed")paid+=p.amount_xaf;});
+    var paid=0;mk.pay.forEach(function(p){if(p.seller_id===s.id&&p.status==="completed"&&mkInP(p.created_at))paid+=p.amount_xaf;});
     return {s:s,orders:os.length,sales:sales,com:com,net:net,paid:paid,owed:net-paid};
   }).filter(function(r){return r.orders>0||r.paid>0;}).sort(function(a,b){return b.sales-a.sales;});
 }
@@ -1995,14 +2028,24 @@ function mkAnalyticsFill(){
   if(!mk.loaded){el.innerHTML="<div class='an-empty'>Loading marketplace data...</div>";if(!mk.loadingA){mk.loadingA=true;mkLoad().then(function(){mk.loadingA=false;});}return;}
   el.innerHTML=mkSellerReportHtml();
   var rep=mkSellerReport(),sales=0,com=0,owed=0;rep.forEach(function(r){sales+=r.sales;com+=r.com;owed+=r.owed;});
-  var setn=function(id,v){var n=document.getElementById(id);if(n)n.textContent=v;};
+  var setn=function(id,v){var n=document.getElementById(id);if(n)n.textContent=v;};var f=function(n){return Math.round(n||0).toLocaleString();};
   var proc=window.__anProfit||0;
-  setn("an-mk-sales",Math.round(sales).toLocaleString());setn("an-mk-com",Math.round(com).toLocaleString());setn("an-mk-owed",Math.round(owed).toLocaleString());setn("an-mk-shops",rep.filter(function(r){return r.orders>0;}).length);
-  setn("an-in-proc",Math.round(proc).toLocaleString());setn("an-in-mk",Math.round(com).toLocaleString());setn("an-in-total",Math.round(proc+com).toLocaleString());
+  setn("an-mk-sales",f(sales));setn("an-mk-com",f(com));setn("an-mk-owed",f(owed));setn("an-mk-shops",rep.filter(function(r){return r.orders>0;}).length);
+  setn("an-in-markup",f(window.__anMarkup));setn("an-in-fee",f(window.__anFee));setn("an-in-mk",f(com));setn("an-in-total",f(proc+com));
   var tot=proc+com,src=document.getElementById("an-source");
-  if(src){if(tot<=0)src.innerHTML="<div class='an-empty'>No income recorded yet.</div>";
-    else{var bar=function(l,v,c){return "<div class='an-hbar'><div class='top'><span>"+l+"</span><span>"+Math.round(v).toLocaleString()+" XAF ("+Math.round(v/tot*100)+"%)</span></div><div class='track'><div class='fill' style='width:"+Math.max(2,Math.round(v/tot*100))+"%;background:"+c+"'></div></div></div>";};
-      src.innerHTML=bar("International procurement (markup + service fee)",proc,"#d4af37")+bar("Local marketplace (commission)",com,"#16a085");}}
+  var bars=function(rows,fmt,color){if(!rows.length)return "<div class='an-empty'>No data yet.</div>";var mx=Math.max.apply(null,rows.map(function(r){return r.v;}))||1;return rows.map(function(r){return "<div class='an-hbar'><div class='top'><span>"+esc(r.l)+"</span><span>"+fmt(r.v)+"</span></div><div class='track'><div class='fill' style='width:"+Math.max(2,Math.round(r.v/mx*100))+"%;background:"+(r.c||color)+"'></div></div></div>";}).join("");};
+  if(src){if(tot<=0)src.innerHTML="<div class='an-empty'>No income recorded in this period.</div>";
+    else src.innerHTML=bars([{l:"International procurement (markup + service fee)",v:proc,c:"#d4af37"},{l:"Local marketplace (commission)",v:com,c:"#16a085"}],function(v){return f(v)+" XAF ("+Math.round(v/tot*100)+"%)";},"#d4af37");}
+  // delivery analysis: every paid marketplace order is a delivery
+  var ds=mk.orders.filter(function(o){return o.payment_status==="confirmed"&&o.order_status!=="cancelled"&&mkInP(o.created_at);});
+  var done=ds.filter(function(o){return o.order_status==="delivered";}).length;
+  var waiting=mk.orders.filter(function(o){return o.payment_status==="confirmed"&&o.order_status!=="delivered"&&o.order_status!=="cancelled";}).length;
+  var fees=0;ds.forEach(function(o){fees+=Number(o.delivery_fee_xaf)||0;});
+  setn("an-dl-total",ds.length);setn("an-dl-done",done);setn("an-dl-due",waiting);setn("an-dl-fees",f(fees));
+  var st={};ds.forEach(function(o){var k=String(o.order_status||"new").replace(/_/g," ");k=k.charAt(0).toUpperCase()+k.slice(1);st[k]=(st[k]||0)+1;});
+  var el2=document.getElementById("an-dl-status");if(el2)el2.innerHTML=bars(Object.keys(st).map(function(k){return {l:k,v:st[k]};}),function(v){return v+(v===1?" delivery":" deliveries");},"#3b82c4");
+  var ct={};ds.forEach(function(o){var c=(o.delivery_location||"Not given").trim()||"Not given";c=c.charAt(0).toUpperCase()+c.slice(1).toLowerCase();ct[c]=(ct[c]||0)+1;});
+  var el3=document.getElementById("an-dl-city");if(el3)el3.innerHTML=bars(Object.keys(ct).map(function(k){return {l:k,v:ct[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,6),function(v){return v+(v===1?" delivery":" deliveries");},"#3b82c4");
 }
 function mkDailyHtml(){
   if(!mk.day)mk.day=mkToday();
