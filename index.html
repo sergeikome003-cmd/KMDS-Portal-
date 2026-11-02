@@ -23,7 +23,7 @@ try{
   --new:#3b82c4;--pay:#c47a1f;--ship:#16a085;--done:#2f9e5c;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--black);color:var(--text);font-family:Georgia,serif;padding-bottom:80px;}
+body{background:var(--black);color:var(--text);font-family:"Noto Serif",Cambria,Georgia,serif;padding-bottom:80px;}
 .topbar{position:sticky;top:0;z-index:100;background:var(--black);}
 body.hide-profit .profit-figure{filter:blur(6px);transition:filter .15s;cursor:pointer;}
 body.hide-profit .profit-figure.revealed{filter:none;}
@@ -36,7 +36,6 @@ nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid
 nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
 nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
 main{padding:16px;}
-@media (min-width:900px){main{max-width:820px;margin:0 auto;padding:20px 16px;}}
 section{display:none;}
 section.active{display:block;animation:fd .2s ease;}
 @keyframes fd{from{opacity:0}to{opacity:1}}
@@ -131,7 +130,7 @@ table.itbl td{padding:7px;font-size:12px;border-bottom:1px solid #eee;}
 }
 
 /* ===== refinement layer: subtle polish only ===== */
-body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;color-scheme:dark;}
 header{background:linear-gradient(180deg,#101010,#0a0a0a);box-shadow:0 1px 0 rgba(212,175,55,.18);}
 .crest{box-shadow:inset 0 0 0 3px #0a0a0a,inset 0 0 0 4px rgba(212,175,55,.35);}
 nav{box-shadow:0 6px 14px -10px rgba(0,0,0,.9);scrollbar-width:none;}
@@ -140,7 +139,7 @@ nav button{transition:color .2s,border-color .2s,background .2s;}
 nav button:hover{color:#e9cf7a;}
 .stat,.card{border-radius:3px;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 6px 16px -12px rgba(0,0,0,.9);transition:border-color .2s,transform .2s;}
 .card:hover{transform:translateY(-1px);}
-.stat .n{letter-spacing:.5px;text-shadow:0 0 18px rgba(212,175,55,.18);}
+.stat .n{letter-spacing:.5px;}
 .badge{border-radius:2px;font-weight:bold;}
 .btn-gold{background:linear-gradient(180deg,#e2c25a,#c9a22f);box-shadow:0 4px 12px -6px rgba(212,175,55,.55);transition:filter .2s,transform .1s;}
 .btn-gold:hover{filter:brightness(1.07);}
