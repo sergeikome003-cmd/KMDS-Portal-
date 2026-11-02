@@ -1853,9 +1853,9 @@ function mkSectionsPanel(s){
   if(!mk.secOk)return "<div class='fee-note'><strong>Store sections need a one-time setup.</strong> Run kmds-store-sections-setup.sql in Supabase (SQL Editor), then press Ctrl+Shift+R to refresh this page.<br><button type='button' data-act='cancel' class='btn-out'>Close</button></div>";
   var l=sellerSections(s.id),sm="background:none;border:1px solid var(--line);color:var(--dim);padding:4px 8px;font-size:10px;font-family:inherit;margin-left:6px;";
   var cnt=function(id){return mk.products.filter(function(p){return p.section_id===id;}).length;};
-  return "<div class='card' style='margin-bottom:16px'><div class='card-ref'>Store sections</div><div class='card-name'>"+esc(s.shop_name)+"</div><div class='card-item'>Sections such as Perfumes, Watches, Jewelry. Customers tap a section to see only those products.</div>"+
+  return "<div class='card' style='margin-bottom:16px'><div class='card-ref'>Store sections</div><div class='card-name'>"+esc(s.shop_name)+"</div><div class='card-item'>Sections such as Perfumes, Watches, Jewelry. Customers tap a section to see only those products. <b>This list shows the sections that already exist.</b></div>"+
    (l.length?l.map(function(x){return "<div class='drow'><span>"+esc(x.name)+"</span><span>"+cnt(x.id)+" product(s)<button data-act='secrename' data-id='"+esc(x.id)+"' style='"+sm+"'>Rename</button><button data-act='secdel' data-id='"+esc(x.id)+"' style='"+sm+"color:#c0564b;'>Delete</button></span></div>";}).join(""):"<div class='card-item' style='margin:8px 0'>No sections yet. Add the first one below.</div>")+
-   "<form id='mk-secform' data-sid='"+esc(s.id)+"' style='display:flex;gap:8px;margin-top:12px'><input name='name' placeholder='New section, e.g. Watches' required maxlength='60' style='flex:1'><button type='submit' class='btn-gold' style='width:auto;padding:0 20px'>Add</button></form>"+
+   "<div class='card-ref' style='margin-top:14px'>Add a NEW section</div><form id='mk-secform' data-sid='"+esc(s.id)+"' style='display:flex;gap:8px;margin-top:6px'><input name='name' placeholder='New section, e.g. Watches' required maxlength='60' style='flex:1'><button type='submit' class='btn-gold' style='width:auto;padding:0 14px;white-space:nowrap'>+ Add section</button></form>"+
    "<button type='button' data-act='cancel' class='btn-out'>Close</button></div>";
 }
 async function mkAddSection(f){
@@ -1877,7 +1877,7 @@ async function mkAddPhotos(e){
     var urls=(p.image_urls||[]).slice();
     for(var i=0;i<files.length;i++)urls.push(await mkUpload(files[i],"mk-public","products"));
     var r=await sb.from("mk_products").update({image_urls:urls}).eq("id",id);if(r.error)throw r.error;
-    input.value="";await mkLoad();alert(files.length+" photo(s) added.");
+    input.value="";await mkLoad();alert(files.length+" photo(s) added to: "+p.title);
   }catch(x){alert("Could not add photos: "+(x.message||x));}
 }
 async function mkLoad(){
@@ -1973,7 +1973,7 @@ function mkProductsHtml(){
   if(!mk.sellers.length)return h+"<div class='empty'>Add a seller first (Sellers tab), then you can add products.</div>";
   h+="<button class='btn-gold' data-act='newproduct' style='margin-bottom:12px'>+ Add product</button>";
   if(mk.form==="product")h+="<form id='mk-pform' style='margin-bottom:16px'><div><label>Seller *</label><select name='seller_id' required>"+selOpts()+"</select></div>"+
-    (mk.secOk?"<div><label>Store section (e.g. Watches)</label><select name='section_id'>"+secOpts(mk.sellers[0]?mk.sellers[0].id:"","")+"</select></div>":"")+
+    (mk.secOk?"<div><label>Store section (e.g. Watches)</label><select name='section_id'>"+secOpts(mk.sellers[0]?mk.sellers[0].id:"","")+"</select><label style='margin-top:8px'>...or type a NEW section (e.g. Necklaces)</label><input name='new_section' maxlength='60' placeholder='Leave empty to use the section above'></div>":"")+
     "<div><label>Product name *</label><input name='title' required></div>"+
     "<div style='display:flex;gap:10px'><div style='flex:1'><label>Price (XAF) *</label><input name='price' type='number' min='0' required></div><div style='flex:1'><label>Unit</label><input name='unit' value='piece'></div></div>"+
     "<div><label>Category</label><select name='category'>"+opts(MK_CATS)+"</select></div>"+"<div><label>Season (optional)</label><select name='season'><option value=''>None</option>"+MK_SEASONS.map(function(s){return "<option>"+esc(s.n)+"</option>";}).join("")+"</select></div>"+
@@ -1987,7 +1987,7 @@ function mkProductsHtml(){
     return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(p.category)+(p.season?" · Season: "+esc(p.season):"")+" · "+esc(sellerName(p.seller_id))+"</div><div class='card-name'>"+esc(p.title)+"</div><div class='card-item'>"+fx(p.price_xaf)+" / "+esc(p.unit||"piece")+" · "+(p.image_urls||[]).length+" photo(s)</div></div>"+
     "<span class='badge "+(p.active?"s-done":"")+"'>"+(p.active?(p.in_stock?"Live":"Out of stock"):"Hidden")+"</span></div>"+
     (mk.secOk&&sellerSections(p.seller_id).length?"<div class='card-item' style='margin-top:6px'>Section: <select data-secmove='"+esc(p.id)+"' style='width:auto;padding:6px;font-size:12px'>"+secOpts(p.seller_id,p.section_id)+"</select></div>":"")+
-    "<div class='card-actions'><button data-act='ptoggle' data-f='active' data-id='"+p.id+"'>"+(p.active?"Hide":"Show")+"</button><button data-act='ptoggle' data-f='in_stock' data-id='"+p.id+"'>"+(p.in_stock?"Mark out of stock":"Mark in stock")+"</button><button data-act='addphotos' data-id='"+p.id+"'>+ Photos</button><button data-act='clearphotos' data-id='"+p.id+"'>Clear photos</button><button class='danger' data-act='pdel' data-id='"+p.id+"'>Delete</button></div></div>";
+    "<div class='card-actions'><button data-act='ptoggle' data-f='active' data-id='"+p.id+"'>"+(p.active?"Hide":"Show")+"</button><button data-act='ptoggle' data-f='in_stock' data-id='"+p.id+"'>"+(p.in_stock?"Mark out of stock":"Mark in stock")+"</button><button data-act='addphotos' data-id='"+p.id+"'>+ Add photos to this product</button><button data-act='clearphotos' data-id='"+p.id+"'>Clear photos</button><button class='danger' data-act='pdel' data-id='"+p.id+"'>Delete</button></div></div>";
   }).join(""):"<div class='empty'>No products yet.</div>");
 }
 async function mkSaveProduct(f){
@@ -1997,6 +1997,12 @@ async function mkSaveProduct(f){
     for(var i=0;i<files.length;i++)urls.push(await mkUpload(files[i],"mk-public","products"));
     var prow={seller_id:f.elements.seller_id.value,title:f.elements.title.value.trim(),price_xaf:Math.round(Number(f.elements.price.value)),unit:f.elements.unit.value.trim()||"piece",category:f.elements.category.value,season:f.elements.season.value||null,description:f.elements.description.value.trim()||null,image_urls:urls};
     if(mk.secOk&&f.elements.section_id&&f.elements.section_id.value)prow.section_id=f.elements.section_id.value;
+    var ns=mk.secOk&&f.elements.new_section?titleCase(f.elements.new_section.value):"";
+    if(ns){
+      var have=sellerSections(prow.seller_id),ex=have.find(function(x){return x.name.toLowerCase()===ns.toLowerCase();});
+      if(ex)prow.section_id=ex.id;
+      else{var rs2=await sb.from("mk_sections").insert({seller_id:prow.seller_id,name:ns,sort_order:have.length}).select().single();if(rs2.error)throw rs2.error;prow.section_id=rs2.data.id;}
+    }
     var r=await sb.from("mk_products").insert(prow);
     if(r.error)throw r.error;
     mk.form="";await mkLoad();
