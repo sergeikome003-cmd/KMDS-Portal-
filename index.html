@@ -323,6 +323,7 @@ h2.title{letter-spacing:1px;}
       <div class="an-box wide"><h3>Monthly Received vs Profit (last 6 months)</h3><div id="an-months"></div></div>
       <div class="an-box"><h3>Orders by City</h3><div id="an-cities"></div></div>
       <div class="an-box"><h3>Top Clients</h3><div id="an-clients"></div></div>
+      <div class="an-box wide"><h3>Marketplace Sellers: Sales, Commission and Payments</h3><div id="an-sellers"></div></div>
     </div>
   </div>
   <p class="an-note">Figures use the same rules as the Dashboard tab: Pending Payment, In Shipment and Completed orders count as received. Tap a blurred number to reveal it when Profit Privacy is on.</p>
@@ -531,6 +532,7 @@ h2.title{letter-spacing:1px;}
     <button data-v="enquiries">Enquiries</button>
     <button data-v="orders">Orders</button>
     <button data-v="settle">Settlements</button>
+    <button data-v="daily">Daily Close</button>
   </div>
   <div id="mk-body"><div class="empty">Loading...</div></div>
   <input type="file" id="mk-addphotos" accept="image/*" multiple style="display:none">
@@ -1645,6 +1647,7 @@ function renderAnalytics(){
   });
   var clients=Object.keys(byClient).map(function(k){return{l:k,v:byClient[k]};}).filter(function(r){return r.v>0;}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
   document.getElementById("an-clients").innerHTML=anHBars(clients,function(v){return anFmt(v)+" XAF";},"#16a085");
+  try{if(window.mkAnalyticsFill&&window.sb)mkAnalyticsFill();}catch(e){}
 }
 
 
@@ -1839,7 +1842,7 @@ var MK_SEASONS=[["christmas", "Christmas", "🎄", "Trees, decorations, lights, 
 var MK_CATS=["Electronics & Appliances","Fashion & Beauty","Home & Living","Food & Beverages","Health & Personal Care","Sports & Outdoors","Automotive","Agriculture & Farming","Industrial & Tools","Toys & Kids","Office & Business","Other"];
 var MK_TYPES=["shop","retailer","wholesaler","supermarket","supplier"];
 MK_SEASONS=MK_SEASONS.map(function(x){return Array.isArray(x)?{k:x[0],n:x[1],e:x[2],d:x[3]}:x;});
-var mk={season:"",tab:"sellers",sellers:[],products:[],enq:[],orders:[],pay:[],led:[],sections:[],secOk:false,err:"",form:"",q:"",loaded:false};
+var mk={season:"",tab:"sellers",sellers:[],products:[],enq:[],orders:[],pay:[],led:[],sections:[],secOk:false,stm:[],stmOk:false,day:"",err:"",form:"",q:"",loaded:false};
 var $m=function(i){return document.getElementById(i);};
 function fx(n){return Number(n||0).toLocaleString("en-US")+" XAF";}
 function opts(arr,sel){return arr.map(function(x){return "<option"+(x===sel?" selected":"")+">"+esc(x)+"</option>";}).join("");}
@@ -1887,7 +1890,9 @@ async function mkLoad(){
     for(var i=0;i<r.length;i++){if(r[i].error)throw r[i].error;}
     mk.sellers=r[0].data;mk.products=r[1].data;mk.enq=r[2].data;mk.orders=r[3].data;mk.pay=r[4].data;mk.led=r[5].data;mk.err="";mk.loaded=true;try{var rs=await sb.from("mk_sections").select("*").order("sort_order",{ascending:true}).order("name",{ascending:true}).limit(3000);if(rs.error){mk.sections=[];mk.secOk=false;}else{mk.sections=rs.data||[];mk.secOk=true;}}catch(x0){mk.sections=[];mk.secOk=false;}try{var ss=await sb.from("mk_settings").select("value").eq("key","active_season").maybeSingle();mk.season=(ss.data&&ss.data.value)||"";}catch(x){}
   }catch(e){mk.err=e.message||String(e);}
+  try{var rt=await sb.from("mk_daily_statements").select("*").order("day",{ascending:false}).limit(3000);if(rt.error){mk.stm=[];mk.stmOk=false;}else{mk.stm=rt.data||[];mk.stmOk=true;}}catch(x1){mk.stm=[];mk.stmOk=false;}
   mkRender();
+  if(window.mkAnalyticsFill)mkAnalyticsFill();
 }
 function mkInit(){mkLoad();}
 
@@ -1905,7 +1910,116 @@ function mkRender(){
   var body=$m("mk-body");
   if(mk.err){body.innerHTML="<div class='fee-note'><strong>Could not load the marketplace data.</strong> "+esc(mk.err)+"<br>If this says a table does not exist, the marketplace database setup has not been run yet.</div>";return;}
   if(!mk.loaded){body.innerHTML="<div class='empty'>Loading...</div>";return;}
-  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml})[mk.tab]();
+  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml,daily:mkDailyHtml})[mk.tab]();
+}
+
+
+/* ---------- DAILY CLOSE (statements per shop, per day) ---------- */
+function mkDayStr(iso){var d=new Date(iso);if(isNaN(d))return "";return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
+function mkToday(){return mkDayStr(new Date().toISOString());}
+function mkTime(iso){var d=new Date(iso);return isNaN(d)?"":d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});}
+function mkItemText(o){return (o.items||[]).map(function(i){return (i.qty>1?i.qty+" x ":"")+(i.title||"item");}).join(", ")||"item";}
+function mkDayData(day){
+  var by={};
+  var add=function(o,when,sign,kind){
+    if(!o)return;var b=by[o.seller_id]||(by[o.seller_id]={seller_id:o.seller_id,lines:[],gross:0,com:0,net:0,n:0});
+    var g=sign*(o.subtotal_xaf||0),c=sign*(o.commission_xaf||0),n=sign*(o.seller_payable_xaf||0);
+    b.lines.push({ref:o.ref,time:mkTime(when),buyer:o.buyer_name,item:mkItemText(o),amount:g,commission:c,net:n,kind:kind});
+    b.gross+=g;b.com+=c;b.net+=n;if(sign>0)b.n++;
+  };
+  mk.led.forEach(function(l){
+    if(l.entry_type!=="payment"&&l.entry_type!=="refund")return;
+    var o=mk.orders.find(function(x){return x.id===l.order_id;});if(!o)return;
+    var when=l.created_at||o.created_at;if(mkDayStr(when)!==day)return;
+    add(o,when,l.entry_type==="payment"?1:-1,l.entry_type==="payment"?"sale":"refund");
+  });
+  return Object.keys(by).map(function(k){return by[k];});
+}
+function mkStmText(s,day){
+  var sel=mk.sellers.find(function(x){return x.id===s.seller_id;})||{};
+  var t="*KMDS Marketplace - Daily Statement*\n"+(sel.shop_name||"")+"\nDate: "+day+"\n\n";
+  s.lines.forEach(function(l,i){t+=(i+1)+". "+l.item+" - "+fx(l.amount)+(l.kind==="refund"?" (refund)":"")+" ("+l.ref+(l.time?", "+l.time:"")+")\n";});
+  t+="\nSales: "+fx(s.gross)+"\nKMDS commission: "+fx(s.com)+"\n*Your amount: "+fx(s.net)+"*\n\nKMDS Cameroon - Saker Junction, Limbe. Please reply here if anything looks wrong.";
+  return t;
+}
+function mkDailyData(day){
+  var closed={};mk.stm.forEach(function(r){if(r.day===day)closed[r.seller_id]=r;});
+  var live=mkDayData(day),out=[];
+  live.forEach(function(s){
+    var c=closed[s.seller_id];
+    if(c)out.push({seller_id:s.seller_id,lines:c.lines||[],gross:c.gross_xaf,com:c.commission_xaf,net:c.net_xaf,n:c.order_count,closed:true});
+    else out.push(Object.assign({closed:false},s));
+  });
+  Object.keys(closed).forEach(function(k){if(!live.some(function(s){return s.seller_id===k;})){var c=closed[k];out.push({seller_id:k,lines:c.lines||[],gross:c.gross_xaf,com:c.commission_xaf,net:c.net_xaf,n:c.order_count,closed:true});}});
+  return out;
+}
+function mkSellerReport(){
+  return mk.sellers.map(function(s){
+    var os=mk.orders.filter(function(o){return o.seller_id===s.id&&o.payment_status==="confirmed";});
+    var sales=0,com=0,net=0;os.forEach(function(o){sales+=o.subtotal_xaf;com+=o.commission_xaf;net+=o.seller_payable_xaf;});
+    var paid=0;mk.pay.forEach(function(p){if(p.seller_id===s.id&&p.status==="completed")paid+=p.amount_xaf;});
+    return {s:s,orders:os.length,sales:sales,com:com,net:net,paid:paid,owed:net-paid};
+  }).filter(function(r){return r.orders>0||r.paid>0;}).sort(function(a,b){return b.sales-a.sales;});
+}
+function mkSellerReportHtml(){
+  var rows=mkSellerReport();
+  if(!rows.length)return "<div class='an-empty'>No confirmed marketplace sales yet.</div>";
+  var max=Math.max.apply(null,rows.map(function(r){return r.sales;}))||1;
+  return rows.map(function(r){
+    return "<div class='an-hbar'><div class='top'><span>"+esc(r.s.shop_name)+" ("+r.orders+" order"+(r.orders===1?"":"s")+")</span><span>"+fx(r.sales)+"</span></div><div class='track'><div class='fill' style='width:"+Math.max(2,Math.round(r.sales/max*100))+"%'></div></div><div class='an-note' style='margin:2px 0 0'>KMDS commission "+fx(r.com)+" · Seller share "+fx(r.net)+" · Paid out "+fx(r.paid)+" · <b>Still owed "+fx(r.owed)+"</b></div></div>";
+  }).join("");
+}
+function mkAnalyticsFill(){
+  var el=document.getElementById("an-sellers");if(!el)return;
+  if(!mk.loaded){el.innerHTML="<div class='an-empty'>Loading marketplace data...</div>";if(!mk.loadingA){mk.loadingA=true;mkLoad().then(function(){mk.loadingA=false;});}return;}
+  el.innerHTML=mkSellerReportHtml();
+}
+function mkDailyHtml(){
+  if(!mk.day)mk.day=mkToday();
+  var h="<div class='fee-note'><strong>Daily Close.</strong> Pick a day to see what each shop sold, KMDS commission and the amount owed to the shop. Tap <b>Close day</b> to save the statements permanently. Then send each shop its statement on WhatsApp.</div>";
+  h+="<div style='display:flex;gap:8px;margin-bottom:12px'><input type='date' data-daypick='1' value='"+esc(mk.day)+"' style='flex:1'><button class='btn-out' data-act='daytoday' style='width:auto;padding:0 14px;margin:0'>Today</button></div>";
+  var data=mkDailyData(mk.day);
+  var open=data.filter(function(s){return !s.closed;});
+  if(!data.length)h+="<div class='empty'>No confirmed sales on this day.</div>";
+  else{
+    var tg=0,tc=0,tn=0;data.forEach(function(s){tg+=s.gross;tc+=s.com;tn+=s.net;});
+    h+="<div class='card'><div class='card-name'>Day total</div><div class='card-item'>Sales "+fx(tg)+" · KMDS commission "+fx(tc)+" · Owed to shops "+fx(tn)+"</div>"+
+      (open.length?(mk.stmOk?"<div class='card-actions'><button class='green' data-act='closeday'>Close day ("+open.length+" shop"+(open.length===1?"":"s")+")</button></div>":"<div class='card-item' style='color:#c47a1f'>To save closed days, run kmds-daily-close-setup.sql in Supabase first.</div>"):"<div class='card-item' style='color:var(--done)'>This day is closed and saved.</div>")+"</div>";
+    h+=data.map(function(s){
+      var sel=mk.sellers.find(function(x){return x.id===s.seller_id;})||{};
+      return "<div class='card'><div class='card-top'><div><div class='card-name'>"+esc(sel.shop_name||"?")+"</div><div class='card-item'>"+s.n+" sale"+(s.n===1?"":"s")+" · Sales "+fx(s.gross)+" · Commission "+fx(s.com)+"</div><div class='card-item'><b>Amount owed to shop: "+fx(s.net)+"</b></div></div><span class='badge "+(s.closed?"on":"off")+"'>"+(s.closed?"Closed":"Open")+"</span></div>"+
+        s.lines.map(function(l){return "<div class='drow'><span>"+esc(l.item)+" · "+esc(l.buyer||"")+" · "+esc(l.ref)+" "+esc(l.time||"")+(l.kind==="refund"?" (refund)":"")+"</span><span>"+fx(l.amount)+"</span></div>";}).join("")+
+        "<div class='card-actions'><button class='green' data-act='stmwa' data-id='"+esc(s.seller_id)+"'>Send on WhatsApp</button><button data-act='stmprint' data-id='"+esc(s.seller_id)+"'>Print</button></div></div>";
+    }).join("");
+  }
+  h+="<h3 style='font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px'>Seller accounts (all time)</h3>";
+  h+="<input data-selsearch='1' placeholder='Search a shop name...' value='"+esc(mk.selq||"")+"' style='margin-bottom:10px'>";
+  var rep=mkSellerReport().filter(function(r){return !mk.selq||r.s.shop_name.toLowerCase().indexOf(mk.selq.toLowerCase())>=0;});
+  h+=rep.length?rep.map(function(r){return "<div class='card'><div class='card-name'>"+esc(r.s.shop_name)+"</div><div class='card-item'>"+r.orders+" orders · Sales "+fx(r.sales)+" · Commission "+fx(r.com)+"</div><div class='card-item'>Seller share "+fx(r.net)+" · Paid out "+fx(r.paid)+" · <b>Still owed "+fx(r.owed)+"</b></div></div>";}).join(""):"<div class='empty'>No sales recorded yet.</div>";
+  return h;
+}
+async function mkDailyAct(act,id){
+  var day=mk.day||mkToday();
+  if(act==="daytoday"){mk.day=mkToday();mkRender();return;}
+  if(act==="stmwa"||act==="stmprint"){
+    var s=mkDailyData(day).find(function(x){return x.seller_id===id;});if(!s)return;
+    var sel=mk.sellers.find(function(x){return x.id===id;})||{};var txt=mkStmText(s,day);
+    if(act==="stmwa"){var n=waNumber(sel.phone);if(!n){alert("This shop has no phone number saved.");return;}window.open("https://wa.me/"+n+"?text="+encodeURIComponent(txt),"_blank");}
+    else{var w=window.open("","_blank");if(!w){alert("Please allow pop-ups to print.");return;}w.document.write("<html><head><title>Statement</title></head><body style='font-family:Arial;padding:20px;max-width:560px'><pre style='white-space:pre-wrap;font-family:Arial;font-size:14px'>"+esc(txt)+"</pre></body></html>");w.document.close();w.print();}
+    return;
+  }
+  if(act==="closeday"){
+    if(!mk.stmOk){alert("Run kmds-daily-close-setup.sql in Supabase first.");return;}
+    var open=mkDailyData(day).filter(function(s){return !s.closed;});if(!open.length)return;
+    if(!confirm("Close "+day+" for "+open.length+" shop(s)? The statements are saved permanently and cannot be edited."))return;
+    try{
+      var u=await sb.auth.getUser();var by=u&&u.data&&u.data.user?u.data.user.email:null;
+      for(var i=0;i<open.length;i++){var s2=open[i];
+        var r=await sb.from("mk_daily_statements").insert({seller_id:s2.seller_id,day:day,order_count:s2.n,gross_xaf:s2.gross,commission_xaf:s2.com,net_xaf:s2.net,lines:s2.lines,closed_by:by});
+        if(r.error&&String(r.error.code)!=="23505")throw r.error;}
+      await mkLoad();
+    }catch(e){alert("Could not close the day: "+(e.message||e));}
+  }
 }
 
 /* ---------- SELLERS ---------- */
@@ -2139,8 +2253,10 @@ $m("mk-body").addEventListener("change",async function(e){if(e.target.id!=="mk-s
   var r=await sb.from("mk_settings").upsert({key:"active_season",value:v||"none"});if(r.error){alert("Could not save: "+r.error.message+" (run seasons-setup.sql first)");return;}
   mk.season=v;var s=MK_SEASONS.find(function(x){return x.k===v;});alert(s?s.n+" is now live on the marketplace.":"Seasonal banner removed.");});
 $m("mk-addphotos").addEventListener("change",mkAddPhotos);
+$m("mk-body").addEventListener("input",function(e){var t=e.target;if(t&&t.getAttribute&&t.getAttribute("data-selsearch")){mk.selq=t.value;var pos=t.selectionStart;mkRender();var n=document.querySelector("[data-selsearch]");if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}}});
 $m("mk-body").addEventListener("change",async function(e){
   var t=e.target;if(!t||!t.getAttribute)return;
+  if(t.getAttribute("data-daypick")){mk.day=t.value||mkToday();mkRender();return;}
   if(t.getAttribute("data-secmove")){var rm=await sb.from("mk_products").update({section_id:t.value||null}).eq("id",t.getAttribute("data-secmove"));if(rm.error)alert(rm.error.message);await mkLoad();return;}
   if(t.name==="seller_id"&&t.form&&t.form.id==="mk-pform"&&t.form.elements.section_id){t.form.elements.section_id.innerHTML=secOpts(t.value,"");}
 });
@@ -2164,6 +2280,7 @@ $m("mk-body").addEventListener("click",async function(e){
   if(a==="newseller"){mk.form="seller";mk.editing=null;mkRender();return;}
   if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="newproduct"){mk.form="product";mkRender();return;}
+  if(a==="daytoday"||a==="stmwa"||a==="stmprint"||a==="closeday"){mkDailyAct(a,id);return;}
   if(a==="sections"){mk.form="sections";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="secdel"){var sc=mk.sections.find(function(x){return x.id===id;});if(!sc)return;if(!confirm("Delete the section \""+sc.name+"\"? Its products stay in the store, just without a section."))return;var rd=await sb.from("mk_sections").delete().eq("id",id);if(rd.error)alert(rd.error.message);await mkLoad();return;}
   if(a==="secrename"){var s2=mk.sections.find(function(x){return x.id===id;});if(!s2)return;var nn=prompt("New name for this section:",s2.name);if(!nn||!nn.trim())return;var ru=await sb.from("mk_sections").update({name:titleCase(nn)}).eq("id",id);if(ru.error)alert(ru.error.message);await mkLoad();return;}
