@@ -118,7 +118,17 @@ body{background:#fff}
 .lay .mobf select{background:#fff;color:#111;border:1px solid #c9a24a}
 .sheet input,.sheet textarea{background:#fff;color:#111;border:1px solid #cfc8b4}.sheet h2{color:#6b4e0c}.sheet .note{background:#fbf6e6;color:#444}.sheet .gal img{border:1px solid #e3ddcd}.x{color:#555}
 .lay .sp .cv:after{background:linear-gradient(transparent 55%,rgba(0,0,0,.35))}
-.sp .op{position:absolute;top:8px;left:8px;z-index:2;background:rgba(0,0,0,.72);color:#7be28c;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;letter-spacing:.3px}</style><style>
+.sp .op{position:absolute;top:8px;left:8px;z-index:2;background:rgba(0,0,0,.72);color:#7be28c;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;letter-spacing:.3px}.sheet.wide{max-width:900px;padding:0}.sheet.wide .x{position:sticky;top:8px;float:right;margin:8px 12px 0 0;z-index:5;background:rgba(255,255,255,.9);border-radius:50%;width:36px;height:36px;font-size:24px;color:#333}
+.stc{height:150px;background:#e9e3d0 center/cover no-repeat}.stb{padding:0 16px 18px}.sth{display:flex;gap:12px;align-items:flex-end;margin-top:-30px;position:relative}
+.stl{width:68px;height:68px;border-radius:14px;background:#fff center/cover no-repeat;border:2px solid #c9a24a;flex:none;display:flex;align-items:center;justify-content:center;font-size:30px;color:#b8902f}
+.stn{font-size:20px;font-weight:800;color:#111;margin:0}.std{color:#444;font-size:14px;margin:10px 0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:6px 0 10px;position:sticky;top:0;background:#fff;z-index:4;-webkit-overflow-scrolling:touch}
+.chips button{flex:none;border:1.5px solid #c9a24a;background:#fff;color:#6b4e0c;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.chips button.on{background:#c9a24a;color:#1d1606}
+.stg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:700px){.stg{grid-template-columns:repeat(3,1fr)}}
+.cd .im{position:relative}.cd .ph{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:3px 8px;border-radius:999px}
+.cd .oos{display:inline-block;margin-top:4px;font-size:11px;color:#a33;border:1px solid #a33;border-radius:999px;padding:1px 8px}
+</style><style>
 .seas{margin:14px 0;border:1px solid var(--g2);border-radius:12px;background:linear-gradient(135deg,#1c1809,#0f0d05);padding:16px}
 .seas h2{font-size:24px;margin:0 0 4px}.seas p{color:var(--dm);font-size:13.5px;margin:0 0 12px}
 .seas .cards{margin-top:6px}
@@ -222,14 +232,37 @@ function loadSeason(){var el=$("season");if(!el)return;
 loadSeason();
 function refresh(){loadShops();loadProds(true)}
 function mark(){["cats","regions"].forEach(function(id){var k=id==="cats"?"cat":"region";[].forEach.call($(id).children,function(b){b.className=b.dataset.v===st[k]?"on":""})});$("m-reg").value=st.region==="All"?"All regions":st.region;$("m-cat").value=st.cat==="All"?"All categories":st.cat}
-function open_(h){$("sheet").innerHTML='<button class="x" aria-label="Close" onclick="closeM()">×</button>'+h;$("modal").classList.add("open")}
-function closeM(){$("modal").classList.remove("open")}
+function open_(h,wide){$("sheet").className="sheet"+(wide?" wide":"");$("sheet").innerHTML='<button class="x" aria-label="Close" onclick="closeM()">×</button>'+h;$("modal").classList.add("open")}
+function closeM(){$("modal").classList.remove("open");st.fromShop=null;$("sheet").className="sheet"}
 function showProduct(id){var p=st.rows.find(function(r){return r.id===id});if(!p)return;
   var g=(p.image_urls||[]).map(function(u){return '<img loading="lazy" src="'+encodeURI(u)+'" alt="'+esc(p.title)+'">'}).join("");
-  open_('<h2>'+esc(p.title)+'</h2><div class="price" style="font-size:20px">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+(g?'<div class="gal">'+g+'</div>':'')+'<p style="margin:8px 0">'+esc(p.description||"")+'</p><div class="meta">Sold by <b style="color:#fff">'+esc(p.shop_name)+'</b> · '+esc(p.town_area||p.region)+'</div><button class="btn" style="margin-top:14px;width:100%" onclick="enquire(\''+esc(p.id)+'\')">Enquire through KMDS</button><button class="btn o" style="margin-top:8px;width:100%" onclick="showShop(\''+esc(p.seller_id)+'\')">View shop</button>')}
-function showShop(id){api("mk_public_sellers?id=eq."+encodeURIComponent(id)).then(function(r){return r.json()}).then(function(a){var s=a[0];if(!s)return;
-  api("mk_public_products?seller_id=eq."+encodeURIComponent(id)+"&limit=24&order=title.asc").then(function(r){return r.json()}).then(function(ps){st.rows=st.rows.concat(ps);
-  open_('<div class="hd"><div class="lg2"'+bgs(s.logo_url)+'>'+(s.logo_url?'':'&#9819;')+'</div><div><h2 style="margin:0">'+esc(s.shop_name)+'</h2><div class="meta">'+esc(s.seller_type)+' · '+esc(s.town_area||s.region)+(s.address?' · '+esc(s.address):'')+'</div></div></div><button class="btn sm" style="margin-bottom:8px" onclick="chatShop(\''+esc(s.id)+'\',\''+esc(s.shop_name).replace(/&#39;/g,'')+'\')">Chat via KMDS</button>'+(s.cover_url?'<div class="gal"><img loading="lazy" src="'+encodeURI(s.cover_url)+'" alt=""></div>':'')+'<p style="margin:10px 0">'+esc(s.description||"")+'</p><div class="lab">Products</div><div class="cards pp" style="grid-template-columns:repeat(2,1fr)">'+(ps.length?ps.map(prodCard).join(""):'<div class="meta">No products listed yet.</div>')+'</div>')})})}
+  open_((st.fromShop&&st.store?'<button class="btn o sm" data-back="1" style="margin-bottom:8px">← Back to shop</button>':'')+'<h2>'+esc(p.title)+'</h2><div class="price" style="font-size:20px">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+(g?'<div class="gal">'+g+'</div>':'')+'<p style="margin:8px 0">'+esc(p.description||"")+'</p><div class="meta">Sold by <b style="color:#fff">'+esc(p.shop_name)+'</b> · '+esc(p.town_area||p.region)+'</div><button class="btn" style="margin-top:14px;width:100%" onclick="enquire(\''+esc(p.id)+'\')">Enquire through KMDS</button><button class="btn o" style="margin-top:8px;width:100%" onclick="showShop(\''+esc(p.seller_id)+'\')">View shop</button>')}
+function showShop(id){
+  var j=function(r){return r.ok?r.json():Promise.reject(r.status)};
+  Promise.all([
+    api("mk_public_sellers?id=eq."+encodeURIComponent(id)).then(j),
+    api("mk_public_store_products?seller_id=eq."+encodeURIComponent(id)+"&limit=200&order=created_at.desc").then(j).catch(function(){return api("mk_public_products?seller_id=eq."+encodeURIComponent(id)+"&limit=200&order=title.asc").then(j)}),
+    api("mk_public_sections?seller_id=eq."+encodeURIComponent(id)+"&order=sort_order.asc,name.asc").then(j).catch(function(){return[]})
+  ]).then(function(r){var s=r[0][0];if(!s)return;var ps=r[1]||[];
+    ps.forEach(function(p){if(!st.rows.some(function(x){return x.id===p.id}))st.rows.push(p)});
+    st.store={s:s,ps:ps,secs:r[2]||[],sec:"all"};st.fromShop=id;drawStore(true)
+  }).catch(function(){open_('<h2>Shop</h2><div class="meta">Could not load this shop. Please check your connection and try again.</div>')})}
+function storeCard(p){var u=(p.image_urls||[]),n=u.length;
+  return '<div class="cd" data-p="'+esc(p.id)+'"><div class="im"'+bgs(u[0])+'>'+(n?'':'&#9819;')+(n>1?'<span class="ph">'+n+' photos</span>':'')+'</div><div class="b"><h4>'+esc(p.title)+'</h4><div class="pr">'+xaf(p.price_xaf)+'</div>'+(p.in_stock===false?'<span class="oos">Out of stock</span>':'')+'</div></div>'}
+function drawStore(first){var S=st.store;if(!S)return;var s=S.s,ps=S.ps,secs=S.secs,cur=S.sec;
+  var cnt={};ps.forEach(function(p){var k=p.section_id||"none";cnt[k]=(cnt[k]||0)+1});
+  var shown=secs.filter(function(x){return cnt[x.id]});
+  var chips='';
+  if(shown.length){chips='<div class="chips"><button data-sec="all"'+(cur==="all"?' class="on"':'')+'>All ('+ps.length+')</button>'+shown.map(function(x){return '<button data-sec="'+esc(x.id)+'"'+(cur===x.id?' class="on"':'')+'>'+esc(x.name)+' ('+cnt[x.id]+')</button>'}).join("")+(cnt.none?'<button data-sec="none"'+(cur==="none"?' class="on"':'')+'>More ('+cnt.none+')</button>':'')+'</div>'}
+  var list=cur==="all"?ps:ps.filter(function(p){return (p.section_id||"none")===cur});
+  var upd=ps.reduce(function(m,p){return p.created_at&&p.created_at>m?p.created_at:m},"");
+  var old=$("sheet").scrollTop;
+  open_('<div class="stc"'+bgs(s.cover_url)+'></div><div class="stb"><div class="sth"><div class="stl"'+bgs(s.logo_url)+'>'+(s.logo_url?'':'&#9819;')+'</div><div><h2 class="stn">'+esc(s.shop_name)+'</h2><div class="meta">'+esc(s.seller_type||"")+' · '+esc(s.town_area||s.region||"")+(s.address?' · '+esc(s.address):'')+'</div></div></div>'
+   +(upd?'<div class="meta" style="margin-top:6px">Updated '+new Date(upd).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+'</div>':'')
+   +(s.description?'<p class="std">'+esc(s.description)+'</p>':'')
+   +'<button class="btn sm" style="margin:6px 0 10px" data-chat="'+esc(s.id)+'" data-name="'+esc(s.shop_name).replace(/&#39;/g,'')+'">Chat via KMDS</button>'+chips
+   +'<div class="stg">'+(list.length?list.map(storeCard).join(""):'<div class="meta">No products listed yet.</div>')+'</div></div>',true);
+  if(!first)$("sheet").scrollTop=old}
 function enquire(pid){var p=st.rows.find(function(r){return r.id===pid});if(!p)return;
   open_('<h2>Enquire through KMDS</h2><div class="meta">'+esc(p.title)+' · '+xaf(p.price_xaf)+' · '+esc(p.shop_name)+'</div><label>Your name</label><input id="e-name" autocomplete="name"><label>Phone / WhatsApp number</label><input id="e-phone" type="tel" autocomplete="tel" placeholder="6XX XXX XXX"><label>Quantity</label><input id="e-qty" type="number" min="1" value="1"><label>Delivery location</label><input id="e-loc" placeholder="Town and quarter"><label>Message (optional)</label><textarea id="e-msg" rows="2"></textarea><div class="note">This is an enquiry, not a confirmed order. KMDS will confirm the price, availability and delivery with you on WhatsApp. Never pay anyone before KMDS confirms your order.</div><button class="btn" style="width:100%" id="e-go" onclick="sendEnq(\''+esc(pid)+'\')">Continue on WhatsApp</button><div class="err" id="e-err"></div>')}
 function mkRef(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];var d=new Date();return "KMDS-MK-"+String(d.getFullYear()).slice(2)+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+s}
@@ -245,6 +278,8 @@ function sendEnq(pid){var p=st.rows.find(function(r){return r.id===pid});
 document.addEventListener("click",function(e){
   var b=e.target.closest("#cats button,#regions button");
   if(b){st[b.parentNode.id==="cats"?"cat":"region"]=b.dataset.v;mark();refresh();return}
+  var sc=e.target.closest("[data-sec]");if(sc&&st.store){st.store.sec=sc.dataset.sec;drawStore();return}
+  if(e.target.closest("[data-back]")&&st.store){drawStore(true);return}
   var ch=e.target.closest("[data-chat]");if(ch){chatShop(ch.dataset.chat,ch.dataset.name);return}
   var sp=e.target.closest(".sp");if(sp&&!e.target.closest("button")){showShop(sp.dataset.s);return}
   var g=e.target.closest(".go,.sp button");if(g){if(g.dataset.p)showProduct(g.dataset.p);else showShop(g.dataset.s);return}

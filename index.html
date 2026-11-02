@@ -36,6 +36,7 @@ nav{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid
 nav button{flex:none;background:none;border:none;color:var(--dim);font-family:inherit;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;}
 nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
 main{padding:16px;}
+@media (min-width:900px){main{max-width:820px;margin:0 auto;padding:20px 16px;}}
 section{display:none;}
 section.active{display:block;animation:fd .2s ease;}
 @keyframes fd{from{opacity:0}to{opacity:1}}
@@ -533,6 +534,7 @@ h2.title{letter-spacing:1px;}
     <button data-v="settle">Settlements</button>
   </div>
   <div id="mk-body"><div class="empty">Loading...</div></div>
+  <input type="file" id="mk-addphotos" accept="image/*" multiple style="display:none">
 </section>
 
 <!-- SETTINGS -->
@@ -1837,19 +1839,54 @@ var MK_REGIONS=["Limbe","Buea","Douala","Bamenda","Yaoundé","Other"];
 var MK_SEASONS=[["christmas", "Christmas", "🎄", "Trees, decorations, lights, toys and gifts"], ["newyear", "New Year", "🎆", "Party items, gifts and fresh starts"], ["school", "Back to School", "🎒", "Bags, books, uniforms and stationery"], ["valentine", "Valentine's Day", "💝", "Gifts, flowers and treats"], ["easter", "Easter", "🐣", "Family meals, clothes and gifts"], ["blackfriday", "Black Friday", "🏷️", "Special offers from verified sellers"], ["mothers", "Mother's Day", "🌸", "Gifts and treats for mums"]].map(function(x){return {k:x[0],n:x[1]};});
 var MK_CATS=["Electronics & Appliances","Fashion & Beauty","Home & Living","Food & Beverages","Health & Personal Care","Sports & Outdoors","Automotive","Agriculture & Farming","Industrial & Tools","Toys & Kids","Office & Business","Other"];
 var MK_TYPES=["shop","retailer","wholesaler","supermarket","supplier"];
-var mk={season:"",tab:"sellers",sellers:[],products:[],enq:[],orders:[],pay:[],led:[],err:"",form:"",q:"",loaded:false};
+MK_SEASONS=MK_SEASONS.map(function(x){return Array.isArray(x)?{k:x[0],n:x[1],e:x[2],d:x[3]}:x;});
+var mk={season:"",tab:"sellers",sellers:[],products:[],enq:[],orders:[],pay:[],led:[],sections:[],secOk:false,err:"",form:"",q:"",loaded:false};
 var $m=function(i){return document.getElementById(i);};
 function fx(n){return Number(n||0).toLocaleString("en-US")+" XAF";}
 function opts(arr,sel){return arr.map(function(x){return "<option"+(x===sel?" selected":"")+">"+esc(x)+"</option>";}).join("");}
 function sellerName(id){var s=mk.sellers.find(function(x){return x.id===id;});return s?s.shop_name:"?";}
 function selOpts(sel){return mk.sellers.map(function(s){return "<option value='"+s.id+"'"+(s.id===sel?" selected":"")+">"+esc(s.shop_name)+" ("+esc(s.region)+")</option>";}).join("");}
 
+function sellerSections(sid){return mk.sections.filter(function(x){return x.seller_id===sid;});}
+function secOpts(sid,sel){return "<option value=''>No section</option>"+sellerSections(sid).map(function(x){return "<option value='"+esc(x.id)+"'"+(x.id===sel?" selected":"")+">"+esc(x.name)+"</option>";}).join("");}
+function mkSectionsPanel(s){
+  if(!s)return "";
+  if(!mk.secOk)return "<div class='fee-note'><strong>Store sections need a one-time setup.</strong> Run kmds-store-sections-setup.sql in Supabase (SQL Editor), then press Ctrl+Shift+R to refresh this page.<br><button type='button' data-act='cancel' class='btn-out'>Close</button></div>";
+  var l=sellerSections(s.id),sm="background:none;border:1px solid var(--line);color:var(--dim);padding:4px 8px;font-size:10px;font-family:inherit;margin-left:6px;";
+  var cnt=function(id){return mk.products.filter(function(p){return p.section_id===id;}).length;};
+  return "<div class='card' style='margin-bottom:16px'><div class='card-ref'>Store sections</div><div class='card-name'>"+esc(s.shop_name)+"</div><div class='card-item'>Sections such as Perfumes, Watches, Jewelry. Customers tap a section to see only those products.</div>"+
+   (l.length?l.map(function(x){return "<div class='drow'><span>"+esc(x.name)+"</span><span>"+cnt(x.id)+" product(s)<button data-act='secrename' data-id='"+esc(x.id)+"' style='"+sm+"'>Rename</button><button data-act='secdel' data-id='"+esc(x.id)+"' style='"+sm+"color:#c0564b;'>Delete</button></span></div>";}).join(""):"<div class='card-item' style='margin:8px 0'>No sections yet. Add the first one below.</div>")+
+   "<form id='mk-secform' data-sid='"+esc(s.id)+"' style='display:flex;gap:8px;margin-top:12px'><input name='name' placeholder='New section, e.g. Watches' required maxlength='60' style='flex:1'><button type='submit' class='btn-gold' style='width:auto;padding:0 20px'>Add</button></form>"+
+   "<button type='button' data-act='cancel' class='btn-out'>Close</button></div>";
+}
+async function mkAddSection(f){
+  var name=titleCase(f.elements.name.value);if(!name)return;
+  var sid=f.getAttribute("data-sid"),have=sellerSections(sid);
+  if(have.some(function(x){return x.name.toLowerCase()===name.toLowerCase();})){alert("That section already exists.");return;}
+  var r=await sb.from("mk_sections").insert({seller_id:sid,name:name,sort_order:have.length});
+  if(r.error){alert("Could not add the section: "+r.error.message);return;}
+  await mkLoad();
+}
+async function mkAddPhotos(e){
+  var input=e.target,id=mk.photoTarget,p=mk.products.find(function(x){return x.id===id;});
+  if(!p||!input.files||!input.files.length)return;
+  var room=5-(p.image_urls||[]).length;
+  if(room<=0){alert("This product already has 5 photos. Tap Clear photos first if you want to replace them.");input.value="";return;}
+  var files=Array.prototype.slice.call(input.files,0,room);
+  if(input.files.length>room)alert("Only "+room+" more photo(s) fit (maximum 5 per product). The first "+room+" will be added.");
+  try{
+    var urls=(p.image_urls||[]).slice();
+    for(var i=0;i<files.length;i++)urls.push(await mkUpload(files[i],"mk-public","products"));
+    var r=await sb.from("mk_products").update({image_urls:urls}).eq("id",id);if(r.error)throw r.error;
+    input.value="";await mkLoad();alert(files.length+" photo(s) added.");
+  }catch(x){alert("Could not add photos: "+(x.message||x));}
+}
 async function mkLoad(){
   try{
     var q=function(t,o,l){return sb.from(t).select("*").order(o,{ascending:false}).limit(l);};
     var r=await Promise.all([q("mk_sellers","created_at",1000),q("mk_products","created_at",2000),q("mk_enquiries","created_at",300),q("mk_orders","created_at",500),q("mk_payouts","created_at",300),sb.from("mk_ledger").select("*").limit(5000)]);
     for(var i=0;i<r.length;i++){if(r[i].error)throw r[i].error;}
-    mk.sellers=r[0].data;mk.products=r[1].data;mk.enq=r[2].data;mk.orders=r[3].data;mk.pay=r[4].data;mk.led=r[5].data;mk.err="";mk.loaded=true;try{var ss=await sb.from("mk_settings").select("value").eq("key","active_season").maybeSingle();mk.season=(ss.data&&ss.data.value)||"";}catch(x){}
+    mk.sellers=r[0].data;mk.products=r[1].data;mk.enq=r[2].data;mk.orders=r[3].data;mk.pay=r[4].data;mk.led=r[5].data;mk.err="";mk.loaded=true;try{var rs=await sb.from("mk_sections").select("*").order("sort_order",{ascending:true}).order("name",{ascending:true}).limit(3000);if(rs.error){mk.sections=[];mk.secOk=false;}else{mk.sections=rs.data||[];mk.secOk=true;}}catch(x0){mk.sections=[];mk.secOk=false;}try{var ss=await sb.from("mk_settings").select("value").eq("key","active_season").maybeSingle();mk.season=(ss.data&&ss.data.value)||"";}catch(x){}
   }catch(e){mk.err=e.message||String(e);}
   mkRender();
 }
@@ -1899,6 +1936,7 @@ function mkSellerForm(s){
 function mkSellersHtml(){
   var h="<button class='btn-gold' data-act='newseller' style='margin-bottom:12px'>+ Add seller</button>";
   if(mk.form==="seller")h+=mkSellerForm(mk.editing);
+  if(mk.form==="sections")h+=mkSectionsPanel(mk.sellers.find(function(x){return mk.editing&&x.id===mk.editing.id;})||mk.editing);
   h+="<input id='mk-q' placeholder='Search sellers...' value='"+esc(mk.q)+"' style='margin-bottom:12px'>";
   var q=mk.q.toLowerCase();
   var l=mk.sellers.filter(function(s){return !q||(s.shop_name+" "+s.region+" "+(s.town_area||"")+" "+(s.owner_name||"")+" "+s.ref).toLowerCase().indexOf(q)>-1;});
@@ -1907,7 +1945,7 @@ function mkSellersHtml(){
     var cls=s.status==="verified"?"s-done":(s.status==="pending"?"s-pay":"");
     return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(s.ref)+" · "+esc(s.seller_type)+"</div><div class='card-name'>"+esc(s.shop_name)+"</div>"+
     "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div></div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
-    "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button>"+
+    "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button><button data-act='sections' data-id='"+s.id+"'>Sections ("+sellerSections(s.id).length+")</button>"+
     (s.status!=="verified"?"<button class='green' data-act='setstatus' data-v='verified' data-id='"+s.id+"'>Verify</button>":"<button class='danger' data-act='setstatus' data-v='suspended' data-id='"+s.id+"'>Suspend</button>")+
     (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+"</div></div>";
   }).join(""):"<div class='empty'>No sellers yet. Tap + Add seller.</div>");
@@ -1936,11 +1974,12 @@ function mkProductsHtml(){
   if(!mk.sellers.length)return h+"<div class='empty'>Add a seller first (Sellers tab), then you can add products.</div>";
   h+="<button class='btn-gold' data-act='newproduct' style='margin-bottom:12px'>+ Add product</button>";
   if(mk.form==="product")h+="<form id='mk-pform' style='margin-bottom:16px'><div><label>Seller *</label><select name='seller_id' required>"+selOpts()+"</select></div>"+
+    (mk.secOk?"<div><label>Store section (e.g. Watches)</label><select name='section_id'>"+secOpts(mk.sellers[0]?mk.sellers[0].id:"","")+"</select></div>":"")+
     "<div><label>Product name *</label><input name='title' required></div>"+
     "<div style='display:flex;gap:10px'><div style='flex:1'><label>Price (XAF) *</label><input name='price' type='number' min='0' required></div><div style='flex:1'><label>Unit</label><input name='unit' value='piece'></div></div>"+
     "<div><label>Category</label><select name='category'>"+opts(MK_CATS)+"</select></div>"+"<div><label>Season (optional)</label><select name='season'><option value=''>None</option>"+MK_SEASONS.map(function(s){return "<option>"+esc(s.n)+"</option>";}).join("")+"</select></div>"+
     "<div><label>Description</label><textarea name='description' style='min-height:60px'></textarea></div>"+
-    "<div><label>Photos (up to 3)</label><input type='file' name='photos' accept='image/*' multiple></div>"+
+    "<div><label>Photos (up to 5, the first one is the cover photo)</label><input type='file' name='photos' accept='image/*' multiple></div>"+
     "<button type='submit' class='btn-gold' style='margin-top:12px'>Save product</button> <button type='button' data-act='cancel' class='btn-gold' style='background:none;color:var(--dim);border:1px solid var(--line);margin-top:8px'>Cancel</button></form>";
   h+="<input id='mk-q' placeholder='Search products or shop...' value='"+esc(mk.q)+"' style='margin-bottom:12px'>";
   var q=mk.q.toLowerCase();
@@ -1948,15 +1987,18 @@ function mkProductsHtml(){
   return h+(l.length?l.slice(0,100).map(function(p){
     return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(p.category)+(p.season?" · Season: "+esc(p.season):"")+" · "+esc(sellerName(p.seller_id))+"</div><div class='card-name'>"+esc(p.title)+"</div><div class='card-item'>"+fx(p.price_xaf)+" / "+esc(p.unit||"piece")+" · "+(p.image_urls||[]).length+" photo(s)</div></div>"+
     "<span class='badge "+(p.active?"s-done":"")+"'>"+(p.active?(p.in_stock?"Live":"Out of stock"):"Hidden")+"</span></div>"+
-    "<div class='card-actions'><button data-act='ptoggle' data-f='active' data-id='"+p.id+"'>"+(p.active?"Hide":"Show")+"</button><button data-act='ptoggle' data-f='in_stock' data-id='"+p.id+"'>"+(p.in_stock?"Mark out of stock":"Mark in stock")+"</button><button class='danger' data-act='pdel' data-id='"+p.id+"'>Delete</button></div></div>";
+    (mk.secOk&&sellerSections(p.seller_id).length?"<div class='card-item' style='margin-top:6px'>Section: <select data-secmove='"+esc(p.id)+"' style='width:auto;padding:6px;font-size:12px'>"+secOpts(p.seller_id,p.section_id)+"</select></div>":"")+
+    "<div class='card-actions'><button data-act='ptoggle' data-f='active' data-id='"+p.id+"'>"+(p.active?"Hide":"Show")+"</button><button data-act='ptoggle' data-f='in_stock' data-id='"+p.id+"'>"+(p.in_stock?"Mark out of stock":"Mark in stock")+"</button><button data-act='addphotos' data-id='"+p.id+"'>+ Photos</button><button data-act='clearphotos' data-id='"+p.id+"'>Clear photos</button><button class='danger' data-act='pdel' data-id='"+p.id+"'>Delete</button></div></div>";
   }).join(""):"<div class='empty'>No products yet.</div>");
 }
 async function mkSaveProduct(f){
   var btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Saving...";
   try{
-    var urls=[],files=Array.prototype.slice.call(f.elements.photos.files,0,3);
+    var urls=[],files=Array.prototype.slice.call(f.elements.photos.files,0,5);
     for(var i=0;i<files.length;i++)urls.push(await mkUpload(files[i],"mk-public","products"));
-    var r=await sb.from("mk_products").insert({seller_id:f.elements.seller_id.value,title:f.elements.title.value.trim(),price_xaf:Math.round(Number(f.elements.price.value)),unit:f.elements.unit.value.trim()||"piece",category:f.elements.category.value,season:f.elements.season.value||null,description:f.elements.description.value.trim()||null,image_urls:urls});
+    var prow={seller_id:f.elements.seller_id.value,title:f.elements.title.value.trim(),price_xaf:Math.round(Number(f.elements.price.value)),unit:f.elements.unit.value.trim()||"piece",category:f.elements.category.value,season:f.elements.season.value||null,description:f.elements.description.value.trim()||null,image_urls:urls};
+    if(mk.secOk&&f.elements.section_id&&f.elements.section_id.value)prow.section_id=f.elements.section_id.value;
+    var r=await sb.from("mk_products").insert(prow);
     if(r.error)throw r.error;
     mk.form="";await mkLoad();
   }catch(e){alert("Could not save: "+(e.message||e));btn.disabled=false;btn.textContent="Save product";}
@@ -2091,10 +2133,17 @@ $m("mk-body").addEventListener("input",function(e){if(e.target.id==="mk-q"){mk.q
 $m("mk-body").addEventListener("change",async function(e){if(e.target.id!=="mk-season")return;var v=e.target.value;
   var r=await sb.from("mk_settings").upsert({key:"active_season",value:v||"none"});if(r.error){alert("Could not save: "+r.error.message+" (run seasons-setup.sql first)");return;}
   mk.season=v;var s=MK_SEASONS.find(function(x){return x.k===v;});alert(s?s.n+" is now live on the marketplace.":"Seasonal banner removed.");});
+$m("mk-addphotos").addEventListener("change",mkAddPhotos);
+$m("mk-body").addEventListener("change",async function(e){
+  var t=e.target;if(!t||!t.getAttribute)return;
+  if(t.getAttribute("data-secmove")){var rm=await sb.from("mk_products").update({section_id:t.value||null}).eq("id",t.getAttribute("data-secmove"));if(rm.error)alert(rm.error.message);await mkLoad();return;}
+  if(t.name==="seller_id"&&t.form&&t.form.id==="mk-pform"&&t.form.elements.section_id){t.form.elements.section_id.innerHTML=secOpts(t.value,"");}
+});
 $m("mk-body").addEventListener("submit",function(e){e.preventDefault();var f=e.target;
   if(f.id==="mk-sform")mkSaveSeller(f);
   if(f.id==="mk-pform")mkSaveProduct(f);
   if(f.id==="mk-oform")mkCreateManual(f);
+  if(f.id==="mk-secform")mkAddSection(f);
 });
 async function mkCreateManual(f){
   try{
@@ -2110,6 +2159,11 @@ $m("mk-body").addEventListener("click",async function(e){
   if(a==="newseller"){mk.form="seller";mk.editing=null;mkRender();return;}
   if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="newproduct"){mk.form="product";mkRender();return;}
+  if(a==="sections"){mk.form="sections";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
+  if(a==="secdel"){var sc=mk.sections.find(function(x){return x.id===id;});if(!sc)return;if(!confirm("Delete the section \""+sc.name+"\"? Its products stay in the store, just without a section."))return;var rd=await sb.from("mk_sections").delete().eq("id",id);if(rd.error)alert(rd.error.message);await mkLoad();return;}
+  if(a==="secrename"){var s2=mk.sections.find(function(x){return x.id===id;});if(!s2)return;var nn=prompt("New name for this section:",s2.name);if(!nn||!nn.trim())return;var ru=await sb.from("mk_sections").update({name:titleCase(nn)}).eq("id",id);if(ru.error)alert(ru.error.message);await mkLoad();return;}
+  if(a==="addphotos"){mk.photoTarget=id;var fi=$m("mk-addphotos");if(fi){fi.value="";fi.click();}return;}
+  if(a==="clearphotos"){if(!confirm("Remove all photos from this product? You can then add new ones with + Photos."))return;var rc=await sb.from("mk_products").update({image_urls:[]}).eq("id",id);if(rc.error)alert(rc.error.message);await mkLoad();return;}
   if(a==="neworder"){mk.form="order";mkRender();return;}
   if(a==="cancel"){mk.form="";mkRender();return;}
   if(a==="wa"){window.open("https://wa.me/"+waNumber(b.getAttribute("data-p")),"_blank");return;}
