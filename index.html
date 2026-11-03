@@ -2110,6 +2110,7 @@ function mkSellerForm(s){
   "<h3 style='font-size:12px;color:var(--gold);letter-spacing:1px;margin:14px 0 6px'>PRIVATE (never shown to the public)</h3>"+
   "<div><label>Owner name</label><input name='owner_name' value='"+esc(s.owner_name||"")+"'></div>"+
   "<div><label>Owner phone / WhatsApp</label><input name='phone' type='tel' value='"+esc(s.phone||"")+"'></div>"+
+  "<div><label>Email (optional)</label><input name='email' type='email' value='"+esc(s.email||"")+"' placeholder='shop@example.com'></div>"+
   "<div><label>ID card number</label><input name='id_number' value='"+esc(s.id_number||"")+"'></div>"+
   "<div><label>Photo of ID card</label><input type='file' name='iddoc' accept='image/*'></div>"+
   "<div><label>Payout method (MTN MoMo / Orange Money / bank)</label><input name='payout_method' value='"+esc(s.payout_method||"")+"'></div>"+
@@ -2130,7 +2131,7 @@ function mkSellersHtml(){
   return h+(l.length?l.slice(0,100).map(function(s){
     var cls=s.status==="verified"?"s-done":(s.status==="pending"?"s-pay":"");
     return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(s.ref)+" · "+esc(s.seller_type)+"</div><div class='card-name'>"+esc(s.shop_name)+"</div>"+
-    "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div></div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
+    "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div>"+(s.email?"<div class='card-item'><a href='mailto:"+esc(s.email)+"' style='color:var(--gold)'>"+esc(s.email)+"</a></div>":"")+"</div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
     "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button><button data-act='sections' data-id='"+s.id+"'>Sections ("+sellerSections(s.id).length+")</button>"+
     (s.status!=="verified"?"<button class='green' data-act='setstatus' data-v='verified' data-id='"+s.id+"'>Verify</button>":"<button class='danger' data-act='setstatus' data-v='suspended' data-id='"+s.id+"'>Suspend</button>")+
     (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+"</div></div>";
@@ -2139,7 +2140,7 @@ function mkSellersHtml(){
 async function mkSaveSeller(f){
   var v=function(n){return f.elements[n].value.trim();};
   var row={shop_name:titleCase(v("shop_name")),seller_type:v("seller_type"),region:v("region"),town_area:v("town_area")||null,address:v("address")||null,description:v("description")||null,
-    categories:v("categories").split(",").map(function(x){return x.trim();}).filter(Boolean),owner_name:titleCase(v("owner_name"))||null,phone:v("phone")||null,id_number:v("id_number")||null,
+    categories:v("categories").split(",").map(function(x){return x.trim();}).filter(Boolean),owner_name:titleCase(v("owner_name"))||null,phone:v("phone")||null,email:(v("email")||null),id_number:v("id_number")||null,
     payout_method:v("payout_method")||null,payout_account:v("payout_account")||null,commission_rate:v("commission_rate")===""?null:Number(v("commission_rate")),status:v("status"),staff_notes:v("staff_notes")||null};
   var btn=f.querySelector("button[type=submit]");btn.disabled=true;btn.textContent="Saving...";
   try{
