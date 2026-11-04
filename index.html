@@ -737,6 +737,7 @@ h2.title{letter-spacing:1px;}
 
   <h3 style="font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;">System Status</h3>
   <div id="set-sync-status" style="font-size:11px;color:var(--dim);margin-bottom:10px;">Checking…</div>
+  <button id="set-signout-all" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:10px;border-color:#c0564b;color:#c0564b;">Log Out On ALL Devices (lost or stolen device)</button>
   <button id="set-force-refresh" class="btn-out" style="padding:12px;font-family:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;width:100%;margin-bottom:10px;">Force Refresh Data</button>
   <p class="sub" style="font-size:10px;line-height:1.6;">If the portal looks stuck or out of sync after a refresh, the issue is usually on GitHub Pages or Supabase directly — check github.com (Actions tab) or supabase.com (Project dashboard) for a paused project or failed deploy.</p>
 
@@ -1872,6 +1873,15 @@ document.getElementById("set-force-refresh").addEventListener("click",function()
 });
 applyPrivacyState();
 fillSettingsRates();
+var allBtn=document.getElementById("set-signout-all");
+if(allBtn)allBtn.addEventListener("click",function(){
+  if(!confirm("Log out this portal on EVERY device, including a lost or stolen one? You will need to sign in again here.\n\nAlso change your password afterwards."))return;
+  (async function(){
+    try{ if(window.kmdsLogLogout) await window.kmdsLogLogout(); }catch(e){}
+    try{ if(sb){var r=await sb.auth.signOut({scope:"global"});if(r&&r.error)throw r.error;} }catch(e){alert("Could not log out everywhere: "+(e.message||e));return;}
+    location.reload();
+  })();
+});
 var signOutBtn=document.getElementById("set-sign-out");
 if(signOutBtn)signOutBtn.addEventListener("click",function(){
   (async function(){
@@ -2112,7 +2122,10 @@ function mkSellerForm(s){
   "<div><label>Owner phone / WhatsApp</label><input name='phone' type='tel' value='"+esc(s.phone||"")+"'></div>"+
   "<div><label>Email (optional)</label><input name='email' type='email' value='"+esc(s.email||"")+"' placeholder='shop@example.com'></div>"+
   "<div><label>ID card number</label><input name='id_number' value='"+esc(s.id_number||"")+"'></div>"+
-  "<div><label>Photo of ID card</label><input type='file' name='iddoc' accept='image/*'></div>"+
+  "<div><label>Type of ID document</label><select name='id_type'><option value=''>Choose...</option>"+MK_IDTYPES.map(function(t){return "<option"+(s.id_type===t?" selected":"")+">"+t+"</option>";}).join("")+"</select></div>"+
+  "<div><label>Photo of ID document"+(s.id_doc_path?" (already saved)":"")+"</label><input type='file' name='iddoc' accept='image/*'></div>"+
+  "<div><label>Photo of the owner holding the ID"+(s.selfie_path?" (already saved)":"")+"</label><input type='file' name='selfie' accept='image/*'></div>"+
+  "<div class='fee-note'><label style='display:flex;gap:8px;align-items:flex-start;margin:0'><input type='checkbox' name='id_checked' style='width:auto;margin-top:3px'"+(s.id_verified_at?" checked":"")+"> <span>I checked: the face on the ID matches the owner, and the name and number on the ID match the details above. The ID belongs to this person.</span></label>"+(s.id_verified_at?"<br><small>Checked by "+esc(s.id_verified_by||"?")+" on "+esc(fmtDate(s.id_verified_at))+"</small>":"")+"</div>"+
   "<div><label>Payout method (MTN MoMo / Orange Money / bank)</label><input name='payout_method' value='"+esc(s.payout_method||"")+"'></div>"+
   "<div><label>Payout number / account</label><input name='payout_account' value='"+esc(s.payout_account||"")+"'></div>"+
   "<div style='display:flex;gap:10px'><div style='flex:1'><label>Own commission % (empty = default 10)</label><input name='commission_rate' type='number' step='0.01' min='0' max='100' value='"+(s.commission_rate==null?"":s.commission_rate)+"'></div>"+
@@ -2122,6 +2135,9 @@ function mkSellerForm(s){
 }
 function mkSellersHtml(){
   var h="<button class='btn-gold' data-act='newseller' style='margin-bottom:12px'>+ Add seller</button>";
+  if(mk.form==="notice")h+=mkNoticeHtml();
+  h+="<div class='card-actions' style='margin-bottom:10px'><button class='gold' data-act='shownotice'>Weekly safety notice</button></div>";
+  h+="<div class='fee-note'><strong>Strict verification: "+(mk.strict?"ON":"OFF (testing)")+"</strong><br>"+(mk.strict?"A shop can only be verified when its name, owner, phone, email, ID number, ID photo, address and payout number are all filled in.":"While testing, any shop can be verified. Turn this ON when you launch.")+"<br><button type='button' data-act='togglestrict' class='btn-out'>"+(mk.strict?"Turn OFF":"Turn ON")+"</button></div>";
   if(mk.form==="seller")h+=mkSellerForm(mk.editing);
   if(mk.form==="sections")h+=mkSectionsPanel(mk.sellers.find(function(x){return mk.editing&&x.id===mk.editing.id;})||mk.editing);
   h+="<input id='mk-q' placeholder='Search sellers...' value='"+esc(mk.q)+"' style='margin-bottom:12px'>";
@@ -2131,12 +2147,38 @@ function mkSellersHtml(){
   return h+(l.length?l.slice(0,100).map(function(s){
     var cls=s.status==="verified"?"s-done":(s.status==="pending"?"s-pay":"");
     return "<div class='card'><div class='card-top'><div><div class='card-ref'>"+esc(s.ref)+" · "+esc(s.seller_type)+"</div><div class='card-name'>"+esc(s.shop_name)+"</div>"+
-    "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div>"+(s.email?"<div class='card-item'><a href='mailto:"+esc(s.email)+"' style='color:var(--gold)'>"+esc(s.email)+"</a></div>":"")+"</div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
+    "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div>"+(s.email?"<div class='card-item'><a href='mailto:"+esc(s.email)+"' style='color:var(--gold)'>"+esc(s.email)+"</a></div>":"")+(mkMissing(s).length?"<div class='card-item' style='color:#c47a1f'>Missing: "+esc(mkMissing(s).join(", "))+"</div>":"<div class='card-item' style='color:var(--done)'>All required details recorded</div>")+mkDupes(s).map(function(d){return "<div class='card-item' style='color:#c0564b'>Possible duplicate: same "+esc(d[0])+" as "+esc(d[1].shop_name)+"</div>";}).join("")+(s.created_by?"<div class='card-item' style='font-size:11px;color:var(--dim)'>Registered by "+esc(s.created_by)+(s.id_verified_by?" · ID checked by "+esc(s.id_verified_by):"")+"</div>":"")+"</div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
     "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button><button data-act='sections' data-id='"+s.id+"'>Sections ("+sellerSections(s.id).length+")</button>"+
     (s.status!=="verified"?"<button class='green' data-act='setstatus' data-v='verified' data-id='"+s.id+"'>Verify</button>":"<button class='danger' data-act='setstatus' data-v='suspended' data-id='"+s.id+"'>Suspend</button>")+
     (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+"</div></div>";
   }).join(""):"<div class='empty'>No sellers yet. Tap + Add seller.</div>");
 }
+var MK_IDTYPES=["National ID card","Passport","Residence permit","Business registration certificate","Driving licence"];
+var MK_OWNER_EMAIL="sergeikome003@gmail.com";
+function mkDigits(x){return String(x||"").replace(/\D/g,"");}
+function mkDupes(s){var out=[];mk.sellers.forEach(function(o){if(o.id===s.id)return;
+  if(s.phone&&mkDigits(o.phone)&&mkDigits(o.phone)===mkDigits(s.phone))out.push(["phone number",o]);
+  if(s.id_number&&o.id_number&&String(o.id_number).trim().toLowerCase()===String(s.id_number).trim().toLowerCase())out.push(["ID number",o]);
+  if(s.payout_account&&mkDigits(o.payout_account)&&mkDigits(o.payout_account)===mkDigits(s.payout_account))out.push(["payout number",o]);
+  if(s.email&&o.email&&String(o.email).trim().toLowerCase()===String(s.email).trim().toLowerCase())out.push(["email",o]);});return out;}
+async function mkMeEmail(){try{var u=await sb.auth.getUser();return u&&u.data&&u.data.user?u.data.user.email:null;}catch(e){return null;}}
+async function mkVerifyGuard(s){
+  if(!mk.strict)return true;
+  var me=await mkMeEmail();
+  if(s.created_by&&me&&s.created_by===me&&me!==MK_OWNER_EMAIL){alert("Two-person rule: a shop must be verified by a different staff member than the one who registered it.");return false;}
+  var d=mkDupes(s);
+  if(d.length&&!confirm("Warning: this shop shares its "+d.map(function(x){return x[0]+" with "+x[1].shop_name;}).join(", ")+".\n\nThis can be a fake account. Verify anyway?"))return false;
+  return true;}
+var MK_REQ=[["shop_name","shop name"],["owner_name","owner name"],["phone","phone / WhatsApp"],["email","email"],["id_number","ID card number"],["id_type","ID document type"],["id_doc_path","ID document photo"],["selfie_path","owner photo holding the ID"],["id_verified_at","staff ID check (face and name match)"],["town_area","town / area"],["address","address"],["payout_method","payout method"],["payout_account","payout number"]];
+function mkMissing(s){return MK_REQ.filter(function(r){return !s[r[0]]||!String(s[r[0]]).trim();}).map(function(r){return r[1];});}
+try{mk.strict=localStorage.getItem("kmds_mk_strict")==="1";}catch(e){mk.strict=false;}
+var MK_NOTICE="*KMDS Marketplace: weekly safety reminder*\n\n1. Post only REAL photos of products you really have in stock. Fake photos or fake products will get your shop suspended.\n2. KMDS never asks for your PIN, password or any code. Never share them with anyone, even someone who says they are from KMDS.\n3. Pay and receive money only through the numbers and records KMDS gives you. Beware of anyone asking you to pay or deliver outside KMDS.\n4. Buyers can only buy and pay through KMDS. Report any buyer or person who asks you for something different.\n5. Your information is private. KMDS uses it only to run your shop and keep the marketplace safe (see our Privacy Policy on the marketplace website).\n\nReport anything suspicious: kmdscameroon@gmail.com or reply here.\nKMDS Cameroon";
+function mkNoticeHtml(){
+  var sent={};try{sent=JSON.parse(localStorage.getItem("kmds_notice_sent")||"{}");}catch(e){}
+  var l=mk.sellers.filter(function(s){return s.status==="verified";});
+  var h="<div class='card'><div class='card-ref'>Weekly safety notice</div><div class='card-item'>Send each verified shop this reminder once a week. Tap Send, WhatsApp opens with the message ready.</div>"+
+   (l.length?l.map(function(s){var d=sent[s.id]?Math.floor((Date.now()-sent[s.id])/86400000):null;return "<div class='drow'><span>"+esc(s.shop_name)+"<br><small style='color:"+(d===null||d>=7?"#c47a1f":"var(--done)")+"'>"+(d===null?"Never sent":d===0?"Sent today":"Sent "+d+" day"+(d===1?"":"s")+" ago"+(d>=7?" - due now":""))+"</small></span><button data-act='sendnotice' data-id='"+esc(s.id)+"' style='background:none;border:1px solid var(--done);color:var(--done);padding:6px 10px;font-family:inherit'>Send</button></div>";}).join(""):"<div class='card-item'>No verified shops yet.</div>")+
+   "<button type='button' data-act='cancel' class='btn-out'>Close</button></div>";return h;}
 async function mkSaveSeller(f){
   var v=function(n){return f.elements[n].value.trim();};
   var row={shop_name:titleCase(v("shop_name")),seller_type:v("seller_type"),region:v("region"),town_area:v("town_area")||null,address:v("address")||null,description:v("description")||null,
@@ -2147,8 +2189,17 @@ async function mkSaveSeller(f){
     if(f.elements.logo.files[0])row.logo_url=await mkUpload(f.elements.logo.files[0],"mk-public","logos");
     if(f.elements.cover.files[0])row.cover_url=await mkUpload(f.elements.cover.files[0],"mk-public","covers");
     if(f.elements.iddoc.files[0])row.id_doc_path=await mkUpload(f.elements.iddoc.files[0],"mk-private","ids");
-    if(row.status==="verified")row.verified_at=new Date().toISOString();
+    if(f.elements.selfie.files[0])row.selfie_path=await mkUpload(f.elements.selfie.files[0],"mk-private","ids");
+    row.id_type=v("id_type")||null;
+    var me0=await mkMeEmail(),prev=mk.sellers.find(function(x){return x.id===f.getAttribute("data-id");})||{};
+    if(f.elements.id_checked.checked){if(!prev.id_verified_at){row.id_verified_at=new Date().toISOString();row.id_verified_by=me0;}}
+    else if(prev.id_verified_at){row.id_verified_at=null;row.id_verified_by=null;}
+    if(!f.getAttribute("data-id"))row.created_by=me0;
     var id=f.getAttribute("data-id");
+    if(row.status==="verified"&&mk.strict){var ex=mk.sellers.find(function(x){return x.id===id;})||{};var miss=mkMissing(Object.assign({},ex,row));
+      if(miss.length){alert("This shop cannot be verified yet. Missing: "+miss.join(", ")+".\n\nFill these in, or set the status to Pending.");btn.disabled=false;btn.textContent="Save seller";return;}
+      if(!(await mkVerifyGuard(Object.assign({},ex,row,{id:id})))){btn.disabled=false;btn.textContent="Save seller";return;}}
+    if(row.status==="verified")row.verified_at=new Date().toISOString();
     var r=id?await sb.from("mk_sellers").update(row).eq("id",id):await sb.from("mk_sellers").insert(row);
     if(r.error)throw r.error;
     mk.form="";mk.editing=null;await mkLoad();
@@ -2355,6 +2406,11 @@ $m("mk-body").addEventListener("click",async function(e){
   if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="newproduct"){mk.form="product";mkRender();return;}
   if(a==="daytoday"||a==="stmwa"||a==="stmprint"||a==="closeday"){mkDailyAct(a,id);return;}
+  if(a==="shownotice"){mk.form="notice";mkRender();return;}
+  if(a==="sendnotice"){var sn=mk.sellers.find(function(x){return x.id===id;});if(!sn)return;var nn2=waNumber(sn.phone);if(!nn2){alert("This shop has no phone number saved.");return;}
+    try{var sj=JSON.parse(localStorage.getItem("kmds_notice_sent")||"{}");sj[id]=Date.now();localStorage.setItem("kmds_notice_sent",JSON.stringify(sj));}catch(e){}
+    window.open("https://wa.me/"+nn2+"?text="+encodeURIComponent(MK_NOTICE),"_blank");mkRender();return;}
+  if(a==="togglestrict"){mk.strict=!mk.strict;try{localStorage.setItem("kmds_mk_strict",mk.strict?"1":"0");}catch(e){}mkRender();return;}
   if(a==="sections"){mk.form="sections";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="secdel"){var sc=mk.sections.find(function(x){return x.id===id;});if(!sc)return;if(!confirm("Delete the section \""+sc.name+"\"? Its products stay in the store, just without a section."))return;var rd=await sb.from("mk_sections").delete().eq("id",id);if(rd.error)alert(rd.error.message);await mkLoad();return;}
   if(a==="secrename"){var s2=mk.sections.find(function(x){return x.id===id;});if(!s2)return;var nn=prompt("New name for this section:",s2.name);if(!nn||!nn.trim())return;var ru=await sb.from("mk_sections").update({name:titleCase(nn)}).eq("id",id);if(ru.error)alert(ru.error.message);await mkLoad();return;}
@@ -2364,7 +2420,7 @@ $m("mk-body").addEventListener("click",async function(e){
   if(a==="cancel"){mk.form="";mkRender();return;}
   if(a==="wa"){window.open("https://wa.me/"+waNumber(b.getAttribute("data-p")),"_blank");return;}
   if(a==="viewid"){var r=await sb.storage.from("mk-private").createSignedUrl(b.getAttribute("data-p"),60);if(r.error)alert(r.error.message);else window.open(r.data.signedUrl,"_blank");return;}
-  if(a==="setstatus"){var v=b.getAttribute("data-v");var u={status:v};if(v==="verified")u.verified_at=new Date().toISOString();var r1=await sb.from("mk_sellers").update(u).eq("id",id);if(r1.error)alert(r1.error.message);await mkLoad();return;}
+  if(a==="setstatus"){var v=b.getAttribute("data-v");if(v==="verified"&&mk.strict){var sx=mk.sellers.find(function(x){return x.id===id;})||{};var ms=mkMissing(sx);if(ms.length){alert("This shop cannot be verified yet. Missing: "+ms.join(", ")+".\n\nTap Edit and fill these in first.");return;}if(!(await mkVerifyGuard(sx)))return;}var u={status:v};if(v==="verified")u.verified_at=new Date().toISOString();var r1=await sb.from("mk_sellers").update(u).eq("id",id);if(r1.error)alert(r1.error.message);await mkLoad();return;}
   if(a==="ptoggle"){var f=b.getAttribute("data-f"),p=mk.products.find(function(x){return x.id===id;});var o={};o[f]=!p[f];var r5=await sb.from("mk_products").update(o).eq("id",id);if(r5.error)alert(r5.error.message);await mkLoad();return;}
   if(a==="pdel"){if(!confirm("Delete this product?"))return;var r6=await sb.from("mk_products").delete().eq("id",id);if(r6.error)alert(r6.error.message);await mkLoad();return;}
   if(a==="enqclose"){await sb.from("mk_enquiries").update({status:"closed"}).eq("id",id);await mkLoad();return;}
