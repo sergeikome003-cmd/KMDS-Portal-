@@ -75,7 +75,7 @@ footer.ft{background:#000;border-top:1px solid var(--g3);padding:34px 0 18px;fon
 .sheet{background:var(--p1);border:1px solid var(--g3);border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:18px}
 @media(min-width:700px){.modal{align-items:center}.sheet{border-radius:16px}}
 .sheet h2{color:var(--g1);font-size:21px;margin-bottom:4px}.x{float:right;background:none;border:none;color:var(--dm);font-size:28px;cursor:pointer;line-height:1}
-.gal{display:flex;gap:8px;overflow-x:auto;margin:10px 0}.gal img{height:180px;border-radius:10px;border:1px solid var(--ln)}
+.pkr{display:flex;gap:12px;align-items:center;margin:8px 0;padding:8px;border:1px solid #e3ddcd;border-radius:10px}.pkr img{width:68px;height:68px;object-fit:cover;border-radius:8px;flex:none}.pkr b{color:#6b4e0c}.pkr .qs{margin:4px 0 0}.gal{display:flex;gap:8px;overflow-x:auto;margin:10px 0}.gal img{height:180px;border-radius:10px;border:1px solid var(--ln)}
 .sheet label{display:block;font-size:12px;color:var(--dm);margin:10px 0 4px}.sheet input,.sheet textarea{width:100%;background:#000;border:1px solid var(--ln);border-radius:8px;padding:12px;font-size:16px}
 .sheet input:focus,.sheet textarea:focus{outline:none;border-color:var(--g2)}
 .note{background:var(--p2);border-left:3px solid var(--g2);padding:10px 12px;font-size:12.5px;color:var(--dm);margin:12px 0;border-radius:4px}
@@ -247,7 +247,7 @@ function open_(h,wide){$("sheet").className="sheet"+(wide?" wide":"");$("sheet")
 function closeM(){if(/page=/.test(location.hash))history.replaceState(null,"",location.pathname+location.search);$("modal").classList.remove("open");st.fromShop=null;$("sheet").className="sheet"}
 function showProduct(id){var p=st.rows.find(function(r){return r.id===id});if(!p)return;
   var g=(p.image_urls||[]).map(function(u){return '<img loading="lazy" src="'+encodeURI(u)+'" alt="'+esc(p.title)+'">'}).join("");
-  open_((st.fromShop&&st.store?'<button class="btn o sm" data-back="1" style="margin-bottom:8px">← Back to shop</button>':'')+'<h2>'+esc(p.title)+'</h2><div class="price" style="font-size:20px">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+(g?'<div class="gal">'+g+'</div>':'')+'<p style="margin:8px 0">'+esc(p.description||"")+'</p><div class="meta">Sold by <b style="color:#fff">'+esc(p.shop_name)+'</b> · '+esc(p.town_area||p.region)+'</div><button class="btn" style="margin-top:14px;width:100%" onclick="buyNow(\''+esc(p.id)+'\')">Buy now</button><button class="btn o" style="margin-top:8px;width:100%" onclick="enquire(\''+esc(p.id)+'\')">Enquire (price, quantity, delivery)</button><button class="btn o" style="margin-top:8px;width:100%" onclick="showShop(\''+esc(p.seller_id)+'\')">View shop</button>')}
+  open_((st.fromShop&&st.store?'<button class="btn o sm" data-back="1" style="margin-bottom:8px">← Back to shop</button>':'')+'<h2>'+esc(p.title)+'</h2><div class="price" style="font-size:20px">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+(g?'<div class="gal">'+g+'</div>'+((p.image_urls||[]).length>1?'<div class="meta">Photos are numbered 1 to '+p.image_urls.length+' from left to right. Tap Buy now to choose the exact one you want.</div>':''):'')+'<p style="margin:8px 0">'+esc(p.description||"")+'</p><div class="meta">Sold by <b style="color:#fff">'+esc(p.shop_name)+'</b> · '+esc(p.town_area||p.region)+'</div><button class="btn" style="margin-top:14px;width:100%" onclick="buyNow(\''+esc(p.id)+'\')">Buy now</button><button class="btn o" style="margin-top:8px;width:100%" onclick="enquire(\''+esc(p.id)+'\')">Enquire (price, quantity, delivery)</button><button class="btn o" style="margin-top:8px;width:100%" onclick="showShop(\''+esc(p.seller_id)+'\')">View shop</button>')}
 function showShop(id){
   var j=function(r){return r.ok?r.json():Promise.reject(r.status)};
   Promise.all([
@@ -275,10 +275,15 @@ function drawStore(first){var S=st.store;if(!S)return;var s=S.s,ps=S.ps,secs=S.s
    +'<div class="stg">'+(list.length?list.map(storeCard).join(""):'<div class="meta">No products listed yet.</div>')+'</div></div>',true);
   if(!first)$("sheet").scrollTop=old}
 function qtyHtml(px,price){return '<div class="qs"><button type="button" data-qs="'+px+'" data-d="-1" aria-label="Less">−</button><input id="'+px+'-qty" type="number" min="1" value="1" inputmode="numeric"><button type="button" data-qs="'+px+'" data-d="1" aria-label="More">+</button></div><div class="tot">Goods total: <b id="'+px+'-tot">'+xaf(price)+'</b><br><small>Delivery fee depends on where you are. KMDS confirms the full total before you pay.</small></div>'}
-function updTot(px){var p=st.cur;if(!p)return;var q=Math.max(1,parseInt($(px+"-qty").value,10)||1);$(px+"-tot").textContent=xaf(p.price_xaf*q)}
+function pickHtml(px,p){var im=p.image_urls||[];if(im.length<2)return qtyHtml(px,p.price_xaf);
+  return '<div class="note">This product has '+im.length+' photos. Choose the exact one(s) you want: tap + under each photo. You can pick more than one and set how many of each.</div><div class="pk">'+im.map(function(u,i){return '<div class="pkr"><img src="'+encodeURI(u)+'" alt="Photo '+(i+1)+'"><div><b>Photo '+(i+1)+'</b><div class="qs"><button type="button" data-pk="'+px+'" data-i="'+i+'" data-d="-1" aria-label="Less">−</button><input id="'+px+'-pk-'+i+'" type="number" min="0" value="0" inputmode="numeric" oninput="updTot(\''+px+'\')"><button type="button" data-pk="'+px+'" data-i="'+i+'" data-d="1" aria-label="More">+</button></div></div></div>'}).join("")+'</div><div class="tot">Your choice: <b id="'+px+'-sel">Nothing chosen yet</b><br>Goods total: <b id="'+px+'-tot">'+xaf(0)+'</b><br><small>Delivery fee depends on where you are. KMDS confirms the full total before you pay.</small></div>'}
+function pickSel(px,p){var im=p.image_urls||[];if(im.length<2)return{qty:Math.max(1,parseInt(($(px+"-qty")||{}).value,10)||1),lines:[],txt:"",short:""};
+  var L=[],t=0;im.forEach(function(u,i){var el=$(px+"-pk-"+i),q=Math.max(0,parseInt(el&&el.value,10)||0);if(q){L.push({n:i+1,q:q,u:u});t+=q}});
+  return{qty:t,lines:L,txt:L.map(function(l){return "\n- Photo "+l.n+" x"+l.q+": "+l.u}).join(""),short:L.length?" ["+L.map(function(l){return "Photo "+l.n+" x"+l.q}).join(", ")+"]":""}}
+function updTot(px){var p=st.cur;if(!p)return;var s=pickSel(px,p);$(px+"-tot").textContent=xaf(p.price_xaf*s.qty);var el=$(px+"-sel");if(el)el.textContent=s.lines.length?s.lines.map(function(l){return "Photo "+l.n+" ×"+l.q}).join(", "):"Nothing chosen yet"}
 function enquire(pid){var p=st.rows.find(function(r){return r.id===pid});if(!p)return;st.cur=p;
   open_((st.fromShop&&st.store?'<button class="btn o sm" data-back="1" style="margin-bottom:8px">← Back to shop</button>':'')+'<h2>Enquire</h2><div class="meta">'+esc(p.title)+' · '+esc(p.shop_name)+'</div><div class="price" style="font-size:20px;margin:6px 0">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+
-  '<label>How many do you want?</label>'+qtyHtml("e",p.price_xaf)+
+  '<label>What do you want?</label>'+pickHtml("e",p)+
   '<div class="fq"><details><summary>How do I receive my parcel?</summary><p>After your payment is verified, KMDS collects the goods from the shop, packs and labels them, and delivers to you in Limbe, Buea or Douala. You can also collect at our office, Saker Junction, Limbe. KMDS tells you the delivery time on WhatsApp and you can track your order with your reference.</p></details>'+
   '<details><summary>How much is delivery?</summary><p>It depends on where you are. Tell us your town and quarter below, and KMDS gives you the full total (goods + delivery) before you pay.</p></details>'+
   '<details><summary>Is the seller real? What about quality?</summary><p>KMDS verifies every shop before it appears here. Tap the photos to see them bigger. For quality, size or colour questions, write them in the message box and KMDS asks the seller and answers you on WhatsApp.</p></details>'+
@@ -287,7 +292,7 @@ function enquire(pid){var p=st.rows.find(function(r){return r.id===pid});if(!p)r
 var PAY={orange:{n:"Orange Money",num:"641560868",show:"641 56 08 68"},mtn:{n:"MTN Mobile Money",num:"676347228",show:"676 34 72 28"}};
 function buyNow(pid){var p=st.rows.find(function(r){return r.id===pid});if(!p)return;st.cur=p;
   open_((st.fromShop&&st.store?'<button class="btn o sm" data-back="1" style="margin-bottom:8px">← Back to shop</button>':'')+'<h2>Buy now</h2><div class="meta">'+esc(p.title)+' · '+esc(p.shop_name)+'</div><div class="price" style="font-size:20px;margin:6px 0">'+xaf(p.price_xaf)+' <span class="meta">/ '+esc(p.unit||"piece")+'</span></div>'+
-  '<label>Quantity</label>'+qtyHtml("b",p.price_xaf)+
+  '<label>Your choice</label>'+pickHtml("b",p)+
   '<label>Your name</label><input id="b-name" autocomplete="name"><label>Phone / WhatsApp number</label><input id="b-phone" type="tel" autocomplete="tel" placeholder="6XX XXX XXX"><label>Delivery location</label><input id="b-loc" placeholder="Town and quarter">'+
   '<h3 style="margin:14px 0 4px;font-size:16px">1. Pay to KMDS</h3><div class="meta">Pay the goods total above to one of these numbers. KMDS will confirm the delivery fee on WhatsApp.</div>'+
   Object.keys(PAY).map(function(k){var o=PAY[k];return '<div class="payb"><div><b>'+o.n+'</b><small>'+o.show+' · KMDS Cameroon</small></div><div><button type="button" data-copy="'+o.num+'">Copy</button></div></div>'}).join("")+
@@ -295,24 +300,26 @@ function buyNow(pid){var p=st.rows.find(function(r){return r.id===pid});if(!p)re
   '<h3 style="margin:14px 0 4px;font-size:16px">2. Send proof on WhatsApp</h3><div class="note">Your order is confirmed only after KMDS checks your payment (transaction ID and amount). A screenshot alone is not enough. Never pay anyone other than the numbers above.</div>'+
   '<button class="btn" style="width:100%" id="b-paid" onclick="sendBuy(\''+esc(pid)+'\',true)">I have paid. Send proof on WhatsApp</button><button class="btn o" style="width:100%;margin-top:8px" onclick="sendBuy(\''+esc(pid)+'\',false)">Not yet. Send me a quote on WhatsApp</button><div class="err" id="b-err"></div>',false)}
 function sendBuy(pid,paid){var p=st.rows.find(function(r){return r.id===pid});if(!p)return;
-  var name=title($("b-name").value),phone=$("b-phone").value.trim(),loc=$("b-loc").value.trim(),qty=Math.max(1,parseInt($("b-qty").value,10)||1),txn=$("b-txn").value.trim(),m=$("b-m").value,er=$("b-err");er.textContent="";
+  var name=title($("b-name").value),phone=$("b-phone").value.trim(),loc=$("b-loc").value.trim(),sel=pickSel("b",p),qty=sel.qty,txn=$("b-txn").value.trim(),m=$("b-m").value,er=$("b-err");er.textContent="";
   if(name.length<2||phone.replace(/\D/g,"").length<8){er.textContent="Please enter your name and a valid phone number.";return}
+  if(qty<1){er.textContent="Please choose at least one photo (tap + under it).";return}
   if(!loc){er.textContent="Please tell us where to deliver.";return}
   if(paid&&txn.length<5){er.textContent="Please enter the transaction ID from your payment SMS, or tap 'Not yet'.";return}
   var ref=mkRef(),total=p.price_xaf*qty;
-  var text="Hello KMDS Marketplace.\nRef: "+ref+"\n"+(paid?"I HAVE PAID.":"Please send me a quote.")+"\nI want: "+p.title+" x"+qty+"\nGoods total: "+xaf(total)+"\nShop: "+p.shop_name+" ("+(p.town_area||p.region)+")\n"+(paid?"Paid with: "+m+"\nTransaction ID: "+txn+"\n":"")+"Name: "+name+"\nPhone: "+phone+"\nDeliver to: "+loc+(paid?"\nPlease verify my payment and confirm my order.":"");
+  var text="Hello KMDS Marketplace.\nRef: "+ref+"\n"+(paid?"I HAVE PAID.":"Please send me a quote.")+"\nI want: "+p.title+" x"+qty+sel.txt+"\nGoods total: "+xaf(total)+"\nShop: "+p.shop_name+" ("+(p.town_area||p.region)+")\n"+(paid?"Paid with: "+m+"\nTransaction ID: "+txn+"\n":"")+"Name: "+name+"\nPhone: "+phone+"\nDeliver to: "+loc+(paid?"\nPlease verify my payment and confirm my order.":"");
   var url="https://wa.me/"+WA+"?text="+encodeURIComponent(text);
-  api("mk_enquiries",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({ref:ref,seller_id:p.seller_id,product_id:p.id,product_title:p.title,qty:qty,buyer_name:name,buyer_phone:phone,delivery_location:loc,message:(paid?"BUY NOW - PAID via "+m+", txn "+txn:"BUY NOW - quote requested")})}).catch(function(){});
+  api("mk_enquiries",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({ref:ref,seller_id:p.seller_id,product_id:p.id,product_title:p.title+sel.short,qty:qty,buyer_name:name,buyer_phone:phone,delivery_location:loc,message:(paid?"BUY NOW - PAID via "+m+", txn "+txn:"BUY NOW - quote requested")})}).catch(function(){});
   closeM();location.href=url}
 function mkRef(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];var d=new Date();return "KMDS-MK-"+String(d.getFullYear()).slice(2)+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+s}
 function title(s){return s.trim().replace(/\s+/g," ").toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g,function(m,a,b){return a+b.toUpperCase()})}
 function sendEnq(pid){var p=st.rows.find(function(r){return r.id===pid});
-  var name=title($("e-name").value),phone=$("e-phone").value.trim(),qty=parseInt($("e-qty").value,10)||1,loc=$("e-loc").value.trim(),msg=$("e-msg").value.trim();var er=$("e-err");er.textContent="";
+  var name=title($("e-name").value),phone=$("e-phone").value.trim(),sel=pickSel("e",p),qty=sel.qty,loc=$("e-loc").value.trim(),msg=$("e-msg").value.trim();var er=$("e-err");er.textContent="";
   if(name.length<2||phone.replace(/\D/g,"").length<8){er.textContent="Please enter your name and a valid phone number.";return}
+  if(qty<1){er.textContent="Please choose at least one photo (tap + under it).";return}
   var ref=mkRef();$("e-go").disabled=true;$("e-go").textContent="Please wait...";
-  var text="Hello KMDS Marketplace.\nRef: "+ref+"\nI want: "+p.title+" x"+qty+" ("+xaf(p.price_xaf)+" each)\nShop: "+p.shop_name+" ("+(p.town_area||p.region)+")\nName: "+name+"\nPhone: "+phone+(loc?"\nDeliver to: "+loc:"")+(msg?"\nNote: "+msg:"");
+  var text="Hello KMDS Marketplace.\nRef: "+ref+"\nI want: "+p.title+" x"+qty+" ("+xaf(p.price_xaf)+" each)"+sel.txt+"\nShop: "+p.shop_name+" ("+(p.town_area||p.region)+")\nName: "+name+"\nPhone: "+phone+(loc?"\nDeliver to: "+loc:"")+(msg?"\nNote: "+msg:"");
   var url="https://wa.me/"+WA+"?text="+encodeURIComponent(text);
-  api("mk_enquiries",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({ref:ref,seller_id:p.seller_id,product_id:p.id,product_title:p.title,qty:qty,buyer_name:name,buyer_phone:phone,delivery_location:loc||null,message:msg||null})})
+  api("mk_enquiries",{method:"POST",headers:{"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({ref:ref,seller_id:p.seller_id,product_id:p.id,product_title:p.title+sel.short,qty:qty,buyer_name:name,buyer_phone:phone,delivery_location:loc||null,message:msg||null})})
   .then(function(r){if(!r.ok)throw 0;closeM();location.href=url}).catch(function(){$("e-go").disabled=false;$("e-go").textContent="Continue on WhatsApp";er.innerHTML='We could not save your enquiry. You can still <a style="color:var(--g1)" target="_blank" rel="noopener" href="'+url+'">send it on WhatsApp</a>.'})}
 
 var PG_TITLE={track:"Track Your Order",sell:"Apply to Sell on KMDS Marketplace",support:"Customer Support",app:"KMDS App",privacy:"Privacy Policy",feedback:"Send Us Your Feedback"};
@@ -372,6 +379,7 @@ document.addEventListener("click",function(e){
   var sgs=e.target.closest("[data-sgs]");if(sgs){sgHide();showShop(sgs.dataset.sgs);return}
   if(e.target.closest("[data-sga]")){sgHide();st.q=$("q").value.trim();refresh();var t0=$("shops");if(t0)t0.scrollIntoView({behavior:"smooth",block:"start"});return}
   if(!e.target.closest(".sbar"))sgHide();
+  var pk=e.target.closest("[data-pk]");if(pk){var pi=$(pk.dataset.pk+"-pk-"+pk.dataset.i);pi.value=Math.max(0,(parseInt(pi.value,10)||0)+parseInt(pk.dataset.d,10));updTot(pk.dataset.pk);return}
   var qb=e.target.closest("[data-qs]");if(qb){var px=qb.dataset.qs,inp=$(px+"-qty");inp.value=Math.max(1,(parseInt(inp.value,10)||1)+parseInt(qb.dataset.d,10));updTot(px);return}
   var cp=e.target.closest("[data-copy]");if(cp){var v=cp.dataset.copy;if(navigator.clipboard)navigator.clipboard.writeText(v).then(function(){cp.textContent="Copied"},function(){prompt("Copy this number:",v)});else prompt("Copy this number:",v);return}
   var stb=e.target.closest("[data-star]");if(stb){window.__fbStar=+stb.dataset.star;[].forEach.call(document.querySelectorAll("#fb-st button"),function(x){x.className=(+x.dataset.star<=window.__fbStar)?"on":""});return}
