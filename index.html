@@ -577,6 +577,7 @@ h2.title{letter-spacing:1px;}
     <button data-v="orders">Orders</button>
     <button data-v="settle">Settlements</button>
     <button data-v="daily">Daily Close</button>
+    <button data-v="subs">Submissions</button>
   </div>
   <div id="mk-body"><div class="empty">Loading...</div></div>
   <input type="file" id="mk-addphotos" accept="image/*" multiple style="display:none">
@@ -1954,6 +1955,7 @@ async function mkLoad(){
     mk.sellers=r[0].data;mk.products=r[1].data;mk.enq=r[2].data;mk.orders=r[3].data;mk.pay=r[4].data;mk.led=r[5].data;mk.err="";mk.loaded=true;try{var rs=await sb.from("mk_sections").select("*").order("sort_order",{ascending:true}).order("name",{ascending:true}).limit(3000);if(rs.error){mk.sections=[];mk.secOk=false;}else{mk.sections=rs.data||[];mk.secOk=true;}}catch(x0){mk.sections=[];mk.secOk=false;}try{var ss=await sb.from("mk_settings").select("value").eq("key","active_season").maybeSingle();mk.season=(ss.data&&ss.data.value)||"";}catch(x){}
   }catch(e){mk.err=e.message||String(e);}
   try{var rt=await sb.from("mk_daily_statements").select("*").order("day",{ascending:false}).limit(3000);if(rt.error){mk.stm=[];mk.stmOk=false;}else{mk.stm=rt.data||[];mk.stmOk=true;}}catch(x1){mk.stm=[];mk.stmOk=false;}
+  try{var rb=await sb.from("mk_submissions").select("*").order("created_at",{ascending:false}).limit(500);if(rb.error){mk.subs=[];mk.subOk=false;}else{mk.subs=rb.data||[];mk.subOk=true;}}catch(x2){mk.subs=[];mk.subOk=false;}
   mkRender();
   if(window.mkAnalyticsFill)mkAnalyticsFill();
 }
@@ -1973,7 +1975,9 @@ function mkRender(){
   var body=$m("mk-body");
   if(mk.err){body.innerHTML="<div class='fee-note'><strong>Could not load the marketplace data.</strong> "+esc(mk.err)+"<br>If this says a table does not exist, the marketplace database setup has not been run yet.</div>";return;}
   if(!mk.loaded){body.innerHTML="<div class='empty'>Loading...</div>";return;}
-  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml,daily:mkDailyHtml})[mk.tab]();
+  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml,daily:mkDailyHtml,subs:mkSubsHtml})[mk.tab]();
+  var sbtn=document.querySelector("#mk-tabs button[data-v=subs]");if(sbtn){var pn=(mk.subs||[]).filter(function(x){return x.status==="pending";}).length;sbtn.textContent="Submissions"+(pn?" ("+pn+")":"");}
+  if(mk.tab==="subs")mkSubImgs();
 }
 
 
@@ -2150,7 +2154,7 @@ function mkSellersHtml(){
     "<div class='card-item'>"+esc(s.region)+(s.town_area?" · "+esc(s.town_area):"")+"</div><div class='card-item'>"+esc(s.owner_name||"")+(s.phone?" · "+esc(s.phone):"")+"</div>"+(s.email?"<div class='card-item'><a href='mailto:"+esc(s.email)+"' style='color:var(--gold)'>"+esc(s.email)+"</a></div>":"")+(mkMissing(s).length?"<div class='card-item' style='color:#c47a1f'>Missing: "+esc(mkMissing(s).join(", "))+"</div>":"<div class='card-item' style='color:var(--done)'>All required details recorded</div>")+mkDupes(s).map(function(d){return "<div class='card-item' style='color:#c0564b'>Possible duplicate: same "+esc(d[0])+" as "+esc(d[1].shop_name)+"</div>";}).join("")+(s.created_by?"<div class='card-item' style='font-size:11px;color:var(--dim)'>Registered by "+esc(s.created_by)+(s.id_verified_by?" · ID checked by "+esc(s.id_verified_by):"")+"</div>":"")+"</div><span class='badge "+cls+"'>"+esc(s.status)+"</span></div>"+
     "<div class='card-actions'><button class='gold' data-act='editseller' data-id='"+s.id+"'>Edit</button><button data-act='sections' data-id='"+s.id+"'>Sections ("+sellerSections(s.id).length+")</button>"+
     (s.status!=="verified"?"<button class='green' data-act='setstatus' data-v='verified' data-id='"+s.id+"'>Verify</button>":"<button class='danger' data-act='setstatus' data-v='suspended' data-id='"+s.id+"'>Suspend</button>")+
-    (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+"</div></div>";
+    (s.phone?"<button data-act='wa' data-p='"+esc(s.phone)+"'>WhatsApp</button>":"")+(s.id_doc_path?"<button data-act='viewid' data-p='"+esc(s.id_doc_path)+"'>View ID</button>":"")+(s.status==="verified"?(s.submit_enabled?"<button class='green' data-act='sendlink' data-id='"+s.id+"'>Send submission link</button><button data-act='copylink' data-id='"+s.id+"'>Copy link</button><button class='danger' data-act='sublink' data-id='"+s.id+"'>Link ON: turn off</button>":"<button data-act='sublink' data-id='"+s.id+"'>Turn on submission link</button>"):"")+"</div></div>";
   }).join(""):"<div class='empty'>No sellers yet. Tap + Add seller.</div>");
 }
 var MK_IDTYPES=["National ID card","Passport","Residence permit","Business registration certificate","Driving licence"];
@@ -2246,6 +2250,55 @@ async function mkSaveProduct(f){
     if(r.error)throw r.error;
     mk.form="";await mkLoad();
   }catch(e){alert("Could not save: "+(e.message||e));btn.disabled=false;btn.textContent="Save product";}
+}
+
+
+/* ---------- SELLER SUBMISSIONS (sellers send, staff approve) ---------- */
+var MK_SUBURL="https://kmds-cameroon.pages.dev/kmds-submit.html";
+function mkSubLink(s){return MK_SUBURL+"#t="+s.submit_token;}
+function mkSubImgs(){if(!window.sb||!sb.storage)return;document.querySelectorAll("#mk-body img[data-sp]").forEach(function(im){sb.storage.from("mk-submit").createSignedUrl(im.getAttribute("data-sp"),600).then(function(r){if(r&&r.data)im.src=r.data.signedUrl;}).catch(function(){});});}
+function mkSubsHtml(){
+  if(!mk.subOk)return "<div class='fee-note'><strong>Submissions are not set up yet.</strong><br>Run the file kmds-submissions-setup.sql once in Supabase (SQL Editor), then reload this page.</div>";
+  var all=mk.subs||[],pend=all.filter(function(x){return x.status==="pending";}),done=all.filter(function(x){return x.status!=="pending";}).slice(0,20);
+  var h="<div class='fee-note'><strong>How it works</strong><br>1. Open a verified seller in the Sellers tab and tap <b>Turn on submission link</b>, then <b>Send submission link</b> (opens WhatsApp).<br>2. The seller fills in the page. Their phone number must match your record.<br>3. Their product appears here as <b>Pending</b>. You can edit the name, price and description, then tap <b>Approve and publish</b> or <b>Reject</b>.<br>Nothing goes live without your approval.<br><button type='button' data-act='alllinksoff' class='btn-out'>Switch ALL submission links off</button></div>";
+  h+="<div class='sub' style='margin:10px 0 8px'>"+pend.length+" waiting for review</div>";
+  h+=pend.length?pend.map(function(x){var sl=mk.sellers.find(function(y){return y.id===x.seller_id;})||{};
+    return "<div class='card sb-card' data-id='"+x.id+"'><div class='card-ref'>"+esc(x.ref)+" · "+fmtDate(x.created_at)+"</div><div class='card-name'>"+esc(sl.shop_name||"Seller")+"</div><div class='card-item'>Quantity offered: "+x.qty+"</div>"+
+    "<div style='display:flex;gap:6px;flex-wrap:wrap;margin:8px 0'>"+(x.image_paths||[]).map(function(pp){return "<img data-sp='"+esc(pp)+"' alt='' style='width:76px;height:76px;object-fit:cover;border-radius:8px;background:#222'>";}).join("")+"</div>"+
+    "<label>Product name</label><input class='sb-t' value='"+esc(x.title)+"'><label>Price (FCFA)</label><input class='sb-p' type='number' value='"+x.price_xaf+"'><label>Category</label><select class='sb-c'>"+opts(MK_CATS)+"</select><label>Description</label><textarea class='sb-d' rows='3'>"+esc(x.description||"")+"</textarea>"+
+    "<div class='card-actions'><button class='green' data-act='subapprove' data-id='"+x.id+"'>Approve and publish</button><button class='danger' data-act='subreject' data-id='"+x.id+"'>Reject</button>"+(sl.phone?"<button data-act='wa' data-p='"+esc(sl.phone)+"'>WhatsApp seller</button>":"")+"</div></div>";}).join(""):"<div class='empty'>No submissions waiting.</div>";
+  if(done.length)h+="<div class='sub' style='margin:16px 0 8px'>Recently reviewed</div>"+done.map(function(x){var sl=mk.sellers.find(function(y){return y.id===x.seller_id;})||{};
+    return "<div class='card'><div class='card-ref'>"+esc(x.ref)+" · "+fmtDate(x.created_at)+"</div><div class='card-name'>"+esc(x.title)+" · "+fx(x.price_xaf)+"</div><div class='card-item'>"+esc(sl.shop_name||"")+" · <b>"+esc(x.status)+"</b>"+(x.reject_reason?" · "+esc(x.reject_reason):"")+(x.reviewed_by?" · by "+esc(x.reviewed_by):"")+"</div></div>";}).join("");
+  return h;}
+function mkGenToken(){var a=new Uint8Array(16);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return ("0"+b.toString(16)).slice(-2);}).join("");}
+async function mkSubAct(a,id){
+  try{
+  if(a==="alllinksoff"){if(!confirm("Switch OFF every seller's submission link? Sellers can no longer submit until you turn their link on again."))return;var r0=await sb.from("mk_sellers").update({submit_enabled:false}).eq("submit_enabled",true);if(r0.error)throw r0.error;await mkLoad();alert("All submission links are off.");return;}
+  var sl=mk.sellers.find(function(x){return x.id===id;}),sub=(mk.subs||[]).find(function(x){return x.id===id;});
+  if(a==="sublink"){if(!sl)return;if(sl.submit_enabled){var r1=await sb.from("mk_sellers").update({submit_enabled:false}).eq("id",id);if(r1.error)throw r1.error;}
+    else{if(sl.status!=="verified"){alert("Verify this shop first. Only verified shops can have a submission link.");return;}var tk=sl.submit_token||mkGenToken();var r2=await sb.from("mk_sellers").update({submit_token:tk,submit_enabled:true}).eq("id",id);if(r2.error)throw r2.error;}
+    await mkLoad();return;}
+  if(a==="copylink"||a==="sendlink"){if(!sl||!sl.submit_enabled||!sl.submit_token){alert("Turn on the submission link first.");return;}
+    var url=mkSubLink(sl);
+    if(a==="copylink"){try{await navigator.clipboard.writeText(url);alert("Link copied.");}catch(e){prompt("Copy this link:",url);}return;}
+    var n=waNumber(sl.phone);if(!n){alert("This shop has no phone number saved.");return;}
+    var msg="Hello "+(sl.owner_name||sl.shop_name)+", this is KMDS Marketplace.\n\nHere is your PRIVATE product submission link:\n"+url+"\n\nHow it works:\n1. Open the link.\n2. Enter your registered phone number, product name, price, quantity, description and 1 to 5 REAL photos.\n3. Send. KMDS reviews it.\n\nYour product appears on the marketplace only after KMDS approves it. KMDS may adjust the price, or reject products that do not meet our standards.\n\nPlease do NOT share this link with anyone. KMDS never asks for money, PIN or codes.";
+    window.open("https://wa.me/"+n+"?text="+encodeURIComponent(msg),"_blank");return;}
+  if(!sub)return;var card=document.querySelector(".sb-card[data-id='"+id+"']"),me=await mkMeEmail();
+  var sh=mk.sellers.find(function(x){return x.id===sub.seller_id;})||{};
+  if(a==="subreject"){var why=prompt("Reason (you can tell the seller on WhatsApp):");if(why===null)return;
+    var r3=await sb.from("mk_submissions").update({status:"rejected",reject_reason:(why||"").trim()||null,reviewed_by:me,reviewed_at:new Date().toISOString()}).eq("id",id);if(r3.error)throw r3.error;await mkLoad();
+    var nn=waNumber(sh.phone);if(nn&&confirm("Rejected. Tell the seller on WhatsApp now?"))window.open("https://wa.me/"+nn+"?text="+encodeURIComponent("Hello from KMDS Marketplace. We could not publish your product "+sub.title+" ("+sub.ref+")."+(why?" Reason: "+why:"")+" You are welcome to submit again."),"_blank");return;}
+  if(a==="subapprove"){var title=card.querySelector(".sb-t").value.trim(),price=Math.round(Number(card.querySelector(".sb-p").value)),cat=card.querySelector(".sb-c").value,desc=card.querySelector(".sb-d").value.trim();
+    if(title.length<2||!(price>0)){alert("Check the product name and price.");return;}
+    var btn=card.querySelector("[data-act=subapprove]");btn.disabled=true;btn.textContent="Publishing...";
+    var urls=[];for(var i=0;i<(sub.image_paths||[]).length;i++){var d=await sb.storage.from("mk-submit").download(sub.image_paths[i]);if(d.error)throw d.error;
+      var np="products/"+Date.now()+"-"+Math.random().toString(36).slice(2,8)+".jpg",up=await sb.storage.from("mk-public").upload(np,d.data,{contentType:"image/jpeg"});if(up.error)throw up.error;urls.push(sb.storage.from("mk-public").getPublicUrl(np).data.publicUrl);}
+    var prow={seller_id:sub.seller_id,title:title,price_xaf:price,unit:"piece",category:cat,description:((desc||"")+(sub.qty?(desc?"\n":"")+"Available: "+sub.qty:"")).trim()||null,image_urls:urls};
+    var rp=await sb.from("mk_products").insert(prow).select().single();if(rp.error)throw rp.error;
+    var r4=await sb.from("mk_submissions").update({status:"approved",title:title,price_xaf:price,description:desc||null,reviewed_by:me,reviewed_at:new Date().toISOString(),product_id:String(rp.data.id)}).eq("id",id);if(r4.error)throw r4.error;await mkLoad();
+    var nn2=waNumber(sh.phone);if(nn2&&confirm("Published on the marketplace. Tell the seller on WhatsApp now?"))window.open("https://wa.me/"+nn2+"?text="+encodeURIComponent("Hello from KMDS Marketplace. Your product "+title+" ("+sub.ref+") is approved and now live at "+fx(price)+". Thank you."),"_blank");return;}
+  }catch(e){alert("Could not complete: "+(e.message||e)+(String(e.message||e).indexOf("submit_")>-1?"\n\nRun kmds-submissions-setup.sql in Supabase first.":""));}
 }
 
 /* ---------- ENQUIRIES ---------- */
@@ -2404,6 +2457,7 @@ $m("mk-body").addEventListener("click",async function(e){
   var a=b.getAttribute("data-act"),id=b.getAttribute("data-id");
   if(a==="newseller"){mk.form="seller";mk.editing=null;mkRender();return;}
   if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
+  if(a==="sublink"||a==="copylink"||a==="sendlink"||a==="alllinksoff"||a==="subapprove"||a==="subreject"){mkSubAct(a,id);return;}
   if(a==="newproduct"){mk.form="product";mkRender();return;}
   if(a==="daytoday"||a==="stmwa"||a==="stmprint"||a==="closeday"){mkDailyAct(a,id);return;}
   if(a==="shownotice"){mk.form="notice";mkRender();return;}
