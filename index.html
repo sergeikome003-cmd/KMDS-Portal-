@@ -578,6 +578,7 @@ h2.title{letter-spacing:1px;}
     <button data-v="settle">Settlements</button>
     <button data-v="daily">Daily Close</button>
     <button data-v="subs">Submissions</button>
+    <button data-v="spot">Spotlight</button>
   </div>
   <div id="mk-body"><div class="empty">Loading...</div></div>
   <input type="file" id="mk-addphotos" accept="image/*" multiple style="display:none">
@@ -1956,6 +1957,7 @@ async function mkLoad(){
   }catch(e){mk.err=e.message||String(e);}
   try{var rt=await sb.from("mk_daily_statements").select("*").order("day",{ascending:false}).limit(3000);if(rt.error){mk.stm=[];mk.stmOk=false;}else{mk.stm=rt.data||[];mk.stmOk=true;}}catch(x1){mk.stm=[];mk.stmOk=false;}
   try{var rb=await sb.from("mk_submissions").select("*").order("created_at",{ascending:false}).limit(500);if(rb.error){mk.subs=[];mk.subOk=false;}else{mk.subs=rb.data||[];mk.subOk=true;}}catch(x2){mk.subs=[];mk.subOk=false;}
+  try{var rq=await sb.from("mk_spotlight").select("*").order("sort_order",{ascending:true}).order("created_at",{ascending:false}).limit(100);if(rq.error){mk.spots=[];mk.spotOk=false;}else{mk.spots=rq.data||[];mk.spotOk=true;}}catch(x3){mk.spots=[];mk.spotOk=false;}
   mkRender();
   if(window.mkAnalyticsFill)mkAnalyticsFill();
 }
@@ -1975,7 +1977,7 @@ function mkRender(){
   var body=$m("mk-body");
   if(mk.err){body.innerHTML="<div class='fee-note'><strong>Could not load the marketplace data.</strong> "+esc(mk.err)+"<br>If this says a table does not exist, the marketplace database setup has not been run yet.</div>";return;}
   if(!mk.loaded){body.innerHTML="<div class='empty'>Loading...</div>";return;}
-  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml,daily:mkDailyHtml,subs:mkSubsHtml})[mk.tab]();
+  body.innerHTML=({sellers:mkSellersHtml,products:mkProductsHtml,enquiries:mkEnqHtml,orders:mkOrdersHtml,settle:mkSettleHtml,daily:mkDailyHtml,subs:mkSubsHtml,spot:mkSpotHtml})[mk.tab]();
   var sbtn=document.querySelector("#mk-tabs button[data-v=subs]");if(sbtn){var pn=(mk.subs||[]).filter(function(x){return x.status==="pending";}).length;sbtn.textContent="Submissions"+(pn?" ("+pn+")":"");}
   if(mk.tab==="subs")mkSubImgs();
 }
@@ -2301,6 +2303,26 @@ async function mkSubAct(a,id){
   }catch(e){alert("Could not complete: "+(e.message||e)+(String(e.message||e).indexOf("submit_")>-1?"\n\nRun kmds-submissions-setup.sql in Supabase first.":""));}
 }
 
+
+/* ---------- SPOTLIGHT ("Trending This Week" panel on the public marketplace) ---------- */
+function mkSpotHtml(){
+  if(!mk.spotOk)return "<div class='fee-note'><strong>Spotlight is not set up yet.</strong><br>Run the file kmds-spotlight-setup.sql once in Supabase (SQL Editor), then reload this page.</div>";
+  var h="<div class='fee-note'><strong>Trending This Week</strong><br>Photos you add here rotate in the left side panel of the public marketplace. Only post real, true information. Link a photo to a shop so buyers can open it.</div>";
+  h+="<form id='mk-spform' class='card'><label>Headline (e.g. Best seller in Douala)</label><input name='title' required maxlength='80'><label>Short information (how it sold, price, how fast KMDS delivers)</label><textarea name='note' rows='2' maxlength='200'></textarea><label>Link to a shop (optional)</label><select name='seller_id'><option value=''>No link</option>"+mk.sellers.filter(function(x){return x.status==='verified';}).map(function(x){return "<option value='"+esc(x.id)+"'>"+esc(x.shop_name)+"</option>";}).join("")+"</select><label>Photo</label><input type='file' name='photo' accept='image/*' required><div class='form-actions'><button type='submit' class='btn-gold'>Add to spotlight</button></div></form>";
+  var l=mk.spots||[];
+  h+="<div class='sub' style='margin:12px 0 8px'>"+l.length+" in spotlight</div>";
+  return h+(l.length?l.map(function(x){return "<div class='card'><div style='display:flex;gap:10px'>"+(x.image_url?"<img src='"+esc(x.image_url)+"' alt='' style='width:72px;height:72px;object-fit:cover;border-radius:8px'>":"")+"<div><div class='card-name'>"+esc(x.title)+"</div><div class='card-item'>"+esc(x.note||"")+"</div><div class='card-item'>"+(x.seller_id?"Links to: "+esc(sellerName(x.seller_id)):"No link")+" · <b>"+(x.active?"Showing":"Hidden")+"</b></div></div></div><div class='card-actions'><button data-act='spotup' data-id='"+x.id+"'>Move to first</button><button data-act='spottoggle' data-id='"+x.id+"'>"+(x.active?"Hide":"Show")+"</button><button class='danger' data-act='spotdel' data-id='"+x.id+"'>Delete</button></div></div>";}).join(""):"<div class='empty'>Nothing yet. Add your first photo above.</div>");}
+async function mkSaveSpot(f){var b=f.querySelector("button[type=submit]");b.disabled=true;b.textContent="Saving...";
+  try{var file=f.elements.photo.files[0];if(!file)throw new Error("Choose a photo.");var url=await mkUpload(file,"mk-public","spotlight");
+    var top=(mk.spots||[]).reduce(function(m,x){return Math.min(m,x.sort_order||0);},0)-1;
+    var r=await sb.from("mk_spotlight").insert({title:f.elements.title.value.trim(),note:f.elements.note.value.trim()||null,seller_id:f.elements.seller_id.value||null,image_url:url,sort_order:top});if(r.error)throw r.error;await mkLoad();}
+  catch(e){alert("Could not save: "+(e.message||e));b.disabled=false;b.textContent="Add to spotlight";}}
+async function mkSpotAct(a,id){var x=(mk.spots||[]).find(function(y){return y.id===id;});if(!x)return;
+  try{var r;if(a==="spottoggle")r=await sb.from("mk_spotlight").update({active:!x.active}).eq("id",id);
+    else if(a==="spotup"){var top=(mk.spots||[]).reduce(function(m,y){return Math.min(m,y.sort_order||0);},0)-1;r=await sb.from("mk_spotlight").update({sort_order:top}).eq("id",id);}
+    else if(a==="spotdel"){if(!confirm("Delete this spotlight photo?"))return;r=await sb.from("mk_spotlight").delete().eq("id",id);}
+    if(r&&r.error)throw r.error;await mkLoad();}catch(e){alert("Could not complete: "+(e.message||e));}}
+
 /* ---------- ENQUIRIES ---------- */
 function mkEnqHtml(){
   var l=mk.enq;
@@ -2443,6 +2465,7 @@ $m("mk-body").addEventListener("submit",function(e){e.preventDefault();var f=e.t
   if(f.id==="mk-pform")mkSaveProduct(f);
   if(f.id==="mk-oform")mkCreateManual(f);
   if(f.id==="mk-secform")mkAddSection(f);
+  if(f.id==="mk-spform")mkSaveSpot(f);
 });
 async function mkCreateManual(f){
   try{
@@ -2458,6 +2481,7 @@ $m("mk-body").addEventListener("click",async function(e){
   if(a==="newseller"){mk.form="seller";mk.editing=null;mkRender();return;}
   if(a==="editseller"){mk.form="seller";mk.editing=mk.sellers.find(function(s){return s.id===id;});mkRender();window.scrollTo(0,0);return;}
   if(a==="sublink"||a==="copylink"||a==="sendlink"||a==="alllinksoff"||a==="subapprove"||a==="subreject"){mkSubAct(a,id);return;}
+  if(a==="spottoggle"||a==="spotup"||a==="spotdel"){mkSpotAct(a,id);return;}
   if(a==="newproduct"){mk.form="product";mkRender();return;}
   if(a==="daytoday"||a==="stmwa"||a==="stmprint"||a==="closeday"){mkDailyAct(a,id);return;}
   if(a==="shownotice"){mk.form="notice";mkRender();return;}
