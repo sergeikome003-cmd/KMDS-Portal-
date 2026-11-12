@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#0c0b09">
+<title>KMDS Dispatch</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f2ec;--w:#fff;--ink:#16130c;--m:#7a7568;--l:#e8e4d8;--g:#a8802c;--g2:#c9a24a;--gs:#f7efd9;--ok:#1f8a5b;--oks:#e3f4ec;--bl:#2b6fd1;--bls:#e6effb;--wa:#b86e00;--was:#fdf0dc;--rd:#c0443a;--rds:#fbe9e7;--sh:0 1px 2px rgba(30,25,10,.05),0 6px 20px rgba(30,25,10,.05)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}input,select,textarea{font:inherit;color:var(--ink)}
+.hide{display:none!important}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:#0c0b09}
+.lg{width:100%;max-width:380px;background:var(--w);border-radius:20px;padding:30px 26px}
+.lg .lo{display:flex;gap:12px;align-items:center;margin-bottom:22px}.lg .lo i{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#e0bf6a,#a8802c);display:grid;place-items:center;color:#1a1405;font:700 19px Georgia,serif;font-style:normal}.lg b{font:400 22px Georgia,serif;display:block;line-height:1.1}.lg small{color:var(--m);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+label.f{display:block;font-size:12px;font-weight:600;color:var(--m);margin:14px 0 5px}
+.in{width:100%;border:1px solid var(--l);background:var(--w);border-radius:11px;padding:12px 13px;font-size:16px;outline:0}.in:focus{border-color:var(--g2);box-shadow:0 0 0 3px var(--gs)}
+.er{color:var(--rd);font-size:13px;margin-top:10px;min-height:18px}
+.btn{border:1px solid var(--l);background:var(--w);border-radius:11px;padding:10px 16px;font-weight:600;color:var(--ink)}.btn.p{background:var(--ink);color:#f0dfac;border-color:var(--ink)}.btn.g{background:linear-gradient(135deg,#d9b457,#b8913a);color:#1a1405;border:0}.btn.w{width:100%;padding:14px;font-size:15px}.btn:disabled{opacity:.6}
+.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.side{background:#0c0b09;color:#d9d3c0;padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:10px;padding:2px 8px 22px}.logo i{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#e0bf6a,#a8802c);display:grid;place-items:center;color:#1a1405;font:700 15px Georgia,serif;font-style:normal}
+.logo b{font:400 19px Georgia,serif;color:#f0dfac;display:block;line-height:1.1}.logo small{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8d866f}
+.nv button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:#b9b29c;padding:11px 12px;border-radius:10px;text-align:left;margin-bottom:2px}
+.nv button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nv button:hover{background:#17150f;color:#fff}.nv button.on{background:#1d190e;color:#f0dfac;box-shadow:inset 3px 0 0 var(--g2)}
+.nv em{margin-left:auto;font-style:normal;font-size:11px;background:var(--g2);color:#1a1405;border-radius:99px;padding:1px 8px;font-weight:700}
+.me{margin-top:auto;border-top:1px solid #24211a;padding:14px 8px 0;font-size:13px}.me small{display:block;color:#8d866f;font-size:11px}.me button{margin-top:10px;background:none;border:1px solid #2c281d;color:#b9b29c;border-radius:9px;padding:7px 12px;font-size:12px}
+.main{min-width:0}
+.bar{display:flex;gap:12px;align-items:center;padding:14px 28px;background:rgba(244,242,236,.92);backdrop-filter:blur(8px);position:sticky;top:0;z-index:4;border-bottom:1px solid var(--l)}
+.sr{flex:1;max-width:460px;position:relative}.sr input{width:100%;border:1px solid var(--l);background:var(--w);border-radius:11px;padding:11px 14px;outline:0}.sr input:focus{border-color:var(--g2)}
+.bar>span{flex:1}.bar .st{font-size:12px;color:var(--m)}@media(max-width:900px){.bar .st{display:none}.sr{max-width:none}}
+.pg{padding:26px 28px 70px;max-width:1280px}.pg h1{font:400 30px Georgia,serif;margin:0 0 4px}.pg .sub{color:var(--m);margin:0 0 22px}
+.view{display:none}.view.on{display:block;animation:f .25s ease}@keyframes f{from{opacity:0;transform:translateY(4px)}}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.c{background:var(--w);border:1px solid var(--l);border-radius:16px;box-shadow:var(--sh)}
+.k{padding:18px}.k small{color:var(--m);font-size:12px;font-weight:600}.k b{display:block;font-size:31px;letter-spacing:-.5px;margin:4px 0 2px}.k span{font-size:12.5px;font-weight:600}.up{color:var(--ok)}.dn{color:var(--rd)}.mu{color:var(--m)}
+.g2{display:grid;grid-template-columns:1.7fr 1fr;gap:14px;margin-bottom:14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ch{padding:20px}.ch h3{margin:0;font-size:15px}.ch .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--bg);border-radius:10px;padding:3px}.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--m)}.seg button.on{background:var(--w);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.bars{position:relative;height:220px;display:flex;align-items:flex-end;gap:10px;padding-left:36px}
+.gl{position:absolute;left:0;right:0;border-top:1px dashed var(--l);font-size:10.5px;color:var(--m)}.gl span{position:absolute;left:0;top:-8px;background:var(--w);padding-right:4px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;z-index:1;font-size:11px;color:var(--m);gap:6px;min-width:0}.bars .b i{width:100%;max-width:46px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#d9b457,#b8913a)}
+.bars .b u{position:absolute;top:-4px;font-size:11px;text-decoration:none;color:var(--ink);font-weight:700;opacity:0}.bars .b:hover u{opacity:1}
+.hl .r{display:grid;grid-template-columns:22px 1fr 1.2fr 46px;gap:10px;align-items:center;padding:8px 0;font-size:13.5px}.hl .t{height:8px;background:var(--bg);border-radius:99px;overflow:hidden}.hl .t i{display:block;height:100%;background:linear-gradient(90deg,#d9b457,#b8913a);border-radius:99px}.hl .n{color:var(--m)}.hl .v{text-align:right;font-weight:600}
+.tb{overflow:hidden}.tools{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--l);flex-wrap:wrap}.tools select,.tools input{border:1px solid var(--l);background:var(--w);border-radius:10px;padding:9px 12px}
+.tbw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--m);font-weight:700;padding:11px 16px;background:#faf9f5;border-bottom:1px solid var(--l);white-space:nowrap}td{padding:13px 16px;border-bottom:1px solid var(--l);vertical-align:middle}tr.row{cursor:pointer}tr.row:hover td{background:#fbfaf6}tr:last-child td{border:0}
+td .tn{font-weight:700;font-size:13px}td small{display:block;color:var(--m);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}.pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-new{background:var(--bls);color:var(--bl)}.p-pk{background:var(--was);color:var(--wa)}.p-tr{background:var(--gs);color:var(--g)}.p-ok{background:var(--oks);color:var(--ok)}.p-un{background:var(--rds);color:var(--rd)}.p-gr{background:#eee;color:#666}
+.pgn{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;color:var(--m);font-size:13px}
+.empty{padding:40px 16px;text-align:center;color:var(--m)}
+.dr{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--w);box-shadow:-20px 0 60px rgba(0,0,0,.2);z-index:20;transform:translateX(105%);transition:transform .3s;padding:26px;overflow:auto}.dr.on{transform:none}
+.sc{position:fixed;inset:0;background:rgba(10,8,2,.4);z-index:19;display:none}.sc.on{display:block}
+.dr h2{font:400 24px Georgia,serif;margin:6px 0 2px}.dr .x{float:right;border:0;background:var(--bg);width:34px;height:34px;border-radius:50%;font-size:18px}
+.dr .sec{margin-top:20px;padding-top:16px;border-top:1px solid var(--l)}.dr .sec h4{margin:0 0 10px;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--m)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:14px}.kv span{color:var(--m)}.kv b{word-break:break-word}
+.tl{position:relative;margin-left:8px}.tl .s{display:flex;gap:14px;padding-bottom:16px;position:relative}.tl .s:before{content:"";position:absolute;left:8px;top:20px;bottom:0;width:2px;background:var(--l)}.tl .s:last-child:before{display:none}.tl .s i{flex:none;width:18px;height:18px;border-radius:50%;background:var(--l);border:3px solid var(--w);box-shadow:0 0 0 1px var(--l);position:relative;z-index:1}.tl .s.d i{background:var(--g2);box-shadow:0 0 0 1px var(--g2)}.tl .s b{display:block;font-size:14px}.tl .s small{color:var(--m)}.tl .s:not(.d){opacity:.55}
+.code{font:700 28px Georgia,serif;letter-spacing:6px;background:var(--gs);border-radius:12px;padding:10px 16px;display:inline-block;color:var(--g)}
+.fm{max-width:640px}.fm .card{padding:20px;margin-bottom:14px}.fm h3{margin:0 0 4px;font-size:15px}.fm .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips button{border:1px solid var(--l);background:var(--w);border-radius:99px;padding:9px 15px;font-weight:600;color:var(--m)}.chips button.on{border-color:var(--g2);background:var(--gs);color:var(--g)}
+.price{background:var(--gs);border:1px solid #ecdcaa;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-weight:600}.price b{font-size:22px}
+.ok{background:var(--oks);border:1px solid #b9e2cf;border-radius:16px;padding:20px;margin-bottom:14px}.ok h3{margin:0 0 6px;color:var(--ok);font:400 22px Georgia,serif}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:var(--gs);color:var(--g);border-radius:99px;padding:3px 10px}
+.ns{background:var(--gs);border:1px solid #ecdcaa;color:#7a5a10;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#16130c;color:#f0dfac;padding:12px 18px;border-radius:12px;z-index:50;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:92vw}
+.mob{display:none}
+@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.bar{padding:12px 14px}.pg{padding:18px 14px 100px}.kg{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.pg h1{font-size:25px}.fm .row2{grid-template-columns:1fr}
+ .mob{display:flex;position:fixed;bottom:0;left:0;right:0;background:#0c0b09;z-index:10;padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch}.mob button{flex:1 1 0;min-width:0;background:none;border:0;color:#8d866f;font-size:9.5px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px}.mob button.on{color:#f0dfac}.mob svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+ thead{display:none}table,tbody,tr,td{display:block;width:100%}tr.row{padding:12px 16px;border-bottom:1px solid var(--l)}td{border:0;padding:3px 0}td.hm{display:none}.bars{gap:5px;padding-left:30px}}
+@media print{.side,.bar,.mob,.sc,.dr,.noprint,#toast{display:none!important}body,.main,.pg{background:#fff!important;padding:0!important;margin:0!important;display:block!important}.app{display:block!important}.main{margin:0!important;padding:0!important}.c{box-shadow:none!important;border:none!important}table{font-size:10.5px}th,td{padding:5px 6px!important;border-bottom:1px solid #999!important}@page{size:A4 landscape;margin:10mm}.rph{display:block!important}}
+.rph{display:none;margin-bottom:10px}.rph h2{font-size:20px;margin:0}.rpt td,.rpt th{white-space:nowrap}
+</style></head><body>
+
+<div class="login" id="lgn"><div class="lg"><div class="lo"><i>K</i><div><b>KMDS Dispatch</b><small>Staff sign in</small></div></div>
+<label class="f">Email</label><input class="in" id="em" type="email" autocomplete="username" inputmode="email">
+<label class="f">Password</label><input class="in" id="pw" type="password" autocomplete="current-password">
+<div class="er" id="le"></div><button class="btn g w" id="lb">Sign in</button></div></div>
+
+<div class="app hide" id="app">
+<aside class="side"><div class="logo"><i>K</i><div><b>KMDS Dispatch</b><small>Last-mile delivery</small></div></div><div class="nv" id="nv"></div>
+<div class="me"><b id="mn"></b><small id="mr"></small><button id="lo">Sign out</button></div></aside>
+<div class="main"><div class="bar"><div class="sr"><input id="q" placeholder="Search tracking no., name or phone"></div><span></span><span class="st" id="st"></span><button class="btn g" id="nb">+ New parcel</button></div>
+<div class="pg" id="pg"></div></div></div>
+<nav class="mob hide" id="mob"></nav>
+<div class="sc" id="sc"></div><aside class="dr" id="dr"></aside>
+
+<script>
+var SB_URL="https://qfocanqogkugdyzatjty.supabase.co",SB_KEY="sb_publishable_U2YFEQTrTTHTaJ9wRpaPjA_8QROpqeW";
+</script>
+<script>
+(function(){
+var WA="237641560868",SITE="https://kmds-cameroon.pages.dev";
+var sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var ST={new:["Received at KMDS agency","p-new"],confirmed:["Confirmed","p-new"],picked_up:["Picked up","p-pk"],in_transit:["In transit","p-tr"],arrived:["At reception point (receiver's city)","p-pk"],delivered:["Delivered to receiver","p-ok"],cancelled:["Cancelled","p-gr"]};
+var FLOW=["new","in_transit","arrived","delivered"];
+var me=null,hubs=[],prices=[],dels=[],staff=[],view="",toastT,filt={st:"open",hub:"",range:"all",city:"",dir:"to"};
+var SIZES=[["Small","Small (envelope, phone)"],["Medium","Medium (shoe box, bag)"],["Large","Large (big box, luggage)"]];
+function fmt(d){if(!d)return"";var x=new Date(d);return x.toLocaleDateString("en-GB",{day:"2-digit",month:"short"})+", "+x.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true})}
+function xaf(n){return n==null?"-":Number(n).toLocaleString("en-US")+" FCFA"}
+function hubName(id){for(var i=0;i<hubs.length;i++)if(hubs[i].id===id)return hubs[i].name;return"-"}
+function hubCity(id){for(var i=0;i<hubs.length;i++)if(hubs[i].id===id)return hubs[i].city;return""}
+function late(d){return d&&d.status==='in_transit'&&Date.now()-new Date(d.updated_at||d.created_at).getTime()>864e5}
+function pill(s){var t=ST[s]||[s,"p-gr"];return'<span class="pill '+t[1]+'">'+esc(t[0])+'</span>'}
+function toast(m){var t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},3200)}
+function newRef(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="",d=new Date();for(var i=0;i<5;i++)r+=c[Math.floor(Math.random()*c.length)];return"KMDS-BK-"+String(d.getFullYear()).slice(2)+("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+r}
+function wa(phone,msg){var p=String(phone||"").replace(/\D/g,"");if(p.length===9)p="237"+p;return"https://wa.me/"+p+"?text="+encodeURIComponent(msg)}
+function trackLink(ref){return SITE+"/track?ref="+ref}
+function isAgent(){return me&&me.role==="agent"}
+function isMgr(){return me&&(me.role==="owner"||me.role==="manager")}
+
+/* ---------- sign in ---------- */
+async function signIn(){var e=$("em").value.trim(),p=$("pw").value;$("le").textContent="";if(!e||!p){$("le").textContent="Enter your email and password.";return}
+ $("lb").disabled=true;$("lb").textContent="Signing in...";
+ var r=await sb.auth.signInWithPassword({email:e,password:p});$("lb").disabled=false;$("lb").textContent="Sign in";
+ if(r.error){$("le").textContent="Wrong email or password. ["+(r.error.status||"")+" "+(r.error.message||"")+"]";return}$("pw").value="";boot()}
+$("lb").onclick=signIn;$("pw").onkeydown=function(e){if(e.key==="Enter")signIn()};
+$("lo").onclick=async function(){await sb.auth.signOut();location.reload()};
+
+async function boot(){
+ if(!sb){$("le").textContent="Could not load. Check your internet and refresh.";return}
+ var s=await sb.auth.getSession();if(!s.data||!s.data.session){$("lgn").classList.remove("hide");$("app").classList.add("hide");return}
+ var uid=s.data.session.user.id;
+ var r=await sb.from("staff_roles").select("*").eq("user_id",uid).maybeSingle();
+ if(r.error){$("lgn").classList.remove("hide");$("le").textContent="Setup needed: the owner must run kmds-dispatch-setup3.sql in Supabase.";return}
+ if(!r.data||!r.data.active){await sb.auth.signOut();$("lgn").classList.remove("hide");$("le").textContent="This account has no delivery role. Ask the owner to add you.";return}
+ me=r.data;$("lgn").classList.add("hide");$("app").classList.remove("hide");
+ var h=await sb.from("hubs").select("*").eq("active",true).order("name");hubs=h.data||[];
+ var p=await sb.from("price_list").select("*");prices=p.data||[];
+ $("mn").textContent=me.name||"Staff";$("mr").textContent=(me.role==="owner"?"Owner":me.role==="manager"?"Delivery Manager":"Agent")+(me.hub_id?" · "+hubName(me.hub_id):"");
+ buildNav();await load();go(isAgent()?"new":"ov");openFromHash();setInterval(function(){if(!document.hidden&&!$("dr").classList.contains("on")&&view!=="new"&&view!=="hb")load(true)},30000)}
+
+var IC={ov:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',dl:'<path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10"/>',new:'<path d="M12 5v14M5 12h14"/>',cash:'<path d="M2 7h20v10H2zM12 14a2 2 0 100-4 2 2 0 000 4"/>',an:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',tm:'<path d="M16 20v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 10a4 4 0 100-8 4 4 0 000 8"/>',pr:'<path d="M20 12l-8 8-9-9V3h8l9 9zM7.5 7.5h.01"/>'};
+function buildNav(){var it=isAgent()?[["new","New parcel"],["out","Outgoing"],["in","Incoming"],["cash","Cash"],["rp","Daily report"],["ar","Archive"]]:[["ov","Overview"],["dl","Deliveries"],["rp","Daily report"],["ar","Archive"],["cash","Cash"],["an","Analytics"],["pr","Prices"],["tm","Team & agencies"]];
+ var ic={out:IC.dl,in:IC.dl};
+ var h=it.map(function(x,i){return'<button data-v="'+x[0]+'"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'+(IC[x[0]]||ic[x[0]]||IC.dl)+'</svg>'+x[1]+'</button>'}).join("");
+ $("nv").innerHTML=h;var mb=it.slice(0,5).map(function(x){return'<button data-v="'+x[0]+'"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">'+(IC[x[0]]||IC.dl)+'</svg>'+x[1].split(" ")[0]+'</button>'}).join("");
+ $("mob").innerHTML=mb;$("mob").classList.remove("hide");
+ $("nv").onclick=$("mob").onclick=function(e){var b=e.target.closest("button");if(b)go(b.dataset.v)};
+ $("nb").onclick=function(){go("new")}}
+
+async function load(quiet){
+ var r=await sb.from("deliveries").select("*").order("created_at",{ascending:false}).limit(isMgr()?1000:300);
+ if(r.error){if(!quiet)toast("Could not load: "+r.error.message);return}dels=r.data||[];
+ $("st").textContent="Updated "+new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});if(view&&view!=="new"&&view!=="hb")render()}
+
+function go(v){view=v;[].forEach.call(document.querySelectorAll("#nv button,#mob button"),function(b){b.classList.toggle("on",b.dataset.v===v)});window.scrollTo(0,0);render();if(v==="tm")loadStaff()}
+function render(){var p=$("pg");
+ if(view==="new"){if(!p.querySelector(".fm"))p.innerHTML=formHtml();return}
+ if(view==="ov")p.innerHTML=ovHtml();else if(view==="dl"||view==="out"||view==="in")p.innerHTML=listHtml();else if(view==="cash")p.innerHTML=cashHtml();else if(view==="rp")p.innerHTML=rpHtml();else if(view==="ar"){p.innerHTML=arHtml();if(arNeed)arLoad()}
+ else if(view==="an")p.innerHTML=anHtml();else if(view==="pr")p.innerHTML=prHtml();else if(view==="tm")p.innerHTML=tmHtml();
+ if(view==="an")drawAn();if(view==="rp")rpCheck()}
+$("q").oninput=function(){if(view!=="dl"&&view!=="out"&&view!=="in"){if(isMgr())go("dl");else go("out")}else render()};
+
+/* ---------- lists ---------- */
+function visible(){var q=$("q").value.trim().toLowerCase(),now=Date.now();
+ return dels.filter(function(d){
+  if(view==="out"&&d.origin_hub!==me.hub_id)return false;if(view==="in"&&d.dest_hub!==me.hub_id)return false;
+  if(filt.st==="open"&&(d.status==="delivered"||d.status==="cancelled"))return false;if(filt.st!=="open"&&filt.st!=="all"&&d.status!==filt.st)return false;
+  if(filt.hub&&d.origin_hub!==filt.hub&&d.dest_hub!==filt.hub)return false;
+  if(filt.city){var tc=d.to_city===filt.city,fc=d.from_city===filt.city;if(filt.dir==="to"&&!tc)return false;if(filt.dir==="from"&&!fc)return false;if(filt.dir==="both"&&!(tc||fc))return false}
+  if(filt.range!=="all"){var a=now-new Date(d.created_at).getTime(),lim={day:864e5,week:6048e5,month:2592e6}[filt.range];if(a>lim)return false}
+  if(q){var s=[d.ref,d.sender_name,d.sender_phone,d.receiver_name,d.receiver_phone].join(" ").toLowerCase();if(s.indexOf(q)<0)return false}
+  return true})}
+function listHtml(){var rows=visible(),title=view==="out"?"Outgoing parcels":view==="in"?"Incoming parcels":"Deliveries",
+ sub=view==="out"?"Parcels booked at your agency.":view==="in"?"Parcels coming to your agency.":"Every parcel, in every agency.";
+ var sel=function(id,opts,cur){return'<select data-f="'+id+'">'+opts.map(function(o){return'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+'>'+esc(o[1])+'</option>'}).join("")+'</select>'};
+ var tools='<div class="tools">'+sel("st",[["open","Open"],["all","All"],["new","Received"],["in_transit","In transit"],["arrived","Arrived"],["delivered","Delivered"],["cancelled","Cancelled"]],filt.st)+sel("range",[["all","All time"],["day","Last 24 hours"],["week","Last 7 days"],["month","Last 30 days"]],filt.range)+(isMgr()?sel("hub",[["","All agencies"]].concat(hubs.map(function(h){return[h.id,h.name]})),filt.hub):"")+'</div>';
+ var shown=rows.slice(0,100),body=shown.length?shown.map(function(d){return'<tr class="row" data-id="'+d.id+'"'+(late(d)?' style="background:#fdeeee"':'')+'><td><span class="tn">'+esc(d.ref)+'</span><small>'+fmt(d.created_at)+' · '+esc(d.source==="agent"?"Agent":d.source==="website"?"Website":"Staff")+'</small></td><td><b>'+esc(d.from_city||"")+' → '+esc(d.to_city||"")+'</b><small>'+esc(d.origin_hub?hubName(d.origin_hub)+" → "+hubName(d.dest_hub):"")+'</small></td><td class="hm">'+esc(d.sender_name||"")+'<small>'+esc(d.receiver_name||"")+'</small></td><td>'+pill(d.status)+'</td><td class="hm"><b>'+xaf(d.price_xaf)+'</b></td><td class="hm"><span class="pill '+(d.paid?"p-ok":"p-un")+'">'+(d.paid?"Paid":"Unpaid")+'</span></td></tr>'}).join(""):'<tr><td colspan="6" class="empty">No parcels here yet.</td></tr>';
+var cl=[];hubs.forEach(function(h){if(h.city&&cl.indexOf(h.city)<0)cl.push(h.city)});
+ var cnt=function(c){return dels.filter(function(d){return d.to_city===c&&d.status!=="delivered"&&d.status!=="cancelled"}).length};
+ var cty='<div class="chips" style="margin-bottom:10px"><button type="button" data-cty="" class="'+(!filt.city?"on":"")+'">All cities</button>'+cl.map(function(c){return'<button type="button" data-cty="'+esc(c)+'" class="'+(filt.city===c?"on":"")+'">'+esc(c)+(cnt(c)?' ('+cnt(c)+')':'')+'</button>'}).join("")+'</div>'
+  +(filt.city?'<div class="chips" style="margin-bottom:12px"><button type="button" data-dir="to" class="'+(filt.dir==="to"?"on":"")+'">Going to '+esc(filt.city)+'</button><button type="button" data-dir="from" class="'+(filt.dir==="from"?"on":"")+'">Leaving '+esc(filt.city)+'</button><button type="button" data-dir="both" class="'+(filt.dir==="both"?"on":"")+'">Both</button></div>':'');
+ return'<h1>'+title+'</h1><p class="sub">'+sub+'</p>'+cty+'<div class="c tb">'+tools+'<div class="tbw"><table><thead><tr><th>Tracking no.</th><th>Route</th><th class="hm">Sender / receiver</th><th>Status</th><th class="hm">Price</th><th class="hm">Payment</th></tr></thead><tbody id="tbd">'+body+'</tbody></table></div><div class="pgn"><span>Showing '+shown.length+' of '+rows.length+'</span><span></span></div></div>'}
+$("pg").addEventListener("change",function(e){var f=e.target.getAttribute("data-f");if(f){filt[f]=e.target.value;render()}});
+$("pg").addEventListener("click",function(e){var c=e.target.closest("[data-cty]");if(c){filt.city=c.getAttribute("data-cty");render();return}var dr=e.target.closest("[data-dir]");if(dr){filt.dir=dr.getAttribute("data-dir");render();return}var r=e.target.closest("tr.row");if(r)openDr(r.getAttribute("data-id"))});
+
+/* ---------- overview ---------- */
+function startOf(d){var x=new Date(d);x.setHours(0,0,0,0);return x.getTime()}
+function ovHtml(){var t0=startOf(Date.now()),today=dels.filter(function(d){return new Date(d.created_at).getTime()>=t0}),
+ tr=dels.filter(function(d){return d.status==="in_transit"}).length,ar=dels.filter(function(d){return d.status==="arrived"}).length,
+ dn=today.filter(function(d){return d.status==="delivered"}).length,unpaid=dels.filter(function(d){return !d.paid&&d.status!=="cancelled"&&d.price_xaf}),
+ uam=unpaid.reduce(function(s,d){return s+(d.price_xaf||0)},0),nw=dels.filter(function(d){return d.status==="new"}).length;
+ var byHub=hubs.map(function(h){return{n:h.name,o:dels.filter(function(d){return d.origin_hub===h.id&&new Date(d.created_at).getTime()>=t0}).length,i:dels.filter(function(d){return d.dest_hub===h.id&&(d.status==="in_transit"||d.status==="arrived")}).length}});
+ var web=dels.filter(function(d){return d.source==="website"&&d.status==="new"&&!d.origin_hub}).length;
+ return'<h1>Overview</h1><p class="sub">'+new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</p>'
+ +(web?'<div class="ns"><b>'+web+' website booking'+(web>1?"s":"")+'</b> waiting for an agency. Open Deliveries to handle '+(web>1?"them":"it")+'.</div>':'')
+ +'<div class="kg"><div class="c k"><small>Booked today</small><b>'+today.length+'</b><span class="mu">'+nw+' waiting to be sent</span></div><div class="c k"><small>In transit</small><b>'+tr+'</b><span class="mu">'+ar+' arrived, not collected</span></div><div class="c k"><small>Delivered today</small><b>'+dn+'</b><span class="up">completed</span></div><div class="c k"><small>Unpaid</small><b style="color:var(--rd)">'+unpaid.length+'</b><span class="dn">'+xaf(uam)+' to collect</span></div></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="btn g" data-go="an">Analytics</button><button class="btn" data-go="rp">Daily report</button><button class="btn" data-go="ar">Archive</button><button class="btn" data-go="cash">Cash</button><button class="btn" data-go="pr">Prices</button><button class="btn" data-go="tm">Team &amp; agencies</button></div>'
+ +(function(){var tt=0,pd=0;today.forEach(function(d){if(d.status==="cancelled")return;tt+=d.price_xaf||0;if(d.paid)pd+=d.price_xaf||0});return'<div class="c ch" style="margin-bottom:14px;padding:16px 18px"><h3 style="margin:0 0 8px">Money today (starts again at zero each day)</h3><div style="display:flex;gap:24px;flex-wrap:wrap"><div><div class="mu">Booked today</div><b style="font-size:20px">'+xaf(tt)+'</b></div><div><div class="mu">Paid</div><b style="font-size:20px;color:var(--gn,#1a7f4b)">'+xaf(pd)+'</b></div><div><div class="mu">Still to collect</div><b style="font-size:20px;color:var(--rd)">'+xaf(tt-pd)+'</b></div></div></div>'})()
+ +(function(){var L=dels.filter(late);return L.length?'<div class="c ch" style="border-color:#e3b4b4;background:#fdeeee;margin-bottom:14px"><div class="hd"><h3 style="color:var(--rd)">Delayed: in transit for more than 24 hours ('+L.length+')</h3></div>'+L.slice(0,8).map(function(d){return'<div class="r row" data-id="'+d.id+'" style="cursor:pointer"><span class="n">!</span><span>'+esc(d.ref)+'</span><span>'+esc(d.from_city||"")+' &rarr; '+esc(d.to_city||"")+'</span><span class="v">'+fmt(d.updated_at||d.created_at)+'</span></div>'}).join("")+'</div>':''})()
+ +'<div class="c ch hl"><div class="hd"><h3>Agencies today</h3></div><div class="r" style="font-weight:700;color:var(--m);font-size:12px"><span></span><span>Agency</span><span>Booked today</span><span>Coming</span></div>'+byHub.map(function(h,i){return'<div class="r"><span class="n">'+(i+1)+'</span><span>'+esc(h.n)+'</span><span>'+h.o+' booked</span><span class="v">'+h.i+'</span></div>'}).join("")+'</div>'}
+
+/* ---------- parcel drawer ---------- */
+function d_(id){for(var i=0;i<dels.length;i++)if(dels[i].id===id)return dels[i]}
+async function openDr(id){var d=d_(id);if(!d)return;var ev=await sb.from("delivery_events").select("*").eq("delivery_id",id).order("at");var at={};(ev.data||[]).forEach(function(e){at[e.status]=e});
+ var tl=FLOW.map(function(s){var e=at[s];return'<div class="s'+(e?" d":"")+'"><i></i><div><b>'+ST[s][0]+'</b>'+(e?'<small>'+fmt(e.at)+' · '+esc(e.changed_by||"")+(e.hub_name?" · "+esc(e.hub_name):"")+'</small>':"")+'</div></div>'}).join("");
+ var acts="",nxt="",h=me.hub_id;
+ if(d.status==="new"&&(isMgr()||d.origin_hub===h))nxt+='<button class="btn g w" data-a="send" data-id="'+d.id+'">Send parcel &rarr; In transit</button>';
+ if(d.status==="in_transit"&&(isMgr()||d.dest_hub===h))nxt+='<button class="btn g w" data-a="arrive" data-id="'+d.id+'">Mark arrived at reception point</button>';
+ var hand="";
+ if(d.status==="arrived"&&(isMgr()||d.dest_hub===h))hand='<div class="sec"><h4>Hand over to receiver</h4><label class="f" style="margin-top:0">Receiver\'s pick-up code</label><input class="in" id="hc" inputmode="numeric" maxlength="4" placeholder="4-digit code"><label style="display:flex;gap:8px;align-items:center;margin-top:10px">'+(d.paid?'<span class="pill p-ok">Already paid</span>':'<input type="checkbox" id="hp" checked> I collected '+xaf(d.price_xaf)+' now')+'</label><div class="er" id="he"></div><button class="btn g w" data-a="deliver" data-id="'+d.id+'" style="margin-top:6px">Confirm delivered</button></div>';
+ if(d.status==="new"&&!d.paid&&d.collected_by==null&&false)acts+="";
+ if(!d.paid&&d.status!=="cancelled"&&d.status!=="delivered"&&(isMgr()||d.origin_hub===h||d.dest_hub===h))acts+='<button class="btn" data-a="paid" data-id="'+d.id+'">Mark paid ('+xaf(d.price_xaf)+')</button>';
+ if(isMgr()&&d.status!=="cancelled"&&d.status!=="delivered")acts+='<button class="btn" data-a="cancel" data-id="'+d.id+'">Cancel</button>';
+ var msgS="Hello "+(d.sender_name||"")+", your parcel "+d.ref+" ("+(d.from_city||"")+" to "+(d.to_city||"")+") is registered with KMDS. Track it here: "+trackLink(d.ref),
+     dv=at.delivered,msgD="Hello "+(d.sender_name||"")+", good news: your parcel "+d.ref+" ("+(d.from_city||"")+" to "+(d.to_city||"")+") was collected by "+(d.receiver_name||"the receiver")+(d.dest_hub?" at "+hubName(d.dest_hub):"")+(dv?" on "+fmt(dv.at):"")+". Thank you for using KMDS.",
+     msgR="Hello "+(d.receiver_name||"")+", a parcel from "+(d.sender_name||"someone")+" is coming to you with KMDS ("+d.ref+"). Your pick-up code is "+d.pickup_code+". Do not share it except with the KMDS agent when you collect. Track it: "+trackLink(d.ref);
+ $("dr").innerHTML='<button class="x" id="dx">&times;</button>'+pill(d.status)+'<h2>'+esc(d.from_city||"")+' → '+esc(d.to_city||"")+'</h2><div class="mu">'+esc(d.ref)+'</div>'
+ +(d.origin_hub||d.dest_hub?'<div class="mu" style="margin-top:2px">'+esc(hubName(d.origin_hub))+' → '+esc(hubName(d.dest_hub))+'</div>':'')
+ +(nxt?'<div class="sec"><h4>Next step</h4>'+nxt+'</div>':'')+hand+'<div class="sec"><h4>Progress</h4><div class="tl">'+tl+'</div></div>'
+ +'<div class="sec"><h4>Details</h4><div class="kv"><span>Sender</span><b>'+esc(d.sender_name||"")+' · '+esc(d.sender_phone||"")+'</b><span>Receiver</span><b>'+esc(d.receiver_name||"")+' · '+esc(d.receiver_phone||"")+'</b><span>Receiver gets it</span><b>'+(d.delivery_mode==="door"?"Delivered to door: "+esc(d.delivery_address||""):"Collects at agency")+'</b><span>Parcel</span><b>'+esc(d.parcel_desc||"-")+' · '+esc(d.size||"")+(d.weight_kg?" · "+esc(d.weight_kg)+" kg":"")+'</b><span>Price</span><b>'+xaf(d.price_xaf)+' · '+(d.paid?"Paid":"Not paid ("+(d.pay_by==="receiver"?"receiver pays on arrival":"sender pays")+")")+'</b>'+(d.driver?'<span>Driver</span><b>'+esc(d.driver)+'</b>':'')+'</div>'
+ +(me.role!=="agent"||d.origin_hub===h?'<div style="margin-top:14px"><span class="mu">Pick-up code</span><br><span class="code">'+esc(d.pickup_code||"----")+'</span></div>':'')+'</div>'
+ +'<div class="sec"><h4>Actions</h4><div style="display:flex;gap:10px;flex-wrap:wrap">'+(d.status==="delivered"?'<button class="btn" id="pf" data-id="'+d.id+'">Share delivery proof (picture)</button><a class="btn g" target="_blank" rel="noopener" href="'+esc(wa(d.sender_phone,msgD))+'" style="text-decoration:none">Tell sender: parcel received</a>':'')+acts+'<a class="btn" target="_blank" rel="noopener" href="'+esc(wa(d.sender_phone,msgS))+'" style="text-decoration:none">WhatsApp sender</a><button class="btn" id="wb" data-id="'+d.id+'">Print waybill</button><a class="btn" href="tel:'+esc((d.sender_phone||"").replace(/[^\d+]/g,""))+'" style="text-decoration:none">Call sender</a><a class="btn" target="_blank" rel="noopener" href="'+esc(wa(d.receiver_phone,msgR))+'" style="text-decoration:none">WhatsApp receiver</a></div></div>';
+ $("dr").classList.add("on");$("sc").classList.add("on")}
+function closeDr(){$("dr").classList.remove("on");$("sc").classList.remove("on")}
+$("sc").onclick=closeDr;
+$("dr").addEventListener("click",async function(e){
+ if(e.target.id==="dx"){closeDr();return}
+ var b=e.target.closest("[data-a]");if(!b)return;var id=b.dataset.id,a=b.dataset.a,r;b.disabled=true;
+ if(a==="send")r=await sb.from("deliveries").update({status:"in_transit"}).eq("id",id);
+ else if(a==="arrive")r=await sb.from("deliveries").update({status:"arrived"}).eq("id",id);
+ else if(a==="paid")r=await sb.from("deliveries").update({paid:true}).eq("id",id);
+ else if(a==="cancel"){if(!confirm("Cancel this parcel?")){b.disabled=false;return}r=await sb.from("deliveries").update({status:"cancelled"}).eq("id",id)}
+ else if(a==="deliver"){var c=$("hc").value.trim(),hp=$("hp");if(!c){$("he").textContent="Enter the receiver's code.";b.disabled=false;return}r=await sb.rpc("deliver_parcel",{p_id:id,p_code:c,p_collect:!!(hp&&hp.checked)})}
+ if(r&&r.error){b.disabled=false;var m=r.error.message||"Error";if($("he")&&a==="deliver")$("he").textContent=m;else toast(m);return}
+ toast("Done");await load(true);openDr(id)});
+
+/* ---------- new parcel ---------- */
+var fs={size:"Small",mode:"collect",pay:"sender",paidNow:false};
+function priceFor(fc,tc,sz){for(var i=0;i<prices.length;i++){var p=prices[i];if(p.from_city===fc&&p.to_city===tc&&p.size===sz)return p.price_xaf}return null}
+function formHtml(){var origin=isAgent()?'':'<label class="f">From agency</label><select class="in" id="f-o">'+hubs.map(function(h){return'<option value="'+h.id+'">'+esc(h.name)+'</option>'}).join("")+'</select>';
+ var dest=hubs.filter(function(h){return h.id!==me.hub_id});
+ return'<div class="fm"><h1>New parcel</h1><p class="sub">'+(isAgent()?'Booking at <b>'+esc(hubName(me.hub_id))+'</b>.':'Book a parcel for any agency.')+'</p><div id="fres"></div><div id="fbody">'
+ +'<div class="c card" style="padding:20px;margin-bottom:14px"><h3>Route</h3>'+origin+'<label class="f">To agency</label><select class="in" id="f-d">'+dest.map(function(h){return'<option value="'+h.id+'">'+esc(h.name)+' ('+esc(h.city)+')</option>'}).join("")+'</select>'
+ +'<label class="f">Size</label><div class="chips" id="f-s">'+SIZES.map(function(s){return'<button type="button" data-v="'+s[0]+'" class="'+(s[0]===fs.size?"on":"")+'">'+s[1]+'</button>'}).join("")+'</div><label class="f">What is being sent</label><input class="in" id="f-desc" placeholder="e.g. phone, clothes, documents"><label class="f">Weight in kg (optional)</label><input class="in" id="f-kg" type="number" inputmode="decimal">'
+ +'<div class="price"><span>Price</span><b id="f-p">-</b></div>'+(me.role==="owner"?'<label class="f">Type the price yourself (FCFA)</label><input class="in" id="f-mp" type="number" inputmode="numeric" placeholder="Leave empty to use the price list"><div class="mu" style="margin-top:6px">Only you can do this. Agents always use the price list.</div>':'')+'</div>'
+ +'<div class="c card" style="padding:20px;margin-bottom:14px"><h3>Sender</h3><label class="f">Name</label><input class="in" id="f-sn" autocomplete="off"><label class="f">Phone / WhatsApp</label><input class="in" id="f-sp" type="tel" inputmode="tel" autocomplete="off"></div>'
+ +'<div class="c card" style="padding:20px;margin-bottom:14px"><h3>Receiver</h3><label class="f">Name</label><input class="in" id="f-rn" autocomplete="off"><label class="f">Phone / WhatsApp</label><input class="in" id="f-rp" type="tel" inputmode="tel" autocomplete="off"><label class="f">How does the receiver get it?</label><div class="chips" id="f-m"><button type="button" data-v="collect" class="on">Collects at agency</button><button type="button" data-v="door">Delivered to door</button></div><div id="f-ad" class="hide"><label class="f">Delivery address</label><input class="in" id="f-a"></div></div>'
+ +'<div class="c card" style="padding:20px;margin-bottom:14px"><h3>Payment</h3><div class="chips" id="f-y"><button type="button" data-v="now" class="">Sender pays now</button><button type="button" data-v="sender" class="on">Sender pays later</button><button type="button" data-v="receiver">Receiver pays on arrival</button></div></div>'
+ +'<div class="er" id="f-e"></div><button class="btn g w" id="f-go">Book parcel</button></div></div>'}
+function fprice(){var o=isAgent()?me.hub_id:($("f-o")||{}).value,d=($("f-d")||{}).value;if(!d||!o){return}var p=priceFor(hubCity(o),hubCity(d),fs.size);var mp=$("f-mp")&&$("f-mp").value!==""?Math.round(Number($("f-mp").value)):null;if(mp!=null&&mp>=0)p=mp;$("f-p").textContent=p==null?"Not set":xaf(p);$("f-p").style.color=p==null?"var(--rd)":""}
+$("pg").addEventListener("click",function(e){var b=e.target.closest(".chips button");if(!b||!b.closest("#f-s,#f-m,#f-y"))return;var g=b.parentNode.id;[].forEach.call(b.parentNode.children,function(x){x.classList.toggle("on",x===b)});
+ if(g==="f-s"){fs.size=b.dataset.v;fprice()}else if(g==="f-m"){fs.mode=b.dataset.v;$("f-ad").classList.toggle("hide",fs.mode!=="door")}else if(g==="f-y"){fs.paidNow=b.dataset.v==="now";fs.pay=b.dataset.v==="receiver"?"receiver":"sender"}});
+$("pg").addEventListener("change",function(e){if(e.target.id==="f-o"||e.target.id==="f-d")fprice()});
+$("pg").addEventListener("input",function(e){if(e.target.id==="f-mp")fprice()});
+$("pg").addEventListener("click",async function(e){
+ if(e.target.id==="f-new"){$("pg").innerHTML=formHtml();fprice();return}
+ if(e.target.id!=="f-go")return;var g=function(i){return $(i).value.trim()},er=$("f-e");er.textContent="";
+ var o=isAgent()?me.hub_id:g("f-o"),d=g("f-d");if(!d||!o||o===d){er.textContent="Choose two different agencies.";return}
+ var pr=priceFor(hubCity(o),hubCity(d),fs.size),mpv=$("f-mp")?$("f-mp").value.trim():"";if(mpv!==""){var mn=Math.round(Number(mpv));if(!(mn>=0)){er.textContent="Enter a valid price.";return}pr=mn}
+ if(pr==null){er.textContent=me.role==="owner"?"No price in the list for this route and size. Type the price yourself above.":"No price is set for this route and size. Ask the manager to set it in Prices.";return}
+ if(g("f-sn").length<2||g("f-sp").replace(/\D/g,"").length<8){er.textContent="Enter the sender's name and phone.";return}
+ if(g("f-rn").length<2||g("f-rp").replace(/\D/g,"").length<8){er.textContent="Enter the receiver's name and phone.";return}
+ if(fs.mode==="door"&&!g("f-a")){er.textContent="Enter the delivery address.";return}
+ var b=e.target;b.disabled=true;b.textContent="Booking...";
+ var row={ref:newRef(),source:isAgent()?"agent":"staff",status:"new",origin_hub:o,dest_hub:d,size:fs.size,parcel_desc:g("f-desc")||null,weight_kg:g("f-kg")?Number(g("f-kg")):null,sender_name:g("f-sn"),sender_phone:g("f-sp"),receiver_name:g("f-rn"),receiver_phone:g("f-rp"),delivery_mode:fs.mode,delivery_address:fs.mode==="door"?g("f-a"):null,pay_by:fs.pay,paid:fs.paidNow,price_xaf:isAgent()?null:pr,from_city:hubCity(o),to_city:hubCity(d)};
+ var r=await sb.from("deliveries").insert(row).select("*").single();
+ if(r.error){b.disabled=false;b.textContent="Book parcel";er.textContent=r.error.message;return}
+ var x=r.data,msgS="Hello "+x.sender_name+", your parcel "+x.ref+" ("+x.from_city+" to "+x.to_city+") is registered with KMDS. Price: "+xaf(x.price_xaf)+". Track it here: "+trackLink(x.ref),
+ msgR="Hello "+x.receiver_name+", a parcel from "+x.sender_name+" is coming to you with KMDS ("+x.ref+"). Your pick-up code is "+x.pickup_code+". Do not share it except with the KMDS agent when you collect. Track it: "+trackLink(x.ref);
+ $("pg").innerHTML='<div class="fm"><h1>New parcel</h1><div class="ok"><h3>Booked</h3><div class="mu">Tracking number</div><b style="font-size:19px;letter-spacing:.5px">'+esc(x.ref)+'</b><div class="mu" style="margin-top:12px">Receiver\'s pick-up code</div><span class="code">'+esc(x.pickup_code)+'</span><div style="margin-top:12px">'+esc(x.from_city)+' → '+esc(x.to_city)+' · '+xaf(x.price_xaf)+' · '+(x.paid?"Paid":"Not paid yet")+'</div></div><div style="display:grid;gap:10px"><a class="btn g w" target="_blank" rel="noopener" href="'+esc(wa(x.sender_phone,msgS))+'" style="text-decoration:none;text-align:center">Send tracking to sender (WhatsApp)</a><a class="btn w" target="_blank" rel="noopener" href="'+esc(wa(x.receiver_phone,msgR))+'" style="text-decoration:none;text-align:center">Send code to receiver (WhatsApp)</a><button class="btn w" id="f-new">Book another parcel</button></div></div>';
+ await load(true)});
+
+/* ---------- cash ---------- */
+function cashHtml(){var mine=isAgent(),rows=dels.filter(function(d){return d.paid&&d.collected_by&&!d.remitted&&(!mine||d.collected_by===me.user_id)}),g={};
+ rows.forEach(function(d){(g[d.collected_by]=g[d.collected_by]||[]).push(d)});var ids=Object.keys(g);
+ var nm=function(id){for(var i=0;i<staff.length;i++)if(staff[i].user_id===id)return staff[i].name||staff[i].email;return id===me.user_id?(me.name||"Me"):"Agent"};
+ var tot=rows.reduce(function(s,d){return s+(d.price_xaf||0)},0);
+ return'<h1>'+(mine?'My cash':'Cash')+'</h1><p class="sub">'+(mine?'Money you collected and have not yet given to KMDS.':'Money collected by agents and not yet received by KMDS.')+'</p><div class="kg" style="grid-template-columns:repeat(2,1fr);max-width:520px"><div class="c k"><small>To hand over</small><b>'+xaf(tot)+'</b><span class="mu">'+rows.length+' parcel'+(rows.length===1?"":"s")+'</span></div></div>'
+ +(ids.length?ids.map(function(id){var a=g[id],s=a.reduce(function(t,d){return t+(d.price_xaf||0)},0);return'<div class="c ch" style="margin-bottom:10px"><div class="hd"><div><b>'+esc(nm(id))+'</b><div class="mu">'+a.length+' parcels · '+xaf(s)+'</div></div>'+(isMgr()?'<button class="btn g" data-cash="'+id+'">Mark received</button>':'')+'</div></div>'}).join(""):'<div class="c empty">Nothing to hand over.</div>')}
+$("pg").addEventListener("click",async function(e){var id=e.target.getAttribute&&e.target.getAttribute("data-cash");if(!id)return;if(!confirm("Confirm KMDS received this cash?"))return;
+ var r=await sb.from("deliveries").update({remitted:true}).eq("collected_by",id).eq("paid",true).eq("remitted",false);if(r.error){toast(r.error.message);return}toast("Marked received");await load(true)});
+
+/* ---------- analytics ---------- */
+var anR="w";
+function anHtml(){return'<h1>Analytics</h1><p class="sub">How the business is moving.</p><div class="c ch" style="margin-bottom:14px"><div class="hd"><h3>Deliveries</h3><div class="seg" id="sg">'+[["w","Week"],["m","Month"],["s","6 months"],["y","Year"]].map(function(x){return'<button data-r="'+x[0]+'" class="'+(x[0]===anR?"on":"")+'">'+x[1]+'</button>'}).join("")+'</div></div><div style="display:flex;gap:30px;margin:0 0 16px;flex-wrap:wrap"><div><small class="mu">Parcels</small><b style="display:block;font-size:26px" id="a-t">0</b></div><div><small class="mu">Earned</small><b style="display:block;font-size:26px" id="a-e">0</b></div><div><small class="mu">Unpaid</small><b style="display:block;font-size:26px" id="a-u">0</b></div></div><div class="bars" id="a-b"></div></div><div class="g3" id="a-l"></div>'}
+function rangeCfg(){var now=new Date(),day=864e5;
+ if(anR==="w"){var b=[];for(var i=6;i>=0;i--){var s=startOf(now.getTime()-i*day);b.push({l:new Date(s).toLocaleDateString("en-GB",{weekday:"short"}),s:s,e:s+day})}return b}
+ if(anR==="m"){var b2=[];for(var j=3;j>=0;j--){var e2=startOf(now.getTime())+day-j*7*day,s2=e2-7*day;b2.push({l:"W"+(4-j),s:s2,e:e2})}return b2}
+ var n=anR==="s"?6:12,b3=[];for(var k=n-1;k>=0;k--){var m0=new Date(now.getFullYear(),now.getMonth()-k,1),m1=new Date(now.getFullYear(),now.getMonth()-k+1,1);b3.push({l:m0.toLocaleDateString("en-GB",{month:"short"}),s:m0.getTime(),e:m1.getTime()})}return b3}
+function drawAn(){var bk=rangeCfg(),lo=bk[0].s,hi=bk[bk.length-1].e,rows=dels.filter(function(d){var t=new Date(d.created_at).getTime();return t>=lo&&t<hi&&d.status!=="cancelled"});
+ var cnt=bk.map(function(b){return rows.filter(function(d){var t=new Date(d.created_at).getTime();return t>=b.s&&t<b.e}).length}),mx=Math.max.apply(null,cnt.concat([1])),top=Math.max(4,Math.ceil(mx/4)*4),g="";
+ for(var i=0;i<=3;i++)g+='<div class="gl" style="bottom:'+(24+i*(190/3))+'px"><span>'+Math.round(top/3*i)+'</span></div>';
+ $("a-b").innerHTML=g+bk.map(function(b,i){return'<div class="b"><u>'+cnt[i]+'</u><i style="height:'+Math.round(cnt[i]/top*180)+'px"></i>'+b.l+'</div>'}).join("");
+ $("a-t").textContent=rows.length.toLocaleString();var earned=rows.filter(function(d){return d.paid}).reduce(function(s,d){return s+(d.price_xaf||0)},0),un=rows.filter(function(d){return !d.paid}).reduce(function(s,d){return s+(d.price_xaf||0)},0);
+ $("a-e").textContent=xaf(earned);$("a-u").textContent=xaf(un);
+ var top5=function(fn,w){var m={};rows.forEach(function(d){var k=fn(d);if(k)m[k]=(m[k]||0)+1});var a=Object.keys(m).map(function(k){return[k,m[k]]}).sort(function(x,y){return y[1]-x[1]}).slice(0,5),mx2=a.length?a[0][1]:1;
+  return a.length?a.map(function(x,i){return'<div class="r"><span class="n">'+(i+1)+'</span><span>'+esc(x[0])+'</span><div class="t"><i style="width:'+Math.round(x[1]/mx2*100)+'%"></i></div><span class="v">'+x[1]+'</span></div>'}).join(""):'<div class="mu">No data yet.</div>'};
+ var card=function(t,b){return'<div class="c ch hl"><div class="hd"><h3>'+t+'</h3></div>'+b+'</div>'};
+ $("a-l").innerHTML=card("Busiest routes",top5(function(d){return d.from_city&&d.to_city?d.from_city+" → "+d.to_city:""}))+card("Where parcels start",top5(function(d){return d.from_city}))+card("Where parcels go",top5(function(d){return d.to_city}))
+  +card("Busiest agencies (booked)",top5(function(d){return d.origin_hub?hubName(d.origin_hub):""}))+card("Top customers",top5(function(d){return d.sender_name?d.sender_name+" "+String(d.sender_phone||"").slice(-4):""}))+card("Booked through",top5(function(d){return d.source==="agent"?"Agent":d.source==="website"?"Website":"Staff"}))}
+$("pg").addEventListener("click",function(e){var b=e.target.closest("#sg button");if(!b)return;anR=b.dataset.r;render()});
+
+
+/* ---------- daily report ---------- */
+var rpDay="",rpHub="",arMonth="",arList=[],arOpen=null,arNeed=true,arQ="",arMsg="";
+function dayKey(x){var d=new Date(x);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function tmOnly(x){return x?new Date(x).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true}):"-"}
+function rpHtml(){if(!rpDay)rpDay=dayKey(new Date());
+ var rows=dels.filter(function(d){return d.status!=="cancelled"&&dayKey(d.created_at)===rpDay&&(!rpHub||d.origin_hub===rpHub||d.dest_hub===rpHub)}).sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at)});
+ var tot=0,paid=0,del=0;rows.forEach(function(d){tot+=d.price_xaf||0;if(d.paid)paid+=d.price_xaf||0;if(d.status==="delivered")del++});
+ var long=new Date(rpDay+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+ var hubSel=isAgent()?"":'<select class="in" id="rp-h" style="max-width:220px"><option value="">All agencies</option>'+hubs.map(function(h){return'<option value="'+h.id+'"'+(rpHub===h.id?" selected":"")+'>'+esc(h.name)+'</option>'}).join("")+'</select>';
+ var body=rows.length?rows.map(function(d,i){return'<tr><td>'+(i+1)+'</td><td>'+tmOnly(d.created_at)+'</td><td><b>'+esc(d.ref)+'</b></td><td>'+esc(d.sender_name||"")+'<br><small>'+esc(d.sender_phone||"")+'</small></td><td>'+esc(d.receiver_name||"")+'<br><small>'+esc(d.receiver_phone||"")+'</small></td><td>'+esc(hubName(d.origin_hub))+' &rarr; '+esc(hubName(d.dest_hub))+'</td><td>'+esc(d.size||"")+'</td><td>'+xaf(d.price_xaf)+'</td><td>'+(d.paid?"Paid":"Not paid")+'</td><td>'+(ST[d.status]?ST[d.status][0]:esc(d.status))+(d.status==="delivered"?'<br><small>'+tmOnly(d.updated_at)+'</small>':'')+'</td></tr>'}).join(""):'<tr><td colspan="10" style="text-align:center;padding:26px">No parcels for this day.</td></tr>';
+ return'<div class="noprint"><h1>Daily report</h1><p class="sub">Every parcel booked on a day, in order. Press Print to keep a paper copy.</p>'
+ +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center"><input class="in" type="date" id="rp-d" value="'+rpDay+'" style="max-width:190px">'+hubSel+'<button class="btn g" id="rp-p">Print / Save as PDF</button></div></div>'
+ +'<div class="rph"><h2><b>KMDS REPORT FOR DELIVERY &mdash; '+esc(long.toUpperCase())+'</b></h2>'+(rpHub?'<div>'+esc(hubName(rpHub))+'</div>':'')+(isAgent()?'<div>'+esc(hubName(me.hub_id))+'</div>':'')+'</div>'
+ +'<div class="c tb"><div class="tbw"><table class="rpt"><thead><tr><th>No.</th><th>Time</th><th>Tracking no.</th><th>Sender</th><th>Receiver</th><th>Route</th><th>Size</th><th>Price</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+body+'</tbody></table></div></div>'
+ +'<div style="margin-top:14px;font-weight:600">Parcels: '+rows.length+' &nbsp;|&nbsp; Delivered: '+del+' &nbsp;|&nbsp; Total value: '+xaf(tot)+' &nbsp;|&nbsp; Paid: '+xaf(paid)+' &nbsp;|&nbsp; Not paid: '+xaf(tot-paid)+'</div>'
+ +'<div class="noprint" id="rp-cl" style="margin-top:16px"></div><div class="rph" style="margin-top:40px">Prepared by: ____________________ &nbsp;&nbsp; Signature: ____________________ &nbsp;&nbsp; Date: ____________</div>'}
+document.addEventListener("change",function(e){if(e.target.id==="rp-d"){rpDay=e.target.value||rpDay;render()}if(e.target.id==="rp-h"){rpHub=e.target.value;render()}});
+document.addEventListener("click",function(e){if(e.target.id==="rp-p")window.print()});
+
+function rpScope(){return isAgent()?me.hub_id:(rpHub||null)}
+function rpRows(){return dels.filter(function(d){return d.status!=="cancelled"&&dayKey(d.created_at)===rpDay&&(!rpHub||d.origin_hub===rpHub||d.dest_hub===rpHub)}).sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at)})}
+function longDate(k){return new Date(k+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+async function rpCheck(){var box=$("rp-cl");if(!box)return;var sc=rpScope(),day=rpDay;
+ var q=sb.from("daily_reports").select("id,closed_by_name,closed_at").eq("report_date",day);q=sc?q.eq("hub_id",sc):q.is("hub_id",null);
+ var r=await q.maybeSingle();if(!$("rp-cl")||day!==rpDay)return;box=$("rp-cl");
+ if(r.error){box.innerHTML='<div class="mu">Archive is not ready yet. Run the archive setup first.</div>';return}
+ if(r.data){box.innerHTML='<div class="c" style="padding:14px 16px"><b>&#10003; Day closed</b><div class="mu">Saved permanently by '+esc(r.data.closed_by_name||"staff")+' on '+fmt(r.data.closed_at)+'. Find it any time in Archive.</div></div>';return}
+ box.innerHTML='<button class="btn g" id="rp-c">Close this day and save to archive</button><div class="mu" style="margin-top:6px">After closing, this report is saved permanently and cannot be edited or deleted.</div>'}
+async function rpClose(){var rows=rpRows();if(!rows.length){toast("No parcels to close for this day.");return}
+ if(!confirm("Close "+longDate(rpDay)+"? It will be saved permanently and cannot be changed."))return;
+ var tot=0,paid=0,del=0,snap=rows.map(function(d,i){tot+=d.price_xaf||0;if(d.paid)paid+=d.price_xaf||0;if(d.status==="delivered")del++;
+  return{n:i+1,t:tmOnly(d.created_at),ref:d.ref,sn:d.sender_name||"",sp:d.sender_phone||"",rn:d.receiver_name||"",rp:d.receiver_phone||"",from:hubName(d.origin_hub),to:hubName(d.dest_hub),size:d.size||"",desc:d.parcel_desc||"",price:d.price_xaf,paid:!!d.paid,status:ST[d.status]?ST[d.status][0]:d.status,dt:d.status==="delivered"?tmOnly(d.updated_at):""}});
+ var r=await sb.from("daily_reports").insert({report_date:rpDay,hub_id:rpScope(),closed_by_name:me.name||"",parcels:rows.length,delivered:del,total_xaf:tot,paid_xaf:paid,rows:snap});
+ if(r.error){toast(r.error.message.indexOf("duplicate")>=0?"This day is already closed.":"Could not close: "+r.error.message);rpCheck();return}
+ toast("Day closed and saved");arNeed=true;rpCheck()}
+document.addEventListener("click",function(e){if(e.target.id==="rp-c")rpClose()});
+/* ---------- archive ---------- */
+function monthRange(m){var y=+m.slice(0,4),mo=+m.slice(5,7),last=new Date(y,mo,0).getDate();return[m+"-01",m+"-"+String(last).padStart(2,"0")]}
+async function arLoad(){arNeed=false;if(!arMonth)arMonth=dayKey(new Date()).slice(0,7);arMsg="";
+ var r;if(arQ.trim().length>=3){var s=await sb.rpc("search_archive",{q:arQ.trim()});if(s.error){arMsg="Archive is not ready yet. Run the archive setup first.";arList=[];render();return}
+  var ids=(s.data||[]).map(function(x){return x.id});if(!ids.length){arList=[];arMsg="Nothing found for “"+arQ.trim()+"”.";render();return}
+  r=await sb.from("daily_reports").select("id,report_date,hub_id,closed_by_name,closed_at,parcels,delivered,total_xaf,paid_xaf").in("id",ids).order("report_date",{ascending:false})}
+ else{var rg=monthRange(arMonth);r=await sb.from("daily_reports").select("id,report_date,hub_id,closed_by_name,closed_at,parcels,delivered,total_xaf,paid_xaf").gte("report_date",rg[0]).lte("report_date",rg[1]).order("report_date",{ascending:false})}
+ if(r.error){arMsg="Archive is not ready yet. Run the archive setup first.";arList=[]}else arList=r.data||[];render()}
+function repTable(rows){return'<div class="c tb"><div class="tbw"><table class="rpt"><thead><tr><th>No.</th><th>Time</th><th>Tracking no.</th><th>Sender</th><th>Receiver</th><th>Route</th><th>Size</th><th>Price</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+rows.map(function(d){return'<tr><td>'+d.n+'</td><td>'+esc(d.t)+'</td><td><b>'+esc(d.ref)+'</b></td><td>'+esc(d.sn)+'<br><small>'+esc(d.sp)+'</small></td><td>'+esc(d.rn)+'<br><small>'+esc(d.rp)+'</small></td><td>'+esc(d.from)+' &rarr; '+esc(d.to)+'</td><td>'+esc(d.size)+'</td><td>'+xaf(d.price)+'</td><td>'+(d.paid?"Paid":"Not paid")+'</td><td>'+esc(d.status)+(d.dt?'<br><small>'+esc(d.dt)+'</small>':'')+'</td></tr>'}).join("")+'</tbody></table></div></div>'}
+function arHtml(){if(!arMonth)arMonth=dayKey(new Date()).slice(0,7);
+ if(arOpen){var o=arOpen;return'<div class="noprint"><button class="btn" id="ar-b">&larr; Back to archive</button> <button class="btn g" id="rp-p">Print / Save as PDF</button></div>'
+  +'<div class="rph" style="display:block;margin:14px 0"><h2><b>KMDS REPORT FOR DELIVERY &mdash; '+esc(longDate(o.report_date).toUpperCase())+'</b></h2><div>'+esc(o.hub_id?hubName(o.hub_id):"All agencies")+' &middot; archived copy</div></div>'
+  +repTable(o.rows||[])+'<div style="margin-top:14px;font-weight:600">Parcels: '+o.parcels+' &nbsp;|&nbsp; Delivered: '+o.delivered+' &nbsp;|&nbsp; Total value: '+xaf(o.total_xaf)+' &nbsp;|&nbsp; Paid: '+xaf(o.paid_xaf)+' &nbsp;|&nbsp; Not paid: '+xaf(o.total_xaf-o.paid_xaf)+'</div>'
+  +'<div class="mu" style="margin-top:8px">Closed by '+esc(o.closed_by_name||"staff")+' on '+fmt(o.closed_at)+'. This is the permanent saved copy.</div>'}
+ var rows=arList.length?arList.map(function(r){return'<tr class="row" data-ar="'+r.id+'"><td><b>'+esc(longDate(r.report_date))+'</b></td><td>'+esc(r.hub_id?hubName(r.hub_id):"All agencies")+'</td><td>'+r.parcels+'</td><td>'+r.delivered+'</td><td>'+xaf(r.total_xaf)+'</td><td>'+esc(r.closed_by_name||"")+'</td></tr>'}).join(""):'<tr><td colspan="6" style="text-align:center;padding:26px">'+esc(arMsg||"No closed days for this month yet.")+'</td></tr>';
+ return'<h1>Archive</h1><p class="sub">Every closed day is saved here permanently. Pick a month, or search a name, phone number or tracking number across all days.</p>'
+ +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><input class="in" type="month" id="ar-m" value="'+arMonth+'" style="max-width:180px"><input class="in" id="ar-q" placeholder="Search name, phone or tracking no." value="'+esc(arQ)+'" style="max-width:300px"><button class="btn g" id="ar-s">Search</button></div>'
+ +'<div class="c tb"><div class="tbw"><table><thead><tr><th>Day</th><th>Agency</th><th>Parcels</th><th>Delivered</th><th>Total</th><th>Closed by</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+ +'<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="ar-cm">Download this month (Excel/CSV)</button><button class="btn" id="ar-cy">Download this whole year (backup)</button></div>'}
+function csvCell(v){return'"'+String(v==null?"":v).replace(/"/g,'""')+'"'}
+async function arCsv(whole){var m=arMonth||dayKey(new Date()).slice(0,7),a=whole?m.slice(0,4)+"-01-01":monthRange(m)[0],b=whole?m.slice(0,4)+"-12-31":monthRange(m)[1];
+ var r=await sb.from("daily_reports").select("*").gte("report_date",a).lte("report_date",b).order("report_date");if(r.error||!r.data||!r.data.length){toast("Nothing to download for this period.");return}
+ var L=[["Day","Agency","No","Time","Tracking no","Sender","Sender phone","Receiver","Receiver phone","From","To","Size","Parcel","Price FCFA","Paid","Status","Delivered time","Closed by"].map(csvCell).join(",")];
+ r.data.forEach(function(x){(x.rows||[]).forEach(function(d){L.push([x.report_date,x.hub_id?hubName(x.hub_id):"All agencies",d.n,d.t,d.ref,d.sn,d.sp,d.rn,d.rp,d.from,d.to,d.size,d.desc,d.price,d.paid?"Paid":"Not paid",d.status,d.dt,x.closed_by_name].map(csvCell).join(","))})});
+ var bl=new Blob(["﻿"+L.join("\n")],{type:"text/csv"}),u=URL.createObjectURL(bl),l=document.createElement("a");l.href=u;l.download="KMDS-deliveries-"+(whole?m.slice(0,4):m)+".csv";document.body.appendChild(l);l.click();l.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000)}
+document.addEventListener("change",function(e){if(e.target.id==="ar-m"){arMonth=e.target.value||arMonth;arQ="";arNeed=true;render()}});
+document.addEventListener("click",async function(e){var t=e.target;
+ if(t.id==="ar-s"){arQ=$("ar-q").value;arNeed=true;render()}
+ if(t.id==="ar-b"){arOpen=null;render()}
+ if(t.id==="ar-cm")arCsv(false);if(t.id==="ar-cy")arCsv(true);
+ var tr=t.closest&&t.closest("tr[data-ar]");if(tr){var r=await sb.from("daily_reports").select("*").eq("id",tr.dataset.ar).single();if(r.data){arOpen=r.data;render()}}});
+/* ---------- waybill, scan, saved customers ---------- */
+function waybill(d){var link=SITE+"/delivery#p="+d.ref,qr="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data="+encodeURIComponent(link);
+ var w=window.open("","_blank");if(!w){toast("Allow pop-ups to print the waybill.");return}
+ w.document.write('<!doctype html><meta charset="utf-8"><title>Waybill '+esc(d.ref)+'</title><style>body{font-family:Arial,sans-serif;margin:0;padding:14px}.s{width:90mm;border:2px solid #000;padding:10px}h1{font-size:15px;margin:0;letter-spacing:1px}.r{font-size:12px;margin:3px 0}.b{font-size:15px;font-weight:700}.q{float:right;margin-left:8px}@page{margin:8mm}@media print{.n{display:none}}</style><div class="s"><img class="q" width="95" height="95" src="'+qr+'" alt=""><h1>KMDS DELIVERY</h1><div class="b">'+esc(d.ref)+'</div><div class="r"><b>'+esc(d.from_city||"")+' &rarr; '+esc(d.to_city||"")+'</b></div><div class="r">'+esc(hubName(d.origin_hub))+' &rarr; '+esc(hubName(d.dest_hub))+'</div><hr><div class="r">From: <b>'+esc(d.sender_name||"")+'</b> '+esc(d.sender_phone||"")+'</div><div class="r">To: <b>'+esc(d.receiver_name||"")+'</b> '+esc(d.receiver_phone||"")+'</div><div class="r">'+esc(d.parcel_desc||"Parcel")+' &middot; '+esc(d.size||"")+'</div><div class="r">'+(d.paid?"PAID":"NOT PAID")+' &middot; '+(d.pay_by==="receiver"?"Receiver pays: ":"")+xaf(d.price_xaf)+'</div><div class="r">'+esc(fmt(d.created_at))+'</div><div class="r" style="font-size:10px">Track: '+esc(SITE+"/track")+'</div></div><p class="n"><button onclick="print()" style="font-size:16px;padding:10px 18px">Print</button></p>');w.document.close()}
+document.addEventListener("click",function(e){if(e.target.id==="wb"){var d=d_(e.target.dataset.id);if(d)waybill(d)}});
+function openFromHash(){var m=location.hash.match(/p=([A-Za-z0-9-]+)/);if(!m||!dels.length)return;var ref=m[1].toUpperCase();for(var i=0;i<dels.length;i++)if(dels[i].ref===ref){openDr(dels[i].id);history.replaceState(null,"",location.pathname+location.search);return}toast("Parcel "+ref+" is not in your list.")}
+function custList(){var seen={},o=[];dels.forEach(function(d){[[d.sender_name,d.sender_phone],[d.receiver_name,d.receiver_phone]].forEach(function(x){var p=(x[1]||"").replace(/\D/g,"");if(p.length>=8&&x[0]&&!seen[p]){seen[p]=1;o.push([p,x[0]])}})});return o}
+function custFill(){var l=custList(),h='<datalist id="cust-dl">'+l.map(function(c){return'<option value="'+esc(c[0])+'">'+esc(c[1])+'</option>'}).join("")+'</datalist>',d=$("cust-dl");if(d)d.outerHTML=h;else document.body.insertAdjacentHTML("beforeend",h);["f-sp","f-rp"].forEach(function(i){var el=$(i);if(el)el.setAttribute("list","cust-dl")})}
+document.addEventListener("input",function(e){var id=e.target.id;if(id!=="f-sp"&&id!=="f-rp")return;custFill();var p=e.target.value.replace(/\D/g,""),c=custList().filter(function(x){return x[0]===p})[0];if(c){var n=$(id==="f-sp"?"f-sn":"f-rn");if(n&&!n.value)n.value=c[1]}});
+document.addEventListener("focusin",function(e){if(e.target.id==="f-sp"||e.target.id==="f-rp")custFill()});
+
+/* ---------- delivery proof picture ---------- */
+async function proof(id){var d=d_(id);if(!d)return;var ev=await sb.from("delivery_events").select("*").eq("delivery_id",id).eq("status","delivered").order("at",{ascending:false}).limit(1),e=(ev.data||[])[0]||{};
+ var W=760,H=640,c=document.createElement("canvas");c.width=W;c.height=H;var x=c.getContext("2d");
+ x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#0b0a08";x.fillRect(0,0,W,120);x.fillStyle="#d9b650";x.font="bold 44px Georgia,serif";x.textAlign="center";x.fillText("KMDS",W/2,64);x.fillStyle="#b9b19a";x.font="16px Arial";x.fillText("KINGMAKERS DELIVERY SERVICE",W/2,96);
+ x.fillStyle="#1a7f4b";x.beginPath();x.arc(W/2,190,44,0,7);x.fill();x.strokeStyle="#fff";x.lineWidth=9;x.lineCap="round";x.lineJoin="round";x.beginPath();x.moveTo(W/2-20,190);x.lineTo(W/2-5,206);x.lineTo(W/2+24,172);x.stroke();
+ x.fillStyle="#16130c";x.font="bold 34px Arial";x.fillText("DELIVERED TO RECEIVER",W/2,284);
+ x.textAlign="left";var y=340,row=function(k,v){x.fillStyle="#7a7464";x.font="20px Arial";x.fillText(k,60,y);x.fillStyle="#16130c";x.font="bold 22px Arial";x.fillText(String(v||"").slice(0,34),270,y);y+=46};
+ var tm=e.at?new Date(e.at):new Date(d.updated_at),when=tm.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+", "+tm.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+ row("Tracking no.",d.ref);row("Route",(d.from_city||"")+" -> "+(d.to_city||""));row("Receiver",d.receiver_name);row("Delivered at",e.hub_name||hubName(d.dest_hub));row("Date and time",when);row("Handed over by",e.changed_by||"KMDS agent");
+ x.fillStyle="#7a7464";x.font="16px Arial";x.textAlign="center";x.fillText("Thank you for using KMDS.",W/2,H-30);
+ c.toBlob(async function(b){var f=new File([b],"KMDS-"+d.ref+".png",{type:"image/png"});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:"Your parcel "+d.ref+" was delivered to "+(d.receiver_name||"the receiver")+". Thank you for using KMDS."});return}}catch(er){if(er&&er.name==="AbortError")return}
+  var u=URL.createObjectURL(b),l=document.createElement("a");l.href=u;l.download=f.name;document.body.appendChild(l);l.click();l.remove();toast("Picture saved. Send it to the sender on WhatsApp.");setTimeout(function(){URL.revokeObjectURL(u)},4000)},"image/png")}
+document.addEventListener("click",function(e){if(e.target.id==="pf")proof(e.target.dataset.id)});
+document.addEventListener("click",function(e){var g=e.target.closest&&e.target.closest("[data-go]");if(g)go(g.getAttribute("data-go"))});
+/* ---------- prices ---------- */
+function prHtml(){var cities=[];hubs.forEach(function(h){if(cities.indexOf(h.city)<0)cities.push(h.city)});
+ var rows=prices.slice().sort(function(a,b){return(a.from_city+a.to_city+a.size)<(b.from_city+b.to_city+b.size)?-1:1});
+ return'<h1>Prices</h1><p class="sub">Agents cannot change prices. They use this list. A parcel cannot be booked until its route and size have a price.</p>'
+ +'<div class="c ch fm" style="max-width:640px;margin-bottom:14px"><h3>Set a price</h3><div class="row2"><div><label class="f">From city</label><select class="in" id="pr-f">'+cities.map(function(c){return'<option>'+esc(c)+'</option>'}).join("")+'</select></div><div><label class="f">To city</label><select class="in" id="pr-t">'+cities.map(function(c,i){return'<option'+(i===1?" selected":"")+'>'+esc(c)+'</option>'}).join("")+'</select></div></div><div class="row2"><div><label class="f">Size</label><select class="in" id="pr-s">'+SIZES.map(function(s){return'<option value="'+s[0]+'">'+s[0]+'</option>'}).join("")+'</select></div><div><label class="f">Price (FCFA)</label><input class="in" id="pr-p" type="number" inputmode="numeric"></div></div><div class="er" id="pr-e"></div>'+(me.role==="owner"?'<button class="btn g" id="pr-go" style="margin-top:10px">Save price</button>':'<div class="mu">Only the owner can change prices.</div>')+'</div>'
+ +'<div class="c tb"><div class="tbw"><table><thead><tr><th>From</th><th>To</th><th>Size</th><th>Price</th></tr></thead><tbody>'+(rows.length?rows.map(function(p){return'<tr><td>'+esc(p.from_city)+'</td><td>'+esc(p.to_city)+'</td><td>'+esc(p.size)+'</td><td><b>'+xaf(p.price_xaf)+'</b></td></tr>'}).join(""):'<tr><td colspan="4" class="empty">No prices yet. Add the first one above.</td></tr>')+'</tbody></table></div></div>'}
+$("pg").addEventListener("click",async function(e){if(e.target.id!=="pr-go")return;var p=Math.round(Number($("pr-p").value));if(!(p>=0)||$("pr-p").value===""){$("pr-e").textContent="Enter a price.";return}
+ var f=$("pr-f").value,t=$("pr-t").value,s=$("pr-s").value;if(f===t){$("pr-e").textContent="Choose two different cities.";return}
+ var r=await sb.from("price_list").upsert({from_city:f,to_city:t,size:s,price_xaf:p},{onConflict:"from_city,to_city,size"});if(r.error){$("pr-e").textContent=r.error.message;return}
+ var q=await sb.from("price_list").select("*");prices=q.data||[];$("pr-p").value="";toast("Price saved");render()});
+
+/* ---------- team & agencies ---------- */
+async function loadStaff(){var r=await sb.rpc("list_staff");staff=r.data||[];if(view==="tm")render()}
+function tmHtml(){var own=me.role==="owner";
+ var hs=hubs.map(function(h){return'<tr><td><b>'+esc(h.name)+'</b></td><td>'+esc(h.city)+'</td><td>'+(own?'<button class="btn" data-hr="'+h.id+'">Rename</button>':'')+'</td></tr>'}).join("");
+ var st=staff.map(function(s){return'<tr><td><b>'+esc(s.name||"")+'</b><small>'+esc(s.email||"")+'</small></td><td><span class="tag">'+esc(s.role)+'</span></td><td>'+esc(s.hub_id?hubName(s.hub_id):"All")+'</td><td>'+(s.active?'<span class="pill p-ok">Active</span>':'<span class="pill p-gr">Off</span>')+'</td><td>'+(own&&s.role!=="owner"?'<button class="btn" data-sa="'+s.user_id+'" data-on="'+(s.active?"0":"1")+'">'+(s.active?"Switch off":"Switch on")+'</button>':'')+'</td></tr>'}).join("");
+ return'<h1>Team & agencies</h1><p class="sub">Delivery staff only see deliveries, never procurement or the marketplace.</p>'
+ +(own?'<div class="c ch fm" style="max-width:640px;margin-bottom:14px"><h3>Add a staff member</h3><div class="ns" style="margin-top:10px"><b>Step 1.</b> In Supabase, open Authentication, then Users, then Add user. Create the email and a password. <b>Step 2.</b> Enter that email here.</div><label class="f">Their email</label><input class="in" id="ts-e" type="email"><div class="row2"><div><label class="f">Name</label><input class="in" id="ts-n"></div><div><label class="f">Role</label><select class="in" id="ts-r"><option value="agent">Agent (one agency)</option><option value="manager">Delivery Manager</option></select></div></div><label class="f">Agency (for agents)</label><select class="in" id="ts-h">'+hubs.map(function(h){return'<option value="'+h.id+'">'+esc(h.name)+'</option>'}).join("")+'</select><div class="er" id="ts-x"></div><button class="btn g" id="ts-go" style="margin-top:10px">Add staff</button></div>':'')
+ +'<div class="c tb" style="margin-bottom:14px"><div class="tbw"><table><thead><tr><th>Staff</th><th>Role</th><th>Agency</th><th>Status</th><th></th></tr></thead><tbody>'+(st||'<tr><td colspan="5" class="empty">Loading...</td></tr>')+'</tbody></table></div></div>'
+ +'<div class="c tb"><div class="tbw"><table><thead><tr><th>Agency</th><th>City</th><th></th></tr></thead><tbody>'+hs+'</tbody></table></div></div>'}
+$("pg").addEventListener("click",async function(e){var b=e.target;
+ if(b.id==="ts-go"){var r=await sb.rpc("assign_staff",{p_email:$("ts-e").value,p_role:$("ts-r").value,p_hub:$("ts-r").value==="agent"?$("ts-h").value:null,p_name:$("ts-n").value.trim()});if(r.error){$("ts-x").textContent=r.error.message;return}toast("Staff added");await loadStaff();return}
+ if(b.getAttribute&&b.getAttribute("data-sa")){var r2=await sb.rpc("set_staff_active",{p_user:b.getAttribute("data-sa"),p_active:b.getAttribute("data-on")==="1"});if(r2.error){toast(r2.error.message);return}await loadStaff();return}
+ if(b.getAttribute&&b.getAttribute("data-hr")){var id=b.getAttribute("data-hr"),n=prompt("New name for this agency (for example: Limbe Down Beach)");if(!n||n.trim().length<2)return;var r3=await sb.from("hubs").update({name:n.trim()}).eq("id",id);if(r3.error){toast(r3.error.message);return}var h=await sb.from("hubs").select("*").eq("active",true).order("name");hubs=h.data||[];render()}});
+
+if(sb){sb.auth.onAuthStateChange(function(ev){if(ev==="SIGNED_OUT"&&me)location.reload()});boot()}else{$("le").textContent="Could not load. Check your internet and refresh."}
+})();
+</script>
+</body></html>
