@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KMDS Delivery Booking – Book a delivery</title>
+<meta name="description" content="Book your parcel delivery with KMDS across Cameroon. Get a tracking number straight away and drop your parcel at any KMDS agency.">
+<meta property="og:title" content="KMDS Delivery – Book a delivery"><meta property="og:description" content="Book your parcel delivery with KMDS across Cameroon. Get a tracking number straight away."><meta property="og:site_name" content="KMDS Cameroon"><meta property="og:type" content="website">
+<style>
+:root{--g:#b8932f;--gd:#8a6414;--ink:#16130c;--m:#7a7464;--l:#e8e2d0;--bg:#f6f3ea;--rd:#b3261e;--gn:#1a7f4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+.top{background:#0b0a08;color:#fff;padding:18px 20px;text-align:center;position:relative}.top b{font-family:Georgia,serif;font-size:24px;letter-spacing:2px;color:#d9b650}.top small{display:block;color:#b9b19a;letter-spacing:2px;font-size:11px;margin-top:4px;text-transform:uppercase}.top a{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#d9b650;text-decoration:none;font-size:14px}
+.w{max-width:520px;margin:0 auto;padding:20px 16px 50px}
+h1{font-family:Georgia,serif;font-size:27px;margin:4px 0 6px}.lead{color:var(--m);margin:0 0 16px;line-height:1.45}
+.c{background:#fff;border:1px solid var(--l);border-radius:18px;padding:18px;box-shadow:0 6px 24px rgba(40,30,0,.07);margin-bottom:14px}
+.c h2{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gd);margin:0 0 12px;display:flex;align-items:center;gap:8px}.c h2 i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#16130c;color:#d9b650;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 6px;color:#3d3a2e}label:first-of-type{margin-top:0}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:13px 14px;border:1px solid #d9d2bd;border-radius:12px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid #e0bd58;border-color:#e0bd58}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sz{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sz button{border:1px solid #d9d2bd;background:#fff;border-radius:12px;padding:12px 6px;font:inherit;cursor:pointer;text-align:center}.sz b{display:block;font-size:15px}.sz small{display:block;color:var(--m);font-size:11px;margin-top:3px;line-height:1.25}.sz button.on{border-color:var(--g);background:#fbf6e6;box-shadow:0 0 0 2px #e0bd58 inset}
+.opt{display:grid;gap:8px}.opt button{display:flex;align-items:flex-start;gap:10px;text-align:left;border:1px solid #d9d2bd;background:#fff;border-radius:12px;padding:12px;font:inherit;cursor:pointer}.opt button.on{border-color:var(--g);background:#fbf6e6}.opt span{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid #cfc7ae;margin-top:2px}.opt .on span{border-color:var(--gd);background:radial-gradient(var(--gd) 45%,transparent 50%)}.opt small{display:block;color:var(--m);font-size:12px;margin-top:2px}
+.price{display:flex;justify-content:space-between;align-items:center;background:#16130c;color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:14px}.price small{color:#b9b19a;display:block;font-size:12px}.price b{font-family:Georgia,serif;font-size:24px;color:#d9b650}
+.note{background:#fbf6e6;border-left:3px solid var(--g);border-radius:8px;padding:12px 14px;color:#4a4636;font-size:14px;line-height:1.45;margin-bottom:14px}
+.btn{width:100%;font:inherit;font-weight:700;font-size:17px;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg,#e0bd58,#b8932f);color:#16130c;cursor:pointer;text-decoration:none;display:block;text-align:center}.btn.o{background:#fff;border:1px solid #d9d2bd;margin-top:10px;font-weight:600}.btn:disabled{opacity:.6}
+.er{color:var(--rd);font-size:14px;margin:10px 0;min-height:0}
+.ok{text-align:center}.tick{width:64px;height:64px;border-radius:50%;background:var(--gn);color:#fff;font-size:34px;display:flex;align-items:center;justify-content:center;margin:6px auto 12px}.ref{font-family:Georgia,serif;font-size:24px;letter-spacing:1px;margin:6px 0}.code{display:inline-block;font-family:Georgia,serif;font-size:32px;letter-spacing:8px;color:var(--gd);background:#fbf6e6;border-radius:14px;padding:8px 16px;margin:6px 0}
+.hide{display:none}
+.pk{display:grid;gap:12px;margin:6px 0 16px}.pk button{display:block;width:100%;text-align:left;border:1px solid #d9d2bd;background:#fff;border-radius:16px;padding:16px;font:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(40,30,0,.06)}.pk b{display:block;font-size:17px;margin-bottom:4px}.pk small{color:var(--m);font-size:14px;line-height:1.4;display:block}.pk .tg{display:inline-block;background:#16130c;color:#d9b650;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.6px;padding:3px 9px;margin-bottom:8px}
+.chg{display:inline-block;margin:0 0 12px;color:var(--gd);font-size:14px;font-weight:600;cursor:pointer;background:none;border:0;padding:0}
+.bpc{border:1px solid #e1dac4;border-radius:14px;padding:14px;margin-bottom:12px;background:#fdfbf4}.bpc h3{margin:0 0 10px;font-size:14px;display:flex;justify-content:space-between;align-items:center}.bpc h3 button{border:0;background:none;color:var(--rd);font:inherit;font-size:13px;cursor:pointer}
+.bpc label{margin-top:10px}.addp{width:100%;font:inherit;font-weight:600;font-size:15px;padding:13px;border:1px dashed #b8932f;border-radius:12px;background:#fff;color:var(--gd);cursor:pointer}
+.sl{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid #2a261c}.sl:last-child{border:0}.sl span:first-child{color:#d8d0b8}.tot{border-top:1px solid #4a4332;margin-top:6px;padding-top:8px}
+.pl{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;text-align:left;border-top:1px solid var(--l);padding:10px 0;font-size:14px}.pl .n{width:26px;height:26px;border-radius:50%;background:#16130c;color:#d9b650;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}.pl .c4{font-family:Georgia,serif;font-size:20px;letter-spacing:4px;color:var(--gd)}
+.st{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}.st td{padding:6px 4px;vertical-align:top;border-top:1px solid #e8e0c6}.st td:first-child{white-space:nowrap;font-weight:600}
+</style></head><body>
+<div class="top"><a href="/site">&larr; Home</a><b>KMDS</b><small>Kingmakers Delivery Service</small></div>
+<div class="w">
+<div id="pick"><h1>Book a delivery</h1><p class="lead">How many parcels are you sending?</p><div class="pk"><button type="button" id="pk1"><b>1 or 2 parcels</b><small>Normal booking. Fill in one parcel, get your tracking number straight away.</small></button><button type="button" id="pk3"><span class="tg">CHEAPER</span><b>3 parcels or more</b><small>Bulk delivery: send many parcels to different places in one booking. Lower price per parcel, and one single tracking link for all of them.</small></button></div></div>
+<div id="form" class="hide">
+<button type="button" class="chg" data-chg="1">&larr; Change number of parcels</button>
+<h1>Book a delivery</h1><p class="lead">Fill in the details. You get your tracking number straight away. Then bring the parcel to any KMDS agency, or send someone with it.</p>
+<div class="c"><h2><i>1</i>Route</h2><div class="row2"><div><label for="from">From</label><select id="from"></select></div><div><label for="to">To</label><select id="to"></select></div></div></div>
+<div class="c"><h2><i>2</i>Parcel</h2><label>Size</label><div class="sz" id="sz"><button type="button" data-s="Small" class="on"><b>Small</b><small>Envelope, phone, documents</small></button><button type="button" data-s="Medium"><b>Medium</b><small>Shoe box, small bag</small></button><button type="button" data-s="Large"><b>Large</b><small>Carton, big bag</small></button></div><label for="pd">What is inside?</label><input id="pd" placeholder="e.g. Documents, clothes, cake" maxlength="200"></div>
+<div class="c"><h2><i>3</i>Sender (you)</h2><label for="sn">Full name</label><input id="sn" autocomplete="name" maxlength="80"><label for="sp">Phone (WhatsApp)</label><input id="sp" type="tel" inputmode="tel" autocomplete="tel" placeholder="6XX XXX XXX" maxlength="20"></div>
+<div class="c"><h2><i>4</i>Receiver</h2><label for="rn">Full name</label><input id="rn" maxlength="80"><label for="rp">Phone (WhatsApp)</label><input id="rp" type="tel" inputmode="tel" placeholder="6XX XXX XXX" maxlength="20"></div>
+<div class="c"><h2><i>5</i>Collection and payment</h2><label>How does the receiver get it?</label><div class="opt" id="md"><button type="button" data-v="collect" class="on"><span></span><div><b>Collects at the KMDS agency</b><small>The receiver picks it up with a 4-digit code</small></div></button><button type="button" data-v="door"><span></span><div><b>Delivered to the door</b><small>KMDS will call to confirm the address</small></div></button></div><label style="margin-top:16px">Who pays?</label><div class="opt" id="py"><button type="button" data-v="sender" class="on"><span></span><div><b>I pay at the agency</b><small>When you drop the parcel</small></div></button><button type="button" data-v="receiver"><span></span><div><b>The receiver pays on arrival</b></div></button></div><label for="nt">Note (optional)</label><input id="nt" placeholder="Address, landmark, anything we should know" maxlength="300"></div>
+<div class="price"><div><small>Price</small><span id="pn" style="font-size:13px;color:#b9b19a">Choose both cities</span></div><b id="pv">-</b></div>
+<div class="note"><b>Drop-off:</b> bring your parcel to a KMDS agency in <span id="fc">your city</span>. <span class="sessn"></span> You can send someone (a friend or bike rider): they only need to give your name or tracking number. You pay at the agency.</div>
+<div class="er" id="er"></div>
+<button class="btn" id="go">Book delivery</button>
+</div>
+
+<div id="bform" class="hide">
+<button type="button" class="chg" data-chg="1">&larr; Change number of parcels</button>
+<h1>Bulk delivery</h1><p class="lead">Send 3 or more parcels in one booking. Each parcel has its own receiver and destination. You get <b>one tracking link</b> for all of them, and a lower price: <b>10% off for 3 to 5 parcels, 15% off for 6 or more</b>.</p>
+<div class="c"><h2><i>1</i>Sender (you)</h2><label for="bsn">Full name</label><input id="bsn" autocomplete="name" maxlength="80"><label for="bsp">Phone (WhatsApp)</label><input id="bsp" type="tel" inputmode="tel" autocomplete="tel" placeholder="6XX XXX XXX" maxlength="20"><label for="bfrom">Parcels leave from (city)</label><select id="bfrom"></select></div>
+<div class="c"><h2><i>2</i>Parcels</h2><div id="bp"></div><button type="button" class="addp" id="badd">+ Add another parcel</button></div>
+<div class="c"><h2><i>3</i>Payment</h2><div class="opt" id="bpy"><button type="button" data-v="sender" class="on"><span></span><div><b>I pay at the agency</b><small>You pay for all parcels when you drop them</small></div></button><button type="button" data-v="receiver"><span></span><div><b>Each receiver pays on arrival</b><small>Every receiver pays for their own parcel</small></div></button></div><label for="bnt">Note for KMDS (optional)</label><textarea id="bnt" rows="2" maxlength="400"></textarea></div>
+<div class="price" style="display:block"><div id="bsum" style="font-size:14px">Choose the cities and sizes to see the price.</div></div>
+<div class="note"><b>Drop-off:</b> bring all parcels to a KMDS agency in <span id="bfc">your city</span>. <span class="sessn"></span> You can send someone: they only need to give your name or the booking reference.</div>
+<div class="er" id="ber"></div>
+<button class="btn" id="bgo">Book bulk delivery</button>
+</div>
+<div id="bdone" class="hide"><div class="c ok"><div class="tick">&#10003;</div><h1 style="margin-top:0">Bulk booking received</h1><p class="lead" style="margin-bottom:6px">Your booking reference</p><div class="ref" id="brf"></div><p class="lead" id="bpp" style="margin:6px 0 4px"></p><p class="lead" style="margin:10px 0 0"><small>Track all your parcels with this one link. Each parcel below has a pick-up code: give it only to that receiver.</small></p><div id="bpl" style="margin-top:10px"></div><a class="btn" id="btk" href="#" style="margin-top:16px">Track all my parcels</a><a class="btn o" id="bws" target="_blank" rel="noopener" href="#">Save on WhatsApp</a><button class="btn o" id="bagain">Book another</button></div></div>
+<div id="done" class="hide"><div class="c ok"><div class="tick">&#10003;</div><h1 style="margin-top:0">Booking received</h1><p class="lead" style="margin-bottom:10px">Your tracking number</p><div class="ref" id="rf"></div><p class="lead" style="margin:14px 0 4px">Receiver's pick-up code<br><small>Give it only to the receiver. They show it to collect the parcel.</small></p><div class="code" id="cd"></div><div class="note" style="text-align:left;margin-top:14px">Now bring your parcel to a KMDS agency in <b id="fc2"></b> before 11:30 AM. Mention <b>your name</b> or the tracking number. <span id="pp"></span></div><a class="btn" id="tk" href="#">Track my parcel</a><a class="btn o" id="ws" target="_blank" rel="noopener" href="#">Save details on WhatsApp</a><button class="btn o" id="again" type="button">Book another parcel</button></div></div>
+</div>
+<script>
+(function(){
+var SB="https://qfocanqogkugdyzatjty.supabase.co",KEY="sb_publishable_U2YFEQTrTTHTaJ9wRpaPjA_8QROpqeW";
+var $=function(i){return document.getElementById(i)},st={size:"Small",mode:"collect",pay:"sender"};
+function xaf(n){return n==null?"-":Number(n).toLocaleString("en-US")+" FCFA"}
+async function rpc(fn,body){var r=await fetch(SB+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify(body||{})});var t=await r.text(),j=null;try{j=JSON.parse(t)}catch(e){}return{ok:r.ok,j:j,t:t}}
+function fill(list){var q=new URLSearchParams(location.search);["from","to"].forEach(function(id){var s=$(id);s.innerHTML=(id==="from"?'<option value="">Select...</option>':'<option value="">Select...</option>')+list.map(function(c){return'<option>'+c+'</option>'}).join("");var v=q.get(id);if(v&&list.indexOf(v)>=0)s.value=v})}
+fill(["Limbe","Douala","Buea"]);
+rpc("public_cities").then(function(r){if(r.ok&&Array.isArray(r.j)&&r.j.length){var f=$("from").value,t=$("to").value;fill(r.j);if(f)$("from").value=f;if(t)$("to").value=t;quote()}});
+async function quote(){var f=$("from").value,t=$("to").value;$("fc").textContent=f||"your city";
+ if(!f||!t){$("pv").textContent="-";$("pn").textContent="Choose both cities";return}
+ if(f===t){$("pv").textContent="-";$("pn").textContent="Choose two different cities";return}
+ var r=await rpc("public_quote",{p_from:f,p_to:t,p_size:st.size});
+ if(r.ok&&typeof r.j==="number"){$("pv").textContent=xaf(r.j);$("pn").textContent=f+" → "+t+" · "+st.size}else{$("pv").textContent="At agency";$("pn").textContent="We confirm the price when you drop the parcel"}}
+$("from").onchange=$("to").onchange=quote;
+function pick(box,key,attr){$(box).onclick=function(e){var b=e.target.closest("button");if(!b)return;[].forEach.call($(box).children,function(x){x.classList.remove("on")});b.classList.add("on");st[key]=b.getAttribute(attr);if(key==="size")quote()}}
+pick("sz","size","data-s");pick("md","mode","data-v");pick("py","pay","data-v");
+$("go").onclick=async function(){var er=$("er");er.textContent="";var v=function(i){return $(i).value.trim()},f=v("from"),t=v("to");
+ if(!f||!t||f===t){er.textContent="Choose two different cities.";return}
+ if(!v("sn")||!v("rn")){er.textContent="Enter the sender's and receiver's names.";return}
+ if(v("sp").replace(/\D/g,"").length<8||v("rp").replace(/\D/g,"").length<8){er.textContent="Enter valid phone numbers.";return}
+ var b=$("go");b.disabled=true;b.textContent="Booking...";
+ var r;try{r=await rpc("book_delivery",{p_from:f,p_to:t,p_size:st.size,p_parcel:v("pd"),p_sname:v("sn"),p_sphone:v("sp"),p_rname:v("rn"),p_rphone:v("rp"),p_mode:st.mode,p_pay:st.pay,p_note:v("nt")})}catch(e){r={ok:false,j:{message:"No internet connection. Try again."}}}
+ b.disabled=false;b.textContent="Book delivery";
+ if(!r.ok||!r.j||!r.j.ref){er.textContent=(r.j&&r.j.message)||"Could not book right now. Please message us on WhatsApp.";return}
+ var link=location.origin+"/track?ref="+r.j.ref;
+ $("rf").textContent=r.j.ref;$("cd").textContent=r.j.code||"";$("fc2").textContent=f;$("tk").href="/track?ref="+r.j.ref;
+ $("pp").textContent=r.j.price!=null?"Price: "+xaf(r.j.price)+(st.pay==="receiver"?", paid by the receiver on arrival.":", paid at the agency."):"";
+ $("ws").href="https://wa.me/?text="+encodeURIComponent("KMDS delivery booked. Tracking number: "+r.j.ref+" ("+f+" to "+t+"). Track it: "+link);
+ $("form").classList.add("hide");$("done").classList.remove("hide");window.scrollTo(0,0)};
+$("again").onclick=function(){location.href="/book-delivery"};
+quote();
+/* ---- bulk + sessions ---- */
+function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function sessNote(){return'<table class="st"><tr><td>8:00 AM – 11:30 AM</td><td>Leaves 12:00 noon, arrives about 4:00 PM</td></tr><tr><td>12:00 PM – 4:30 PM</td><td>Leaves 4:30 PM, arrives about 6:00 PM</td></tr><tr><td>After 4:30 PM</td><td>Leaves early next morning (8:00 AM)</td></tr></table>'}
+[].forEach.call(document.querySelectorAll(".sessn"),function(e){e.innerHTML="<b>Drop-off times</b> (when your parcel reaches the agency):"+sessNote()});
+function show(id){["pick","form","bform","done","bdone"].forEach(function(x){$(x).classList.toggle("hide",x!==id)});window.scrollTo(0,0)}
+$("pk1").onclick=function(){show("form")};$("pk3").onclick=function(){show("bform");if(!$("bp").children.length)initBulk()};
+[].forEach.call(document.querySelectorAll("[data-chg]"),function(b){b.onclick=function(){show("pick")}});
+var cities=[],bpay="sender",QC={};
+var BSZ='<option value="Small">Small (envelope, phone)</option><option value="Medium">Medium (shoe box, bag)</option><option value="Large">Large (carton, big bag)</option>';
+function cityOpts(){return'<option value="">Select...</option>'+cities.map(function(c){return'<option>'+esc(c)+'</option>'}).join("")}
+function parcelCard(){var n=$("bp").children.length+1,d=document.createElement("div");d.className="bpc";
+ d.innerHTML='<h3><span class="pn">Parcel '+n+'</span><button type="button" class="rm">Remove</button></h3><label>Going to (city)</label><select class="bto">'+cityOpts()+'</select><label>Size</label><select class="bsz">'+BSZ+'</select><label>What is inside</label><input class="bds" maxlength="120" placeholder="Example: shoes"><label>Receiver full name</label><input class="brn" maxlength="80"><label>Receiver phone (WhatsApp)</label><input class="brp" type="tel" inputmode="tel" placeholder="6XX XXX XXX" maxlength="20"><label>How does the receiver get it?</label><select class="bmd"><option value="collect">Collects at the KMDS agency</option><option value="door">Delivered to the door</option></select>';
+ return d}
+function renum(){var k=$("bp").children;[].forEach.call(k,function(c,i){c.querySelector(".pn").textContent="Parcel "+(i+1);c.querySelector(".rm").style.display=k.length>3?"":"none"});$("badd").style.display=k.length>=20?"none":""}
+function initBulk(){for(var i=0;i<3;i++)$("bp").appendChild(parcelCard());renum();bsum()}
+$("badd").onclick=function(){$("bp").appendChild(parcelCard());renum();bsum()};
+$("bp").onclick=function(e){if(e.target.classList.contains("rm")){var c=e.target.closest(".bpc");if($("bp").children.length>3){c.remove();renum();bsum()}}};
+$("bp").addEventListener("change",bsum);$("bfrom").onchange=function(){$("bfc").textContent=$("bfrom").value||"your city";bsum()};
+$("bpy").onclick=function(e){var b=e.target.closest("button");if(!b)return;[].forEach.call($("bpy").children,function(x){x.classList.remove("on")});b.classList.add("on");bpay=b.getAttribute("data-v")};
+function rate(n){return n>=6?15:n>=3?10:0}
+async function qprice(f,t,z){var k=f+"|"+t+"|"+z;if(QC[k]!==undefined)return QC[k];var r=await rpc("public_quote",{p_from:f,p_to:t,p_size:z});QC[k]=(r.ok&&typeof r.j==="number")?r.j:null;return QC[k]}
+var bt=0,bok=false;
+function bsum(){clearTimeout(bt);bt=setTimeout(bsumNow,250)}
+async function bsumNow(){var f=$("bfrom").value,cards=[].slice.call($("bp").children),el=$("bsum");bok=false;
+ if(!f){el.innerHTML="Choose the city the parcels leave from.";return}
+ var rows=[],sub=0,miss=null,none=false;
+ for(var i=0;i<cards.length;i++){var t=cards[i].querySelector(".bto").value,z=cards[i].querySelector(".bsz").value;
+  if(!t){none=true;rows.push([i+1,"Choose the destination",null]);continue}
+  if(t===f){rows.push([i+1,"Destination must be different from "+f,null]);miss=miss||"same";continue}
+  var p=await qprice(f,t,z);if(p==null){miss=miss||(f+" to "+t);rows.push([i+1,t+" · "+z+" (no price yet)",null])}else{sub+=p;rows.push([i+1,t+" · "+z,p])}}
+ var n=cards.length,pct=rate(n),tot=Math.round(sub*(100-pct)/100);
+ var h=rows.map(function(r){return'<div class="sl"><span>'+r[0]+'. '+esc(r[1])+'</span><span>'+(r[2]==null?"-":xaf(r[2]))+'</span></div>'}).join("");
+ h+='<div class="sl tot"><span>Subtotal ('+n+' parcels)</span><span>'+xaf(sub)+'</span></div><div class="sl"><span>Bulk discount ('+pct+'%)</span><span>- '+xaf(sub-tot)+'</span></div><div class="sl"><span><b>Total</b></span><span><b style="font-family:Georgia,serif;font-size:20px;color:#d9b650">'+xaf(tot)+'</b></span></div>';
+ if(miss&&miss!=="same")h+='<div style="margin-top:8px;color:#f0b4ae">No price is set yet for '+esc(miss)+'. Please contact KMDS.</div>';
+ el.innerHTML=h;bok=!none&&!miss}
+rpc("public_cities").then(function(r){cities=(r.ok&&Array.isArray(r.j)&&r.j.length)?r.j:["Limbe","Douala","Buea"];$("bfrom").innerHTML=cityOpts();[].forEach.call($("bp").querySelectorAll(".bto"),function(s){s.innerHTML=cityOpts()})});
+cities=["Limbe","Douala","Buea"];$("bfrom").innerHTML=cityOpts();
+$("bgo").onclick=async function(){var er=$("ber");er.textContent="";var v=function(i){return $(i).value.trim()};
+ if(!v("bsn")){er.textContent="Enter your full name.";return}
+ if(v("bsp").replace(/\D/g,"").length<8){er.textContent="Enter a valid phone number for you.";return}
+ if(!v("bfrom")){er.textContent="Choose the city the parcels leave from.";return}
+ var cards=[].slice.call($("bp").children),items=[];
+ for(var i=0;i<cards.length;i++){var c=cards[i],q=function(s){return c.querySelector(s).value.trim()};
+  if(!q(".bto")){er.textContent="Parcel "+(i+1)+": choose where it is going.";return}
+  if(q(".bto")===v("bfrom")){er.textContent="Parcel "+(i+1)+": the destination must be different from "+v("bfrom")+".";return}
+  if(!q(".brn")){er.textContent="Parcel "+(i+1)+": enter the receiver's name.";return}
+  if(q(".brp").replace(/\D/g,"").length<8){er.textContent="Parcel "+(i+1)+": enter a valid receiver phone.";return}
+  items.push({to:q(".bto"),size:q(".bsz"),desc:q(".bds"),rname:q(".brn"),rphone:q(".brp"),mode:q(".bmd")})}
+ if(!bok){await bsumNow();if(!bok){er.textContent="Check the prices above before booking.";return}}
+ var b=$("bgo");b.disabled=true;b.textContent="Booking...";
+ var r;try{r=await rpc("book_bulk",{p_from:v("bfrom"),p_sname:v("bsn"),p_sphone:v("bsp"),p_pay:bpay,p_note:v("bnt"),p_parcels:items})}catch(e){r={ok:false,j:{message:"No internet connection. Try again."}}}
+ b.disabled=false;b.textContent="Book bulk delivery";
+ if(!r.ok||!r.j||!r.j.bulk_ref){er.textContent=(r.j&&r.j.message)||"Could not book right now. Please message us on WhatsApp.";return}
+ var j=r.j,link=location.origin+"/track?ref="+j.bulk_ref;
+ $("brf").textContent=j.bulk_ref;
+ $("bpp").innerHTML=j.count+" parcels from "+esc(j.from_city)+" · Total <b>"+xaf(j.total)+"</b>"+(j.discount_pct?" (you save "+xaf(j.discount)+", "+j.discount_pct+"% off)":"")+"<br>"+(bpay==="receiver"?"Each receiver pays on arrival.":"You pay at the agency.");
+ $("bpl").innerHTML=(j.parcels||[]).map(function(p){return'<div class="pl"><span class="n">'+p.no+'</span><div><b>'+esc(p.receiver)+'</b><br><small style="color:#7a7464">'+esc(j.from_city)+' → '+esc(p.to)+' · '+esc(p.size)+'</small></div><span class="c4">'+esc(p.code)+'</span></div>'}).join("");
+ $("btk").href="/track?ref="+j.bulk_ref;
+ $("bws").href="https://wa.me/?text="+encodeURIComponent("KMDS bulk delivery booked. Reference: "+j.bulk_ref+" ("+j.count+" parcels from "+j.from_city+"). Track all parcels here: "+link);
+ show("bdone")};
+$("bagain").onclick=function(){location.href="/book-delivery"};
+(function(){var q=new URLSearchParams(location.search);if(q.get("bulk")==="1"){$("pk3").onclick()}else if(q.get("from")||q.get("to")||q.get("n")==="1"){show("form")}})();
+
+})();
+</script></body></html>
